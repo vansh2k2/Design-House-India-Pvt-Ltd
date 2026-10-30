@@ -32,60 +32,7 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Our Services", href: "/services" },
-  {
-    label: "Projects",
-    href: "/projects",
-    alignRight: true,
-    dropdown: [
-      {
-        label: "Interiors Portfolio",
-        subItems: [
-          { label: "Retail Interior Images", href: "/portfolio/interior/retail-interior" },
-          { label: "Corporate Interior Images", href: "/portfolio/interior/corporate-interior" },
-          { label: "Restaurant Interior Images", href: "/portfolio/interior/restaurant-interior" },
-          { label: "Shop in Shop Images", href: "/portfolio/interior/shops-in-shops" },
-        ],
-      },
-      {
-        label: "Merchandising Portfolio",
-        subItems: [
-          { label: "Retail Merchandising Images", href: "/portfolio/merchandising/merchandising-images" },
-          { label: "Acrylic Table Tops Images", href: "/portfolio/merchandising/acrylic-images" },
-          { label: "Gondola Displays Images", href: "/portfolio/merchandising/gandola-images" },
-          { label: "Window Displays Images", href: "/portfolio/merchandising/window-display-images" },
-        ],
-      },
-      {
-        label: "Kiosk Portfolio",
-        subItems: [
-          { label: "Retail Kiosks Images", href: "/portfolio/kiosk/kiosk-images" },
-          { label: "Mobile Booths Images", href: "/portfolio/kiosk/booth-images" },
-        ],
-      },
-      { label: "Signage Portfolio Images", href: "/portfolio/signage/signage-portfolio" },
-      { label: "Exhibition & Events Portfolio", href: "/portfolio/signage/exhibition-events-portfolio" },
-      {
-        label: "Office Interior Portfolio",
-        subItems: [
-          { label: "Modular Work Station Images", href: "/portfolio/office-interior/modular-images" },
-          { label: "MD Cabin Images", href: "/portfolio/office-interior/md-cabin-images" },
-          { label: "Office Chairs Images", href: "/portfolio/office-interior/office-chairs-images" },
-        ],
-      },
-      {
-        label: "Furniture Portfolio",
-        subItems: [
-          { label: "Modular Wardrobes Images", href: "/portfolio/furniture/wardrobes-images" },
-          { label: "Modular Kitchen Images", href: "/portfolio/furniture/kitchen-images" },
-          { label: "Modular LCD Units Images", href: "/portfolio/furniture/lcd-unit-images" },
-          { label: "Sofas Images", href: "/portfolio/furniture/sofas-images" },
-        ],
-      },
-      { label: "Videos", href: "/portfolio/videos" },
-    ],
-  },
-
-
+  { label: "Projects", href: "/projects" },
   { label: "Clients", href: "/clients" },
 
   { label: "Career", href: "/career" },
