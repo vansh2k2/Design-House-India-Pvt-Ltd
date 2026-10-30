@@ -345,8 +345,7 @@ const HomeHero = () => {
                   src={slide.image}
                   alt={slide.buttonText}
                   fill
-                  priority={idx === 0 || idx === 1}
-                  unoptimized
+                  priority={idx === 0}
                   sizes="(max-width: 1024px) 100vw, 85vw"
                   className="object-cover object-center"
                 />

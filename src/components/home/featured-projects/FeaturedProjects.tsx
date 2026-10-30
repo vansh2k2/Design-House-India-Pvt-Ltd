@@ -158,7 +158,7 @@ export default function FeaturedProjects() {
           alt=""
           aria-hidden="true"
           fill
-          unoptimized
+                  sizes="100vw"
           className="object-cover object-bottom contrast-125"
         />
       </div>
@@ -248,7 +248,7 @@ export default function FeaturedProjects() {
                     src={project.image}
                     alt={project.title}
                     fill
-                    unoptimized
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                 </div>

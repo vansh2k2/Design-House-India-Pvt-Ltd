@@ -137,7 +137,6 @@ const OurAchievements = () => {
           alt="Design House India Corporate Office Reception"
           fill
           sizes="100vw"
-          unoptimized
           className="object-cover object-right lg:object-[center_right] scale-110 -translate-x-[4%]"
           priority
         />
@@ -205,7 +204,6 @@ const OurAchievements = () => {
                   alt={label}
                   width={56}
                   height={56}
-                  unoptimized
                   className="w-full h-full object-contain"
                 />
               </div>

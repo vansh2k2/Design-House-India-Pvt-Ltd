@@ -133,10 +133,10 @@ const IndiaMap = () => (
 /* ─── Small pieces ─── */
 
 const Heading = ({ children }: { children: React.ReactNode }) => (
-  <h4 className="font-sans font-bold text-white text-[17px] uppercase tracking-wide whitespace-nowrap mb-3.5">
+  <h3 className="font-sans font-bold text-white text-[17px] uppercase tracking-wide whitespace-nowrap mb-3.5">
     {children}
     <span className="block w-8 h-[3px] bg-[#1E73E8] mt-1.5 rounded-full" />
-  </h4>
+  </h3>
 );
 
 /* ─── Footer ─── */
@@ -199,8 +199,7 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
         src={footBg}
         alt=""
         aria-hidden="true"
-        loading="eager"
-        unoptimized
+        sizes="30vw"
         className="pointer-events-none absolute bottom-0 left-0 hidden xl:block w-[30%] h-auto opacity-90"
       />
       <div className="relative max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-3">
@@ -231,10 +230,10 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
                 </svg>
               ))}
               <Image
-                src="/logotransparent.png"
+                src="/logotransparent-sm.webp"
                 alt="Design House India Pvt. Ltd."
-                width={1521}
-                height={1034}
+                width={420}
+                height={286}
                 sizes="190px"
                 className="relative w-full h-auto [filter:drop-shadow(0_0_4px_rgba(255,255,255,0.12))]"
               />
@@ -245,8 +244,8 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
                 style={{
                   background: "linear-gradient(110deg, transparent 38%, rgba(255,255,255,0.85) 50%, transparent 62%)",
                   backgroundSize: "260% 100%",
-                  WebkitMaskImage: "url(/logotransparent.png)",
-                  maskImage: "url(/logotransparent.png)",
+                  WebkitMaskImage: "url(/logotransparent-sm.webp)",
+                  maskImage: "url(/logotransparent-sm.webp)",
                   WebkitMaskSize: "100% 100%",
                   maskSize: "100% 100%",
                   WebkitMaskRepeat: "no-repeat",
@@ -278,7 +277,7 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
                   <a
                     key={p}
                     href={`tel:${p.replace(/[^0-9+]/g, "")}`}
-                    className="block whitespace-nowrap font-bold text-[13px] 2xl:text-[14px] tracking-tight hover:text-[#3B9BFF] transition-colors"
+                    className="flex items-center min-h-6 whitespace-nowrap font-bold text-[13px] 2xl:text-[14px] tracking-tight hover:text-[#3B9BFF] transition-colors"
                   >
                     {p}
                   </a>

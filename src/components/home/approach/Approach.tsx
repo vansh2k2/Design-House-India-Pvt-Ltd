@@ -113,7 +113,7 @@ const Approach = () => (
                   src={stepIcon}
                   alt={title}
                   fill
-                  unoptimized
+                  sizes="56px"
                   className="object-cover"
                 />
               </div>

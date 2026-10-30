@@ -21,7 +21,7 @@ const ContactChip = ({
   <a
     href={href}
     aria-label={label}
-    className="group flex items-center gap-1.5 text-white/90 hover:text-white transition-colors duration-300"
+    className="group flex items-center justify-center gap-1.5 min-h-6 min-w-6 text-white/90 hover:text-white transition-colors duration-300"
   >
     <Icon className="w-3.5 h-3.5 text-[#fd6e15] shrink-0 transition-transform duration-200 group-hover:scale-110" />
     <span className="hidden sm:inline text-[12.5px] font-medium tracking-wide">
@@ -41,7 +41,8 @@ const QuickLink = ({
 }) => (
   <a
     href={href}
-    className="group flex items-center gap-1.5 text-white/80 hover:text-white transition-colors duration-300 text-[12px] font-medium"
+    aria-label={text}
+    className="group flex items-center justify-center gap-1.5 min-h-6 min-w-6 text-white/80 hover:text-white transition-colors duration-300 text-[12px] font-medium"
   >
     <Icon className="w-3.5 h-3.5 text-white/60 group-hover:text-white transition-colors" />
     <span className="hidden md:inline">{text}</span>

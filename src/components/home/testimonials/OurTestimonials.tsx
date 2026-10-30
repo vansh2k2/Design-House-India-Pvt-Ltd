@@ -203,14 +203,14 @@ const OurTestimonials = () => {
 
         {/* ── Dots ── */}
         {maxIndex > 0 && (
-          <div className="flex justify-center gap-2 mt-6">
+          <div className="flex justify-center gap-0.5 mt-6">
             {Array.from({ length: maxIndex + 1 }, (_, d) => (
               <button
                 key={d}
                 type="button"
                 onClick={() => setIndex(d)}
                 aria-label={`Go to slide ${d + 1}`}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${d === index ? "bg-[#fd6e15]" : "bg-[#D5DDEA] hover:bg-[#B9C8DD]"}`}
+                className={`w-6 h-6 p-[7px] bg-clip-content rounded-full transition-colors ${d === index ? "bg-[#fd6e15]" : "bg-[#D5DDEA] hover:bg-[#B9C8DD]"}`}
               />
             ))}
           </div>

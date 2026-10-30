@@ -1,19 +1,18 @@
 "use client";
 
 import { ReactNode, Suspense, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { LazyMotion, domAnimation } from "framer-motion";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import SmoothScroll from "@/components/SmoothScroll";
 import { SeoProvider } from "@/context/SeoContext";
-import WhatsAppFloat from "@/components/ui/WhatsAppFloat";
-import SocialSidebar from "@/components/ui/SocialSidebar";
-import BookingFloat from "@/components/layout/BookingFloat";
+// Shown only after the page is idle, so their code (incl. the booking form) is split out of the first load
+const WhatsAppFloat = dynamic(() => import("@/components/ui/WhatsAppFloat"), { ssr: false });
+const SocialSidebar = dynamic(() => import("@/components/ui/SocialSidebar"), { ssr: false });
+const BookingFloat = dynamic(() => import("@/components/layout/BookingFloat"), { ssr: false });
 
 const Providers = ({ children }: { children: ReactNode }) => {
-  const [queryClient] = useState(() => new QueryClient());
   const [showFloating, setShowFloating] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -31,8 +30,6 @@ const Providers = ({ children }: { children: ReactNode }) => {
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
           <ToastContainer position="top-right" autoClose={4000} newestOnTop />
           <SeoProvider>
             <SmoothScroll stopped={isBookingOpen}>
@@ -47,8 +44,6 @@ const Providers = ({ children }: { children: ReactNode }) => {
               )}
             </SmoothScroll>
           </SeoProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
     </LazyMotion>
   );
 };

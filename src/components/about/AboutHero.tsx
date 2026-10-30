@@ -71,7 +71,7 @@ const AboutHero = () => (
 
       {/* Photo on phones/tablets */}
       <div className="lg:hidden relative h-[240px] sm:h-[320px] mt-8 rounded-md overflow-hidden">
-        <Image src={heroImg} alt="Design House India reception" fill placeholder="blur" sizes="100vw" className="object-cover" />
+        <Image src={heroImg} alt="Design House India reception" fill priority placeholder="blur" sizes="100vw" className="object-cover" />
       </div>
     </div>
   </section>

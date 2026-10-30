@@ -116,7 +116,7 @@ const ServiceHero = ({ data }: { data: ServiceDetail }) => {
 
         {/* Photo on phones/tablets */}
         <div className="lg:hidden relative h-[240px] sm:h-[320px]">
-          <Image src={hero.image} alt="" fill placeholder="blur" sizes="100vw" className="object-cover" />
+          <Image src={hero.image} alt="" fill priority placeholder="blur" sizes="100vw" className="object-cover" />
         </div>
       </div>
 

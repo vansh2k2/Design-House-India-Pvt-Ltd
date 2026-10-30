@@ -236,7 +236,6 @@ export default function WhatWeDo() {
                       src={item.image}
                       alt={item.title}
                       fill
-                      unoptimized
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 15vw"
                       className="object-cover object-center group-hover:scale-108 transition-transform duration-500"
                     />
@@ -248,7 +247,6 @@ export default function WhatWeDo() {
                       alt={item.title + " icon"}
                       width={42}
                       height={42}
-                      unoptimized
                       className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] object-contain"
                     />
                   </div>
@@ -337,8 +335,9 @@ export default function WhatWeDo() {
           <div className="absolute left-0 sm:-left-2 lg:-left-4 bottom-[-2px] sm:bottom-[-4px] w-[270px] sm:w-[340px] lg:w-[420px] xl:w-[450px] pointer-events-none opacity-85 flex items-end">
             <Image
               src={bgBuildImg}
-              alt="City Skyline"
-              unoptimized
+              alt=""
+              aria-hidden="true"
+              sizes="450px"
               className="w-full h-auto max-h-[55px] sm:max-h-[64px] lg:max-h-[72px] xl:max-h-[76px] object-contain object-left-bottom"
             />
           </div>
@@ -347,8 +346,9 @@ export default function WhatWeDo() {
           <div className="absolute -right-4 sm:-right-8 lg:-right-12 bottom-[-2px] sm:bottom-[-4px] w-[270px] sm:w-[340px] lg:w-[420px] xl:w-[450px] pointer-events-none opacity-85 flex items-end scale-x-[-1]">
             <Image
               src={bgBuildImg}
-              alt="City Skyline"
-              unoptimized
+              alt=""
+              aria-hidden="true"
+              sizes="450px"
               className="w-full h-auto max-h-[55px] sm:max-h-[64px] lg:max-h-[72px] xl:max-h-[76px] object-contain object-left-bottom"
             />
           </div>

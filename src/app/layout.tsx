@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import GlobalFooterScripts from "@/components/GlobalFooterScripts";
@@ -43,39 +42,6 @@ export default async function RootLayout({
       {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) inject
           attributes on <body> before hydration; ignore those mismatches. */}
       <body suppressHydrationWarning>
-        {/* Preload cached hero image BEFORE React hydrates. The image is
-            served by the backend API, not this frontend, so the URL must be
-            built from API_URL — window.location.origin was this page's own
-            origin and produced a wrong, always-404ing preload URL. */}
-        <Script id="hero-preload" strategy="beforeInteractive">
-          {`
-            try {
-              var cached = localStorage.getItem("dh_hero_slides_cache");
-              if (cached) {
-                var parsed = JSON.parse(cached);
-                var now = Date.now();
-                if (
-                  parsed &&
-                  parsed.timestamp &&
-                  now - parsed.timestamp < 300000 &&
-                  parsed.data &&
-                  parsed.data[0] &&
-                  parsed.data[0].image
-                ) {
-                  var img = parsed.data[0].image;
-                  var apiUrl = ${JSON.stringify(API_URL)};
-                  var fullUrl = img.startsWith("http") ? img : apiUrl + (img.startsWith("/") ? "" : "/") + img;
-                  var link = document.createElement("link");
-                  link.rel = "preload";
-                  link.as = "image";
-                  link.fetchPriority = "high";
-                  link.href = fullUrl;
-                  document.head.appendChild(link);
-                }
-              }
-            } catch (e) {}
-          `}
-        </Script>
 
         <LocationsProvider locations={locations}>
           <Providers>{children}</Providers>

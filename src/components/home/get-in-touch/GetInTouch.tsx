@@ -154,9 +154,8 @@ const GetInTouch = () => {
   return (
     <section className="relative w-full overflow-hidden bg-white">
       {/* ── Background photo, washed white towards the left so the text reads ── */}
-      {/* Served as the original file (2170px, ~230 KB): the section is wider than tall enough that the photo
-          is drawn wider than the screen, and the resized/recompressed copies looked soft in the middle */}
-      <Image src={touchBg} alt="" fill placeholder="blur" unoptimized className="object-cover object-center" />
+      {/* Drawn wider than the screen, so it asks for the full-width file at a higher quality to stay sharp */}
+      <Image src={touchBg} alt="" fill placeholder="blur" sizes="100vw" quality={85} className="object-cover object-center" />
       {/* White wash over the whole left column; clears quickly after it so the logo wall in the middle stays bright */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 via-28% to-white/0 to-45%" />
       {/* Solid white band behind the heading and intro; its bottom edge and right end fade out */}
@@ -203,7 +202,7 @@ const GetInTouch = () => {
               <div>
                 <p className="text-[13.5px] font-bold text-[#0A2B5E] leading-tight mb-0.5">Call Us</p>
                 {PHONES.map((p) => (
-                  <a key={p.tel} href={`tel:${p.tel}`} className="block text-[12.5px] text-[#1F2D44] hover:text-[#fd6e15] leading-snug">
+                  <a key={p.tel} href={`tel:${p.tel}`} className="flex items-center min-h-6 text-[12.5px] text-[#1F2D44] hover:text-[#fd6e15] leading-snug">
                     {p.label}
                   </a>
                 ))}

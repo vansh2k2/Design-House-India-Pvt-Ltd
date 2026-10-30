@@ -45,6 +45,11 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    // Serve AVIF/WebP (much smaller than the source JPG/PNG files) and allow a higher quality for
+    // full-width banners that would otherwise look soft
+    formats: ["image/avif", "image/webp"],
+    qualities: [75, 85],
+    minimumCacheTTL: 2678400, // 31 days
     // CMS-uploaded images (services, hero, stats-counter, logo, etc.) are
     // served from the backend at runtime, so next/image needs them allowlisted.
     remotePatterns: [
