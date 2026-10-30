@@ -70,7 +70,7 @@ const STATS = [
    button on the right; then a grid of client logo cards. */
 const OurClients = () => (
   <section className="relative w-full overflow-hidden bg-white">
-    <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-5 pb-7 lg:pb-8">
+    <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-5 pb-7 lg:pb-8">
       {/* ── Header ── */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-6">
         <div className="max-w-[780px]">

@@ -15,7 +15,7 @@ const WhyChooseUs = () => (
   <section className="relative w-full overflow-hidden bg-[#F5F6F8]">
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_44%] xl:grid-cols-[minmax(0,1fr)_41%]">
       {/* ── Left: copy, cards, buttons (left edge lines up with the other sections' container) ── */}
-      <div className="px-4 sm:px-6 lg:pr-8 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))] py-8 sm:py-10 lg:py-9">
+      <div className="px-4 sm:px-6 lg:pr-8 lg:pl-[max(2rem,calc((100vw-1400px)/2+2rem))] py-8 sm:py-10 lg:py-9">
         <div className="flex items-center gap-2 mb-2">
           <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
           <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#134698]">Why Choose Us</span>

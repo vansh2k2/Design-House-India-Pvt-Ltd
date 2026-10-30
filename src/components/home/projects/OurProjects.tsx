@@ -150,7 +150,7 @@ export default function OurProjects() {
 
   return (
     <section className="relative w-full bg-white pt-4 sm:pt-6 lg:pt-7 pb-1.5 sm:pb-2 lg:pb-2 overflow-hidden">
-      <div className="container mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
 
         {/* ════════════════════════════════════════════════════════════════
             HEADER: Eyebrow + Title + Paragraph + Top Right Button & Badge

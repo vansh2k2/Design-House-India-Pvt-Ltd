@@ -212,7 +212,7 @@ const DownloadsPage = () => {
             {/* Light dark wash on the right edge, behind the four words */}
             <div className="hidden md:block absolute inset-y-0 right-0 w-[24%] bg-gradient-to-l from-black/45 to-transparent" />
 
-            <div className="relative h-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+            <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
               <div className="hb-blur-in flex items-center gap-3 mb-3" style={{ animationDelay: "0.15s" }}>
                 <span className="w-8 h-[2px] bg-[#fd6e15]" />
                 <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.3em] text-white">Downloads</span>
@@ -261,7 +261,7 @@ const DownloadsPage = () => {
 
         {/* ── Download cards ── */}
         <section className="w-full bg-white">
-          <ul className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+          <ul className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             {items.map((item) => (
               <li
                 key={item.href ?? item.title}

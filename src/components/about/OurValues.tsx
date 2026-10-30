@@ -11,7 +11,7 @@ const VALUES: { icon: LucideIcon; title: string; desc: string }[] = [
 /* "Our Values": heading on the left, four value columns with dividers on the right. */
 const OurValues = () => (
   <section className="relative w-full bg-[#F7F9FC]">
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 grid lg:grid-cols-[34%_1fr] gap-8 items-center">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 grid lg:grid-cols-[34%_1fr] gap-8 items-center">
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />

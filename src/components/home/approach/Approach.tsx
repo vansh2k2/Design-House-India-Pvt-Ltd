@@ -79,7 +79,7 @@ const Approach = () => (
       </div>
     </div>
 
-    <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 sm:pt-8 lg:pt-7 pb-7 lg:pb-8">
+    <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 sm:pt-8 lg:pt-7 pb-7 lg:pb-8">
       {/* ── Heading ── */}
       <div className="lg:w-[48%] lg:min-h-[175px]">
         <div className="flex items-center gap-2 mb-2">

@@ -71,7 +71,9 @@ const OurTestimonials = () => {
   }, []);
 
   const maxIndex = Math.max(0, testimonials.length - perView);
-  useEffect(() => setIndex((i) => Math.min(i, maxIndex)), [maxIndex]);
+  useEffect(() => {
+    setIndex((i) => Math.min(i, maxIndex));
+  }, [maxIndex]);
 
   const prev = () => setIndex((i) => (i <= 0 ? maxIndex : i - 1));
   const next = () => setIndex((i) => (i >= maxIndex ? 0 : i + 1));
@@ -89,7 +91,7 @@ const OurTestimonials = () => {
 
   return (
     <section className="relative w-full overflow-hidden bg-gradient-to-b from-[#F3F6FB] to-white">
-      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 lg:pt-8 pb-4 lg:pb-5">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 lg:pt-8 pb-4 lg:pb-5">
         {/* ── Header ── */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-6">
           <div className="max-w-[780px]">

@@ -14,9 +14,9 @@ import FeaturedArticle from "./FeaturedArticle";
 import LatestArticles from "./LatestArticles";
 import BlogSidebar from "./sidebar/BlogSidebar";
 import { ALL_CATEGORY } from "./constants";
-import { SAMPLE_ARTICLES, SAMPLE_POPULAR, TRENDING_TOPICS } from "./data/sampleArticles";
-import type { ArticleItem, Blog } from "./types";
-import { blogDate } from "./utils";
+import { TRENDING_TOPICS } from "./data/sampleArticles";
+import type { Blog } from "./types";
+import { popularItems, toArticleItems } from "./utils";
 
 /* Blogs page: banner, category tiles, then featured article + latest articles (left) beside the sidebar
    (right), an enquiry band and the footer. Blogs come from the admin panel (/api/blogs/published). */
@@ -38,25 +38,18 @@ const BlogsPage = () => {
   }, []);
 
   // Back to the first page whenever the filter changes
-  useEffect(() => setPage(1), [category, search]);
+  useEffect(() => {
+    setPage(1);
+  }, [category, search]);
 
-  // Admin blogs first (they have article pages), then the showcase articles from the design
-  const articles = useMemo<ArticleItem[]>(
-    () => [
-      ...blogs.map((b) => ({
-        key: b._id,
-        title: b.title,
-        excerpt: b.excerpt,
-        category: b.category,
-        date: blogDate(b),
-        href: `/blogs/${b.slug}`,
-        image: b.image,
-        tags: b.tags,
-      })),
-      ...SAMPLE_ARTICLES.map((a) => ({ ...a, key: a.title, date: new Date(a.date), href: "/blogs" })),
-    ],
-    [blogs]
-  );
+  // Filters can arrive in the URL (search box / category links on a blog's detail page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search")) setSearch(params.get("search") ?? "");
+    if (params.get("category")) setCategory(params.get("category") ?? ALL_CATEGORY);
+  }, []);
+
+  const articles = useMemo(() => toArticleItems(blogs), [blogs]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -74,14 +67,7 @@ const BlogsPage = () => {
   }, [blogs]);
 
   // Popular list and trending topics are the fixed ones from the design
-  const popular: ArticleItem[] = SAMPLE_POPULAR.map((a) => ({
-    ...a,
-    key: a.title,
-    excerpt: "",
-    category: "",
-    date: new Date(a.date),
-    href: "/blogs",
-  }));
+  const popular = popularItems();
 
   const changePage = (n: number) => {
     setPage(n);
@@ -97,7 +83,7 @@ const BlogsPage = () => {
         <BlogsHero />
         <BlogCategoryBar active={category} onSelect={setCategory} />
 
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 grid lg:grid-cols-[minmax(0,1fr)_300px] gap-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 grid lg:grid-cols-[minmax(0,1fr)_300px] gap-8">
           <div className="min-w-0 space-y-10">
             {loading ? (
               <div className="h-[260px] rounded-md bg-[#F3F6FB] animate-pulse" />
@@ -111,7 +97,7 @@ const BlogsPage = () => {
           <BlogSidebar search={search} onSearch={setSearch} topics={TRENDING_TOPICS} popular={popular} />
         </div>
 
-        <ProjectCta />
+        <ProjectCta narrow />
       </main>
 
       <Footer />

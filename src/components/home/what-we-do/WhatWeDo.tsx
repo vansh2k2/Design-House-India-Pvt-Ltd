@@ -175,7 +175,7 @@ export default function WhatWeDo() {
   return (
     <section className="relative w-full bg-white pt-6 sm:pt-8 pb-0 overflow-hidden">
       <style>{CSS}</style>
-      <div className="container mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
 
         {/* ════════════════════════════════════════════════════════════════
             HEADER: WHAT WE DO + Turnkey Spaces + Subtitle + CTA Button

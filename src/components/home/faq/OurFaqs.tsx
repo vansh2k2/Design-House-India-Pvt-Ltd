@@ -54,8 +54,8 @@ const OurFaqs = () => {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="relative w-full overflow-hidden bg-white">
-      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-6">
+    <section id="faqs" className="relative w-full overflow-hidden bg-white scroll-mt-24">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-6">
         {/* ── Left: text + contact card over the photo ── */}
         <div className="relative pt-8 pb-2 xl:py-10">
           <div

@@ -178,7 +178,7 @@ const GetInTouch = () => {
       />
       <div className="absolute inset-0 bg-white/60 xl:hidden" />
 
-      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-5 lg:pt-6 pb-5 lg:pb-6 grid xl:grid-cols-[minmax(0,1fr)_390px] gap-8 xl:gap-12 items-center">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-5 lg:pt-6 pb-5 lg:pb-6 grid xl:grid-cols-[minmax(0,1fr)_390px] gap-8 xl:gap-12 items-center">
         {/* ── Left ── */}
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-2">

@@ -5,15 +5,8 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import DateBadge from "./DateBadge";
 import type { Blog } from "./types";
-import { blogDate } from "./utils";
+import { blogDate, splitTitle } from "./utils";
 import featuredImg from "@/assets/image/bl1.webp";
-
-// Titles come from the admin, so the orange accent is simply their last few words
-const splitTitle = (title: string) => {
-  const words = title.trim().split(/\s+/);
-  const accent = words.length > 5 ? 3 : 1;
-  return { lead: words.slice(0, -accent).join(" "), accent: words.slice(-accent).join(" ") };
-};
 
 /* "Featured Article": a large photo with the date badge on the left, category tag, title, excerpt and
    "Read Full Article" on the right; arrows step through the featured blogs. */

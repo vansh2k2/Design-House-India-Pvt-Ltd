@@ -111,7 +111,7 @@ const OurStrengths = () => (
         </div>
       </div>
 
-      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-7 pb-5 flex flex-col xl:flex-row xl:items-center gap-6 xl:gap-8">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-7 pb-5 flex flex-col xl:flex-row xl:items-center gap-6 xl:gap-8">
         {/* ── Left: heading + cards ── */}
         <div className="xl:flex-1 xl:max-w-[1000px] min-w-0">
           <div className="flex items-center gap-2 mb-2">
@@ -186,7 +186,7 @@ const OurStrengths = () => (
     </div>
 
     {/* ── CTA band ── */}
-    <div className="relative -mt-3 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pb-5">
+    <div className="relative -mt-3 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-5">
       <div className="rounded-md bg-gradient-to-r from-[#0A2B5E] via-[#0D2F68] to-[#123A7A] px-5 sm:px-8 lg:px-12 py-4 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8">
         <div className="shrink-0">
           <div className="flex items-center gap-2 mb-1">

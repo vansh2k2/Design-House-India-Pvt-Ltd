@@ -15,7 +15,7 @@ const PROJECTS = [
 /* "Spaces That Inspire": three project cards (photo, name, place, arrow) linking to the portfolio. */
 const AboutProjects = () => (
   <section className="relative w-full bg-[#F7F9FC]">
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-6">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-6">
       <div className="flex flex-wrap items-end justify-between gap-4 mb-5">
         <div>
           <div className="flex items-center gap-2 mb-2">

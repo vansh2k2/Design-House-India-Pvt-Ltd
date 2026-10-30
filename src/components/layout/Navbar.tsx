@@ -31,57 +31,7 @@ type NavLeaf = { label: string; href: string; isPdf?: boolean };
 const navItems = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  {
-    label: "Services",
-    dropdown: [
-      {
-        label: "Interiors",
-        subItems: [
-          { label: "Retail Interior", href: "/services/retail-interior" },
-          { label: "Corporate Interior", href: "/services/corporate-interior" },
-          { label: "Restaurant Interior", href: "/services/restaurant-interior" },
-          { label: "Shop in Shops", href: "/services/shop-in-shop" },
-        ],
-      },
-      {
-        label: "Merchandising",
-        subItems: [
-          { label: "Retail Display Merchandising", href: "/services/retail-display" },
-          { label: "Acrylic Display", href: "/services/acrylic-display" },
-          { label: "Gondolas", href: "/services/gondolas" },
-          { label: "Window Display", href: "/services/window-display" },
-        ],
-      },
-      {
-        label: "Kiosk",
-        subItems: [
-          { label: "Retail Kiosk", href: "/services/retail-kiosk" },
-          { label: "Mobile Booth", href: "/services/mobile-booth" },
-        ],
-      },
-      { label: "Signage", href: "/services/signage" },
-      { label: "Exhibitions & Events", href: "/services/exhibitions" },
-      {
-        label: "Office Interior",
-        subItems: [
-          { label: "Modular Work Station", href: "/services/modular-workstation" },
-          { label: "MD Cabin", href: "/services/md-cabin" },
-          { label: "Chairs", href: "/services/office-chairs" },
-        ],
-      },
-      {
-        label: "Furniture",
-        subItems: [
-          { label: "Wardrobe", href: "/services/wardrobe" },
-          { label: "Kitchen", href: "/services/kitchen" },
-          { label: "LCD Unit", href: "/services/lcd-unit" },
-          { label: "Dressing Table", href: "/services/dressing-table" },
-          { label: "Sofas", href: "/services/sofas" },
-        ],
-      },
-    ],
-  },
-
+  { label: "Our Services", href: "/services" },
   {
     label: "Projects",
     alignRight: true,

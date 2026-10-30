@@ -189,7 +189,7 @@ const Career = () => {
           ))}
         </div>
 
-        <div className="relative order-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:pl-11 lg:pr-8 pt-8 pb-8 lg:pt-6 lg:pb-5">
+        <div className="relative order-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-8 pb-8 lg:pt-6 lg:pb-5">
           <m.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -239,8 +239,8 @@ const Career = () => {
       </section>
 
       {/* ============ CURRENT OPENINGS ============ */}
-      <section id="openings" className="scroll-mt-24 pt-3 md:pt-3 pb-4 md:pb-5 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section id="openings" className="scroll-mt-24 pt-3 md:pt-3 pb-4 md:pb-5 bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
             <m.div
               initial={{ opacity: 0, y: 30 }}
@@ -365,8 +365,8 @@ const Career = () => {
       </section>
 
       {/* ============ WHY WORK WITH US ============ */}
-      <section className="pt-2 md:pt-2 pb-4 md:pb-5 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="pt-2 md:pt-2 pb-4 md:pb-5 bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 lg:items-start mb-6">
             <m.div
               initial={{ opacity: 0, y: 30 }}
@@ -424,8 +424,8 @@ const Career = () => {
       </section>
 
       {/* ============ LIFE AT DESIGN HOUSE ============ */}
-      <section className="pt-4 md:pt-5 pb-4 md:pb-5 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="pt-4 md:pt-5 pb-4 md:pb-5 bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6 lg:gap-12 lg:items-end mb-8">
             <m.div
               initial={{ opacity: 0, y: 30 }}
@@ -485,7 +485,7 @@ const Career = () => {
           transition={{ duration: 0.7 }}
           className="bg-white overflow-hidden flex flex-col lg:flex-row lg:items-center"
         >
-          <div className="relative h-32 sm:h-36 lg:h-auto lg:self-stretch lg:min-h-[110px] lg:ml-[max(2rem,(100vw_-_80rem)/2)] lg:w-[20rem] flex-shrink-0">
+          <div className="relative h-32 sm:h-36 lg:h-auto lg:self-stretch lg:min-h-[110px] lg:ml-[max(2rem,(100vw_-_1336px)/2)] lg:w-[20rem] flex-shrink-0">
             <Image
               src={ctaImg}
               alt=""
@@ -499,7 +499,7 @@ const Career = () => {
             <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-b from-transparent to-white lg:inset-y-0 lg:left-auto lg:right-0 lg:h-auto lg:w-1/4 lg:bg-gradient-to-r" />
           </div>
 
-          <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6 px-4 sm:px-6 py-4 lg:py-3 lg:pl-2 lg:pr-[max(2rem,(100vw_-_80rem)/2)]">
+          <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6 px-4 sm:px-6 py-4 lg:py-3 lg:pl-2 lg:pr-[max(2rem,(100vw_-_1336px)/2)]">
             <h2 className="font-display font-bold text-[#134698] text-xl md:text-2xl leading-tight flex-shrink-0">
               Be Part of Something
               <br />

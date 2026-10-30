@@ -5,11 +5,12 @@ import ArticleImage from "../ArticleImage";
 import type { ArticleItem } from "../types";
 import { formatDate } from "../utils";
 
-/* Popular articles: thumbnail, title and date. */
-const PopularArticles = ({ items }: { items: ArticleItem[] }) => {
+/* List of articles with thumbnail, title and date ("Popular Articles" on the Blogs page, "Recent Articles" on a
+   blog's page). */
+const PopularArticles = ({ items, title = "Popular Articles" }: { items: ArticleItem[]; title?: string }) => {
   if (items.length === 0) return null;
   return (
-    <SidebarCard title="Popular Articles">
+    <SidebarCard title={title}>
       <ul className="space-y-3.5">
         {items.map((item) => (
           <li key={item.key}>

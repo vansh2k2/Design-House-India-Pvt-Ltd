@@ -25,3 +25,7 @@ export const BLOG_CATEGORIES: { label: string; icon: LucideIcon }[] = [
 ];
 
 export const ARTICLES_PER_PAGE = 9;
+
+// true: every blog's detail page shows the fixed design content (data/demoDetail.ts) and no backend data.
+// Set to false to show each blog's real content from the admin panel again.
+export const USE_DEMO_BLOG_DETAIL = true;

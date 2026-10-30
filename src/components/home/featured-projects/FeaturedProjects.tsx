@@ -163,7 +163,7 @@ export default function FeaturedProjects() {
         />
       </div>
 
-      <div className="container relative mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 z-10">
+      <div className="container relative mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 z-10">
         {/* ── Background Text Watermark ("PROJECTS") ── */}
         <m.div
           style={{ x: watermarkX }}

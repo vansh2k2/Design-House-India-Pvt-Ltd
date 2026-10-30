@@ -21,7 +21,7 @@ const BRANDS: { name: string; logo: StaticImageData | string; ratio: number; cap
    "Our Partners" link above them. */
 const BrandsAssociates = () => (
   <section className="relative w-full bg-white">
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 lg:pt-4 pb-5 lg:pb-6 grid lg:grid-cols-[30%_1fr] gap-8 items-center">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 lg:pt-4 pb-5 lg:pb-6 grid lg:grid-cols-[30%_1fr] gap-8 items-center">
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />

@@ -103,8 +103,12 @@ const OurBlogs = () => {
 
   const shown = category === "All" ? BLOGS : BLOGS.filter((b) => b.category === category);
   const maxIndex = Math.max(0, shown.length - perView);
-  useEffect(() => setIndex((i) => Math.min(i, maxIndex)), [maxIndex]);
-  useEffect(() => setIndex(0), [category]);
+  useEffect(() => {
+    setIndex((i) => Math.min(i, maxIndex));
+  }, [maxIndex]);
+  useEffect(() => {
+    setIndex(0);
+  }, [category]);
 
   const prev = () => setIndex((i) => (i <= 0 ? maxIndex : i - 1));
   const next = () => setIndex((i) => (i >= maxIndex ? 0 : i + 1));
@@ -117,7 +121,7 @@ const OurBlogs = () => {
            Its width reaches from the viewport's right edge to just past the cards' right edge. ── */}
       <div
         className="hidden xl:block absolute top-0 bottom-0 right-0 [clip-path:polygon(29%_0,100%_0,100%_100%,0_100%)]"
-        style={{ width: "calc((100vw - min(100vw, 1440px)) / 2 + 360px)" }}
+        style={{ width: "calc((100vw - min(100vw, 1400px)) / 2 + 360px)" }}
       >
         <Image src={blogsImg} alt="" fill placeholder="blur" sizes="(min-width: 1280px) 60vw, 100vw" className="object-cover object-[70%_center]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A2B5E] via-[#0A2B5E]/80 via-25% to-transparent to-55%" />
@@ -133,7 +137,7 @@ const OurBlogs = () => {
         </div>
       </div>
 
-      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-5 pb-4 lg:pb-5">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-5 pb-4 lg:pb-5">
         <div className="xl:pr-[300px]">
           {/* ── Header ── */}
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-5">

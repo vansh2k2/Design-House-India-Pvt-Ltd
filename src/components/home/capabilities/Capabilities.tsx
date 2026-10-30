@@ -76,7 +76,7 @@ const Capabilities = () => (
         />
       </div>
 
-      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-7 sm:py-8 lg:pt-7 lg:pb-3">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-7 sm:py-8 lg:pt-7 lg:pb-3">
         <div className="lg:w-[46%] xl:w-[44%]">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
@@ -115,7 +115,7 @@ const Capabilities = () => (
     </div>
 
     {/* ── Process steps ── */}
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-5 lg:pt-6 pb-4 lg:pb-5">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-5 lg:pt-6 pb-4 lg:pb-5">
       <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] items-center gap-3 lg:gap-2">
         {STEPS.map((step, i) => (
           <Fragment key={step.title}>

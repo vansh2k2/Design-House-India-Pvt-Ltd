@@ -12,7 +12,7 @@ const STEPS: { icon: LucideIcon; title: string; desc: string }[] = [
 /* "Our Approach": four numbered step cards joined by arrows. */
 const AboutApproach = () => (
   <section className="relative w-full bg-white">
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
       <div className="flex items-center gap-2 mb-2">
         <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
         <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">Our Approach</span>

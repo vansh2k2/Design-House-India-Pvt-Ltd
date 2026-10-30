@@ -24,3 +24,18 @@ export interface ArticleItem {
   image: string | import("next/image").StaticImageData; // API path (string) or a bundled image
   tags?: string[];
 }
+
+// Everything the blog detail page shows for one article (an admin blog or a showcase article)
+export interface ArticleDetail {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  date: Date;
+  image: string | import("next/image").StaticImageData;
+  readTime: number; // minutes
+  views?: number;
+  coverWords?: string[]; // stacked over the right side of the cover photo
+  html?: string; // admin blogs: rich-text body
+  blocks?: import("./data/sampleArticles").ArticleBlock[]; // showcase articles: structured body
+}

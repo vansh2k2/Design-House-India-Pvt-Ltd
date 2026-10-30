@@ -1,5 +1,42 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Old service pages that were removed: their URLs open the Our Services page (the old corporate
+  // page opens the new Corporate Interiors page). /services/<slug> pages built from
+  // src/components/services/details are left alone.
+  async redirects() {
+    const removed = [
+      "acrylic-display",
+      "dressing-table",
+      
+      "gondolas",
+      "kitchen",
+      "lcd-unit",
+      "md-cabin",
+      "mobile-booth",
+      "modular-workstation",
+      "office-chairs",
+      "office-interior",
+      
+      
+      
+      
+      "shop-in-shop",
+      
+      "sofas",
+      "wardrobe",
+      "window-display",
+    ];
+    return [
+      { source: "/services/corporate-interior", destination: "/services/corporate-interiors", permanent: true },
+      { source: "/services/retail-interior", destination: "/services/retail-showrooms", permanent: true },
+      { source: "/services/restaurant-interior", destination: "/services/restaurant-interiors", permanent: true },
+      { source: "/services/exhibitions", destination: "/services/exhibition-stalls", permanent: true },
+      { source: "/services/retail-kiosk", destination: "/services/retail-kiosks", permanent: true },
+      { source: "/services/signage", destination: "/services/signage-branding", permanent: true },
+      { source: "/services/retail-display", destination: "/services/display-fixtures", permanent: true },
+      ...removed.map((slug) => ({ source: `/services/${slug}`, destination: "/services", permanent: true })),
+    ];
+  },
   typescript: {
     // Vite's `vite build` transpiles with esbuild and never ran `tsc`, so this
     // codebase has pre-existing type errors (e.g. framer-motion Variants typing)

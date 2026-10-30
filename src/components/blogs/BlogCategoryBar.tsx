@@ -3,7 +3,7 @@ import { BLOG_CATEGORIES } from "./constants";
 /* Row of category tiles (icon + label); the active one is filled navy. */
 const BlogCategoryBar = ({ active, onSelect }: { active: string; onSelect: (category: string) => void }) => (
   <section className="w-full bg-white border-b border-[#E8EDF4]">
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
       <ul className="flex lg:grid lg:grid-cols-8 gap-3 overflow-x-auto scrollbar-none">
         {BLOG_CATEGORIES.map(({ label, icon: Icon }) => {
           const isActive = active === label;
