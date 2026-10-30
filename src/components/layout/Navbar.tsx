@@ -28,7 +28,12 @@ import { m, AnimatePresence } from "framer-motion";
 // A third-level menu link; isPdf opens the file in a new tab with a file icon (no menu uses it right now)
 type NavLeaf = { label: string; href: string; isPdf?: boolean };
 
-const navItems = [
+// A dropdown group: a link, or a heading with links under it
+type NavGroup = { label: string; href?: string; subItems?: NavLeaf[] };
+// A top-level item: a plain link, or (with dropdown) a menu; none use a dropdown right now
+type NavItem = { label: string; href?: string; alignRight?: boolean; dropdown?: NavGroup[] };
+
+const navItems: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Our Services", href: "/services" },
