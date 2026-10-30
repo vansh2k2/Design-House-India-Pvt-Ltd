@@ -1,7 +1,11 @@
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
+import { HERO_ACCENT_SHADOW, HERO_DESC_SHADOW, HERO_TITLE_SHADOW } from "@/components/common/heroBannerEffects";
 
 import { PHOTOS } from "./data";
-import { CONTAINER, CtaButton } from "./ui";
+import { CONTAINER } from "./ui";
 
 /* Dark navy hero; the reception photo fills the right two-thirds, cut on a diagonal (top edge further right than the
    bottom) with a thin orange band along the cut. */
@@ -47,24 +51,39 @@ const ProjectsHero = () => (
       </div>
     </div>
 
-    <div className={`relative ${CONTAINER} py-10 lg:py-0 lg:min-h-[480px] lg:flex lg:items-center`}>
-      <div className="lg:w-[40%] lg:pl-12">
-        {/* Tagline, title and intro use the home hero's type */}
-        <div className="flex items-center gap-2.5 text-[12px] sm:text-[13px] lg:text-[14px] uppercase tracking-[0.22em] font-bold text-white mb-2 sm:mb-2.5">
-          <span className="w-6 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-          Our Projects
+    <div className={`relative ${CONTAINER} py-10 lg:py-5 lg:min-h-[300px] lg:flex lg:items-center`}>
+      <div className="lg:w-[40%]">
+        {/* Gold eyebrow line, white serif title with "Inspire" in gold, bold tagline, short text and a gold button */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className="w-8 h-[2px] bg-[#E8A64C]" />
+          <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.3em] text-white">Our Projects</span>
         </div>
-        <h1 className="text-[34px] sm:text-[42px] lg:text-[46px] xl:text-[52px] 2xl:text-[56px] font-black uppercase leading-[1.02] tracking-[-0.01em] text-white mb-2.5">
+        <h1
+          className="text-[38px] sm:text-[48px] lg:text-[56px] font-serif font-medium leading-[1.04] text-white mb-3"
+          style={{ textShadow: HERO_TITLE_SHADOW }}
+        >
           Spaces
           <br />
-          That <span className="text-[#fd6e15] tracking-tight">Inspire</span>
+          That{" "}
+          <span className="text-[#E8A64C]" style={{ textShadow: HERO_ACCENT_SHADOW }}>
+            Inspire
+          </span>
         </h1>
-        <p className="text-[16px] sm:text-[18px] font-bold text-white mb-2.5">From Vision to Reality</p>
-        <p className="text-[14px] sm:text-[15.5px] lg:text-[16px] xl:text-[16.5px] text-white/95 leading-relaxed max-w-[430px] mb-5">
+        <p className="text-[17px] sm:text-[20px] font-bold text-white mb-3">From Vision to Reality</p>
+        <p
+          className="text-[13.5px] sm:text-[14.5px] text-white/90 leading-relaxed max-w-[400px] mb-5"
+          style={{ textShadow: HERO_DESC_SHADOW }}
+        >
           Explore our portfolio of thoughtfully designed and expertly executed spaces across industries. Each project
           reflects our commitment to functionality, aesthetics and long-term value.
         </p>
-        <CtaButton href="/contact">Discuss Your Project</CtaButton>
+        <Link
+          href="/contact"
+          className="group inline-flex items-center justify-center gap-2 min-w-[190px] rounded-md bg-[#E8A64C] hover:bg-[#D9963B] px-6 py-3 text-white text-[13px] font-semibold shadow-[0_6px_16px_rgba(232,166,76,0.35)] transition-colors"
+        >
+          Discuss Your Project
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        </Link>
       </div>
 
       {/* Photo on phones/tablets */}
