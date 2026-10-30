@@ -1,108 +1,312 @@
 "use client";
 
-import React, { useCallback } from "react";
+import { useEffect, useState } from "react";
+import Image, { type StaticImageData } from "next/image";
+import { Clock, Download, FileText } from "lucide-react";
 
-/* ---------- TYPES ---------- */
-interface PdfFile {
-  label: string;
-  path: string;
-}
+import Topbar from "@/components/layout/Topbar";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/sections/Footer";
+import { api, API_URL } from "@/lib/api";
+import { HERO_ACCENT_SHADOW, HERO_BANNER_CSS, HERO_DESC_SHADOW, HERO_TITLE_SHADOW } from "@/components/common/heroBannerEffects";
+import heroBg from "@/assets/banner/downloads.webp";
+import companyImg from "@/assets/image/vision.webp";
+import officeImg from "@/assets/7.jpg";
+import modularImg from "@/assets/hero-interior-1.jpg";
+import kitchenImg from "@/assets/cara1.jpg";
+import ensisImg from "@/assets/about1.webp";
+import corporateImg from "@/assets/hero-corporate-1.jpg";
+import residentialImg from "@/assets/about2.webp";
+import genericImg from "@/assets/image/b2.webp";
+import retailImg from "@/assets/image/b1.webp";
+import restaurantImg from "@/assets/image/b3.webp";
+import exhibitionImg from "@/assets/image/b4.webp";
 
-interface PdfSection {
+interface DownloadItem {
   title: string;
-  items: PdfFile[];
+  coverTitle: string; // printed on the card's cover panel
+  desc: string;
+  href?: string; // no file yet: the card shows a disabled "Coming Soon" button
+  size?: string;
+  img: StaticImageData;
+  action: string;
+  accent?: boolean; // orange cover title (the main company profile)
+  ensis?: boolean; // ENSIS cover style
 }
 
-/* ---------- DATA ---------- */
-const pdfList: PdfSection[] = [
-  {
-    title: "E-Brochures",
-    items: [
-      {
-        label: "Modular Furniture",
-        path: "/downloads/ebrochures/Modular Furniture.pdf",
-      },
-      {
-        label: "Office Furniture",
-        path: "/downloads/ebrochures/office furniture.pdf",
-      },
-      {
-        label: "Modular Kitchen",
-        path: "/downloads/ebrochures/Modular Kitchen.pdf",
-      },
-      {
-        label: "SPA & Panchkula",
-        path: "/downloads/ebrochures/e-broucher.pdf",
-      },
-    ],
-  },
-  {
-    title: "Newsletters",
-    items: [
-      {
-        label: "Corporate Interior",
-        path: "/downloads/newsletter/corprate_nov.pdf",
-      },
-      {
-        label: "Residential Interior",
-        path: "/downloads/newsletter/residential_nov.pdf",
-      },
-    ],
-  },
+// Files shipped in /public/downloads (sizes as on disk)
+const DOWNLOADS: DownloadItem[] = [
   {
     title: "Company Profile",
-    items: [
-      {
-        label: "DHIPL Company Profile",
-        path: "/downloads/dhipl-profile.pdf",
-      },
-    ],
+    coverTitle: "Company\nProfile",
+    desc: "Complete overview of our company, capabilities and business verticals.",
+    href: "/downloads/dhipl-profile.pdf",
+    size: "13.4 MB",
+    img: companyImg,
+    action: "Download Profile",
+    accent: true,
+  },
+  {
+    title: "Office Furniture",
+    coverTitle: "Office\nFurniture",
+    desc: "Workstations, cabins and seating solutions for modern offices.",
+    href: "/downloads/ebrochures/office furniture.pdf",
+    size: "15.9 MB",
+    img: officeImg,
+    action: "Download Brochure",
+  },
+  {
+    title: "Modular Furniture",
+    coverTitle: "Modular\nFurniture",
+    desc: "Modular furniture designed for everyday function and style.",
+    href: "/downloads/ebrochures/Modular Furniture.pdf",
+    size: "1.4 MB",
+    img: modularImg,
+    action: "Download Brochure",
+  },
+  {
+    title: "Modular Kitchen",
+    coverTitle: "Modular\nKitchen",
+    desc: "Functional and elegant modular kitchen designs.",
+    href: "/downloads/ebrochures/Modular Kitchen.pdf",
+    size: "1.2 MB",
+    img: kitchenImg,
+    action: "Download Brochure",
+  },
+  {
+    title: "ENSIS Brochure",
+    coverTitle: "Spa & Panchkarma\nFurniture",
+    desc: "Premium spa and Panchkarma furniture solutions.",
+    href: "/downloads/ebrochures/e-broucher.pdf",
+    size: "3.2 MB",
+    img: ensisImg,
+    action: "Download Brochure",
+    ensis: true,
+  },
+  {
+    title: "Corporate Interior Newsletter",
+    coverTitle: "Corporate\nInteriors",
+    desc: "Highlights from our corporate interior projects.",
+    href: "/downloads/newsletter/corprate_nov.pdf",
+    size: "303 KB",
+    img: corporateImg,
+    action: "Download Newsletter",
+  },
+  {
+    title: "Residential Interior Newsletter",
+    coverTitle: "Residential\nInteriors",
+    desc: "Highlights from our residential interior projects.",
+    href: "/downloads/newsletter/residential_nov.pdf",
+    size: "1.8 MB",
+    img: residentialImg,
+    action: "Download Newsletter",
   },
 ];
 
-/* ---------- COMPONENT ---------- */
-const DownloadsPage: React.FC = () => {
-  const openPdf = useCallback((path: string) => {
-    window.open(path, "_blank", "noopener,noreferrer");
+// Profiles without a PDF yet; shown after everything else with a "Coming Soon" button
+const COMING_SOON: DownloadItem[] = [
+  {
+    title: "Retail Showroom Interiors",
+    coverTitle: "Retail\nShowroom\nInteriors",
+    desc: "Design and build solutions for retail stores and showrooms.",
+    img: retailImg,
+    action: "Coming Soon",
+  },
+  {
+    title: "Restaurant & Hospitality",
+    coverTitle: "Restaurant &\nHospitality\nInteriors",
+    desc: "Creating memorable dining and hospitality experiences.",
+    img: restaurantImg,
+    action: "Coming Soon",
+  },
+  {
+    title: "Exhibition Stall Design",
+    coverTitle: "Exhibition\nStall Design\n& Build",
+    desc: "Innovative exhibition stalls and brand environments.",
+    img: exhibitionImg,
+    action: "Coming Soon",
+  },
+];
+
+const HERO_WORDS = ["Spaces", "Brands", "Businesses", "People"];
+
+
+/* Card cover: the photo with a navy panel over its left part (slanted right edge) carrying the
+   "Design House" name and the document title, or a light ENSIS panel for the ENSIS brochure. */
+const Cover = ({ item }: { item: DownloadItem }) => (
+  <div className="relative aspect-[4/3] rounded-[4px] overflow-hidden shadow-[0_2px_6px_rgba(10,30,74,0.18)]">
+    <Image src={item.img} alt="" fill placeholder="blur" sizes="(min-width: 1280px) 16vw, (min-width: 768px) 33vw, 100vw" className="object-cover object-right" />
+    {item.ensis ? (
+      <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 via-45% to-transparent to-70% px-3.5 py-3.5">
+        <p className="text-[28px] font-bold text-[#0E6B6B] leading-none tracking-wide mb-2">ENSIS</p>
+        <p className="whitespace-pre-line text-[10px] font-medium uppercase text-[#1F2D44] leading-snug">{item.coverTitle}</p>
+      </div>
+    ) : (
+      <>
+        {/* Thin lighter-blue edge along the cut, then the navy panel (steep diagonal: wide at the top, narrow at the bottom) */}
+        <div className="absolute inset-0 bg-[#3B6BC4]/70 [clip-path:polygon(0_0,66%_0,40%_100%,0_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1E4A] to-[#10306E] [clip-path:polygon(0_0,64%_0,38%_100%,0_100%)]" />
+        <div className="absolute inset-0 px-3.5 pt-3.5 pb-3 flex flex-col">
+          <p className="text-[12.5px] font-extrabold text-white leading-none tracking-[-0.01em]">DESIGN HOUSE</p>
+          <p className="text-[6px] font-bold text-white/85 tracking-[0.18em] mt-[2px] pl-[14px]">INDIA PVT. LTD.</p>
+          <p
+            className={`whitespace-pre-line uppercase leading-[1.15] mt-4 ${
+              item.accent ? "text-[#fd6e15] text-[16px] font-medium" : "text-white text-[13px] font-medium"
+            }`}
+          >
+            {item.coverTitle}
+          </p>
+          {item.accent && (
+            <p className="mt-auto text-[7.5px] text-white/85 leading-snug">
+              Transforming Spaces,
+              <br />
+              Creating Experiences.
+            </p>
+          )}
+        </div>
+      </>
+    )}
+  </div>
+);
+
+/* Downloads page: banner (navy left with the title, reception photo right with four words), then a grid
+   of company profile / brochure / newsletter cards, each with a cover, details and a download button.
+   PDFs added in the admin PDF Manager (other than E-Broucher / Newsletter) are appended to the grid. */
+const DownloadsPage = () => {
+  const [extra, setExtra] = useState<DownloadItem[]>([]);
+
+  useEffect(() => {
+    api
+      .get("/api/pdf-manager")
+      .then((res) => {
+        if (!res.data?.success || !Array.isArray(res.data.data)) return;
+        setExtra(
+          res.data.data
+            .filter((pdf: any) => pdf.status === "Active" && pdf.category !== "E-Broucher" && pdf.category !== "Newsletter")
+            .map((pdf: any) => ({
+              title: pdf.pdfTitle,
+              coverTitle: pdf.subCategory || pdf.pdfTitle,
+              desc: [pdf.category, pdf.subCategory].filter(Boolean).join(" · "),
+              href: `${API_URL}/${pdf.pdfUrl}`,
+              img: genericImg,
+              action: "Download",
+            }))
+        );
+      })
+      .catch((err) => console.error("Error fetching PDFs:", err));
   }, []);
 
+  const items = [...DOWNLOADS, ...extra, ...COMING_SOON];
+
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center px-4 py-12">
-      <div className="bg-white shadow-xl rounded-xl p-6 w-full max-w-xl">
-        <h2 className="text-2xl font-semibold text-[#274896] mb-8 text-center">
-          Downloads
-        </h2>
+    <div className="min-h-screen bg-white flex flex-col">
+      <Topbar />
+      <Navbar />
 
-        {pdfList.map((section, sectionIndex) => (
-          <div key={sectionIndex} className="mb-8">
-            {/* Section Title */}
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              {section.title}
-            </h3>
+      <main className="flex-1">
+        {/* ── Banner ── */}
+        <section className="hero-banner relative w-full bg-[#0A2050] pt-[56px] sm:pt-[68px]">
+          <style>{HERO_BANNER_CSS}</style>
+          <div className="relative h-[300px] sm:h-[280px] lg:h-[300px] overflow-hidden">
+            <Image src={heroBg} alt="" fill priority placeholder="blur" sizes="100vw" className="object-cover object-left sm:object-[center_40%]" />
+            {/* Light dark wash on the right edge, behind the four words */}
+            <div className="hidden md:block absolute inset-y-0 right-0 w-[24%] bg-gradient-to-l from-black/45 to-transparent" />
 
-            {/* PDF Items */}
-            <ul className="space-y-3">
-              {section.items.map((file, fileIndex) => (
-                <li key={fileIndex}>
-                  <button
-                    onClick={() => openPdf(file.path)}
-                    className="w-full flex items-center justify-between
-                    px-4 py-3 rounded-lg border border-gray-200
-                    text-gray-700 hover:text-[#CDA274]
-                    hover:border-[#CDA274] hover:bg-gray-50
-                    transition-all duration-200"
+            <div className="relative h-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+              <div className="hb-blur-in flex items-center gap-3 mb-3" style={{ animationDelay: "0.15s" }}>
+                <span className="w-8 h-[2px] bg-[#fd6e15]" />
+                <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.3em] text-white">Downloads</span>
+              </div>
+              <h1
+                className="text-[32px] sm:text-[40px] lg:text-[48px] font-serif font-medium leading-[1.06] text-white mb-3 [perspective:800px]"
+                style={{ textShadow: HERO_TITLE_SHADOW }}
+              >
+                <span className="block overflow-hidden">
+                  <span className="hb-title-line" style={{ animationDelay: "0.2s" }}>Our Company</span>
+                </span>
+                <span className="block overflow-hidden">
+                  <span
+                    className="hb-title-line text-[#fd6e15]"
+                    style={{
+                      fontSize: "0.9em", // a touch smaller than "Our Company"
+                      animationDelay: "0.4s",
+                      textShadow: HERO_ACCENT_SHADOW,
+                    }}
                   >
-                    <span className="text-sm font-medium">
-                      {file.label}
-                    </span>
-                    <span className="text-xs text-gray-400">PDF</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    Profiles &amp; Brochures
+                  </span>
+                </span>
+              </h1>
+              <p
+                className="hb-desc-in text-[13.5px] sm:text-[15px] text-white/90 leading-relaxed max-w-[440px]"
+                style={{ animationDelay: "0.45s", textShadow: HERO_DESC_SHADOW }}
+              >
+                Explore and download our company profiles and brand brochures to know more about our businesses and
+                capabilities.
+              </p>
+            </div>
+
+            <div className="hidden md:block absolute top-1/2 -translate-y-1/2 right-[4%]">
+              <ul className="space-y-1.5">
+                {HERO_WORDS.map((w) => (
+                  <li key={w} className="text-white text-[18px] lg:text-[20px] uppercase tracking-[0.04em] leading-tight">
+                    {w}
+                  </li>
+                ))}
+              </ul>
+              <span className="block w-10 h-[2px] bg-[#fd6e15] mt-4" />
+            </div>
           </div>
-        ))}
-      </div>
+        </section>
+
+        {/* ── Download cards ── */}
+        <section className="w-full bg-white">
+          <ul className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            {items.map((item) => (
+              <li
+                key={item.href ?? item.title}
+                className="flex flex-col rounded-md bg-white p-3 shadow-[rgba(0,0,0,0.12)_0px_1px_3px,rgba(0,0,0,0.24)_0px_1px_2px]"
+              >
+                <Cover item={item} />
+                <h2 className="font-sans font-semibold text-[15px] text-[#0A2B5E] leading-snug mt-3 mb-1">{item.title}</h2>
+                <p className="text-[12px] text-black leading-snug mb-3">{item.desc}</p>
+                <p className="mt-auto flex items-center gap-2 text-[12px] text-[#3A4A63] mb-2.5">
+                  <FileText className="w-4 h-4 text-[#fd6e15]" />
+                  PDF
+                  {item.size && (
+                    <>
+                      <span className="text-[#C5CFDD]">|</span>
+                      {item.size}
+                    </>
+                  )}
+                </p>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="group flex items-center justify-center gap-2 rounded-md bg-[#fd6e15] hover:bg-[#e05d0e] py-2.5 text-white text-[12.5px] font-semibold transition-colors"
+                  >
+                    {item.action}
+                    <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                  </a>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className="flex items-center justify-center gap-2 rounded-md bg-[#E3E8F0] py-2.5 text-[#7A8AA3] text-[12.5px] font-semibold cursor-not-allowed select-none"
+                  >
+                    <Clock className="w-4 h-4" />
+                    {item.action}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 };

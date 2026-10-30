@@ -3,10 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { api, API_URL } from "@/lib/api";
-import { getHeroToneSampler, subscribeHeroTone, type Tone } from "@/lib/heroTone";
 import {
   Armchair,
+  ArrowRight,
   BookOpen,
   BriefcaseBusiness,
   Building2,
@@ -18,7 +17,6 @@ import {
   MonitorSmartphone,
   Newspaper,
   Presentation,
-  ShieldCheck,
   Signpost,
   Sparkles,
   Video,
@@ -26,6 +24,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
+
+// A third-level menu link; isPdf opens the file in a new tab with a file icon (no menu uses it right now)
+type NavLeaf = { label: string; href: string; isPdf?: boolean };
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -139,39 +140,7 @@ const navItems = [
   { label: "Career", href: "/career" },
   { label: "Blogs", href: "/blogs" },
 
-  {
-    label: "Downloads",
-    alignRight: true,
-    dropdown: [
-      {
-        label: "E-Broucher",
-        subItems: [
-          { label: "Modular Furniture", href: "/downloads/ebrochures/Modular Furniture.pdf", isPdf: true },
-          { label: "Office Furniture", href: "/downloads/ebrochures/office furniture.pdf", isPdf: true },
-          { label: "Modular Kitchen", href: "/downloads/ebrochures/Modular Kitchen.pdf", isPdf: true },
-          { label: "Spa & Panchkarma", href: "/downloads/ebrochures/e-broucher.pdf", isPdf: true },
-        ],
-      },
-      {
-        label: "Newsletter",
-        subItems: [
-          { label: "Corporate Interior", href: "/downloads/newsletter/corprate_nov.pdf", isPdf: true },
-          { label: "Residential Interior", href: "/downloads/newsletter/residential_nov.pdf", isPdf: true },
-        ],
-      },
-      {
-        label: "Company Profile",
-        subItems: [
-          { label: "Company Profile", href: "/downloads/company-profile.pdf", isPdf: true },
-          { label: "Corporate Presentation", href: "/downloads/corporate-presentation.pdf", isPdf: true },
-          { label: "Infrastructure Overview", href: "/downloads/infrastructure.pdf", isPdf: true },
-          { label: "Quality Standards", href: "/downloads/quality-standards.pdf", isPdf: true },
-          { label: "Safety Policy", href: "/downloads/safety-policy.pdf", isPdf: true },
-          { label: "Core Values", href: "/downloads/core-values.pdf", isPdf: true },
-        ],
-      },
-    ],
-  },
+  { label: "Downloads", href: "/downloads" },
 
   { label: "Contact Us", href: "/contact" },
 
@@ -216,42 +185,15 @@ const isActiveItem = (item, pathname: string) => {
 
 /* ─── Navbar ─── */
 
-// `solid` keeps the light (scrolled) styling from the start — for pages whose
-// hero is light, where the transparent white-text navbar would be unreadable.
-// `lightHero` is for a light hero image with dark patches (the home banner): the
-// bar stays transparent and each link is dark or white depending on what is behind it.
+// Always-white navbar with blue text and orange GET A QUOTE button.
+// `solid` and `lightHero` props are kept for API compat but ignored.
 const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHero?: boolean } = {}) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const isLight = isScrolled || solid;
-  const overHero = lightHero && !isLight;
-  // Tone of the hero behind each link / the logo / Login ("dark" → white text)
-  const toneRefs = useRef<Record<string, HTMLElement | null>>({});
-  const [tones, setTones] = useState<Record<string, Tone>>({});
-  const toneOf = (key: string): Tone => (isLight ? "light" : overHero ? tones[key] ?? "light" : "dark");
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeSubDropdown, setActiveSubDropdown] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileExpandedItems, setMobileExpandedItems] = useState({});
-  const [companyProfilePdfs, setCompanyProfilePdfs] = useState([]);
   const pathname = usePathname();
-
-  useEffect(() => {
-    const fetchPdfs = async () => {
-      try {
-        const response = await api.get("/api/pdf-manager");
-        if (response.data.success) {
-          // Filter only active PDFs that are NOT in static categories
-          const filtered = response.data.data.filter(
-            (pdf) => pdf.status === "Active" && pdf.category !== "E-Broucher" && pdf.category !== "Newsletter"
-          );
-          setCompanyProfilePdfs(filtered);
-        }
-      } catch (error) {
-        console.error("Error fetching PDFs:", error);
-      }
-    };
-    fetchPdfs();
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -264,122 +206,40 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!lightHero) return;
-    let frame = 0;
-    const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const sample = getHeroToneSampler();
-        if (!sample) return;
-        const next: Record<string, Tone> = {};
-        for (const [key, el] of Object.entries(toneRefs.current)) {
-          if (!el) continue;
-          // Sample across the whole label; white text once a good part of it sits on dark
-          const r = el.getBoundingClientRect();
-          let dark = 0;
-          let seen = 0;
-          for (let k = 0; k < 5; k++) {
-            const tone = sample(r.left + (r.width * (k + 0.5)) / 5, r.top + r.height / 2, key);
-            if (!tone) continue;
-            seen++;
-            if (tone === "dark") dark++;
-          }
-          if (seen) next[key] = dark / seen >= 0.4 ? "dark" : "light";
-        }
-        setTones((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
-      });
-    };
-    measure();
-    const unsubscribe = subscribeHeroTone(measure);
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, { passive: true });
-    // Links shift when the web font or the PDF list arrives, so re-measure on any size change
-    const ro = new ResizeObserver(measure);
-    Object.values(toneRefs.current).forEach((el) => el && ro.observe(el));
-    document.fonts?.ready.then(measure);
-    return () => {
-      cancelAnimationFrame(frame);
-      ro.disconnect();
-      unsubscribe();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure);
-    };
-  }, [lightHero]);
-
   const toggleMobileItem = (label) => {
     setMobileExpandedItems((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const dynamicNavItems = navItems.map((item) => {
-    if (item.label === "Downloads") {
-      return {
-        ...item,
-        dropdown: item.dropdown.map((sub) => {
-          if (sub.label === "Company Profile") {
-            const dynamicSubItems = companyProfilePdfs.map((pdf) => ({
-              label: pdf.subCategory || pdf.pdfTitle,
-              href: `${API_URL}/${pdf.pdfUrl}`,
-              isPdf: true,
-            }));
-
-            return {
-              ...sub,
-              subItems: dynamicSubItems.length > 0 ? dynamicSubItems : sub.subItems,
-            };
-          }
-          return sub;
-        }),
-      };
-    }
-    return item;
-  });
+  // Downloads is a plain link to /downloads (that page lists the PDFs, including the admin PDF Manager ones)
+  const dynamicNavItems = navItems;
 
   return (
     <>
       {/* ─── Navbar ─── */}
       <m.nav
-        className={`fixed left-0 right-0 z-40 transition-all duration-500 ease-in-out ${isScrolled
-          ? "top-0 bg-white/95 backdrop-blur-xl shadow-[0_10px_30px_-12px_rgba(19,70,152,0.25)]"
-          : solid
-            ? "top-[48px] bg-white shadow-none"
-            : overHero
-              ? "top-[48px] bg-transparent shadow-none"
-              : // Over a photo hero: a soft dark fade keeps the white links readable
-              "top-[48px] bg-gradient-to-b from-black/45 via-black/15 to-transparent backdrop-blur-none shadow-none"
-          }`}
-        style={{ fontFamily: "'Inter', sans-serif", borderBottom: isLight ? "1.5px solid rgba(19,70,152,0.09)" : "none" }}
+        className={`fixed left-0 right-0 z-40 transition-all duration-500 ease-in-out ${
+          isScrolled
+            ? "top-0 bg-white shadow-[0_4px_20px_-6px_rgba(19,70,152,0.18)]"
+            : "top-[40px] bg-white shadow-none"
+        }`}
+        style={{ fontFamily: "'Inter', sans-serif", borderBottom: "1.5px solid rgba(19,70,152,0.09)" }}
       >
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-[56px] sm:h-[72px] flex justify-between lg:grid lg:grid-cols-[auto_1fr_auto] items-center">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-[56px] sm:h-[68px] flex justify-between lg:grid lg:grid-cols-[auto_1fr_auto] items-center">
 
-          {/* Logo (public/logobg.png, which has its own white background) */}
-          <a href="/" ref={(el) => { toneRefs.current.__logo = el; }} className="flex items-center z-10 h-[42px] sm:h-[62px] min-w-[135px] sm:min-w-[200px]">
+          {/* Logo — enlarged size without affecting navbar height */}
+          <a href="/" className="flex items-center z-10 h-[48px] sm:h-[64px] min-w-[145px] sm:min-w-[215px]">
             <m.div
-              whileHover={{ scale: 1.04 }}
+              whileHover={{ scale: 1.03 }}
               transition={{ duration: 0.2 }}
-              // On the white (scrolled / solid) navbar the logo sits on it directly, no box;
-              // over a photo hero it keeps its white card so it stays readable.
-              className={`transition-all duration-500 rounded-xl px-2 py-0.5 sm:px-3 sm:py-1 ${toneOf("__logo") === "light"
-                  ? "bg-transparent shadow-none"
-                  : "bg-white shadow-[0_0_40px_rgba(255,255,255,0.8),0_0_15px_rgba(255,255,255,0.5)] border border-white/40 mb-1"
-                }`}
+              className="transition-all duration-300 p-0 bg-transparent shadow-none"
             >
-              {/* logobg.png has wide white margins (the logo is the middle 534×306 of 606×412);
-                  this box has the logo's own shape and the image is scaled to crop the margins,
-                  so the logo is bigger without making the navbar taller. */}
-              {/* Over the home hero (before scrolling) the logo grows down into the hero;
-                  scaled from its top-left so the navbar itself keeps its height. */}
-              <div
-                className={`relative overflow-hidden h-[44px] sm:h-[60px] aspect-[534/306] origin-top-left transition-transform duration-500 ${
-                  overHero ? "scale-[1.3] sm:scale-[1.5]" : ""
-                }`}
-              >
+              <div className="relative overflow-hidden h-[48px] sm:h-[64px] aspect-[534/306]">
                 <Image
                   src="/logobg.png"
                   alt="Design House India Pvt. Ltd."
                   fill
-                  sizes="110px"
-                  className="object-cover scale-[1.1]"
+                  sizes="(max-width: 640px) 160px, 220px"
+                  className="object-contain scale-[1.24]"
                   priority
                 />
               </div>
@@ -387,21 +247,21 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
           </a>
 
           {/* ─── Desktop Nav ─── */}
-          <div className="hidden lg:flex justify-center items-center gap-1 whitespace-nowrap h-full">
+          <div className="hidden lg:flex justify-center items-center gap-0.5 whitespace-nowrap h-full">
             {dynamicNavItems.map((item) => {
               const open = activeDropdown === item.label;
               const active = isActiveItem(item, pathname);
-              const onLight = toneOf(item.label) === "light";
-              const setRef = (el: HTMLElement | null) => { toneRefs.current[item.label] = el; };
-              // Pill-style link: soft background on hover/open, underline under the current page
-              const linkClass = `relative inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-[11.5px] uppercase tracking-[0.12em] font-semibold leading-none transition-colors duration-300 ${
-                onLight
-                  ? `${active || open ? "text-[#134698]" : "text-neutral-800"} hover:text-[#134698] ${open ? "bg-[#134698]/[0.07]" : "hover:bg-[#134698]/[0.06]"}`
-                  : `text-white ${open ? "bg-white/15" : "hover:bg-white/10"} ${overHero ? "[text-shadow:0_1px_8px_rgba(0,0,0,0.45)]" : ""}`
+              // Always on light/white background with orange underline
+              const linkClass = `group relative inline-flex items-center gap-1 px-3.5 py-2 text-[12px] uppercase tracking-[0.1em] font-bold leading-none transition-colors duration-200 ${
+                active || open ? "text-[#134698]" : "text-[#0C1E3A] hover:text-[#134698]"
               }`;
-              const dot = active && (
+              const underline = (
                 <span
-                  className={`absolute left-3.5 right-3.5 bottom-0.5 h-[2px] rounded-full transition-colors duration-300 ${onLight ? "bg-[#134698]" : "bg-white"}`}
+                  className={`absolute left-3.5 right-3.5 bottom-0 h-[2.5px] rounded-full bg-[#fd6e15] transition-all duration-300 ${
+                    active || open
+                      ? "opacity-100 scale-x-100"
+                      : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100 origin-center"
+                  }`}
                   aria-hidden="true"
                 />
               );
@@ -414,15 +274,15 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
                   onMouseLeave={() => { setActiveDropdown(null); setActiveSubDropdown(null); }}
                 >
                   {item.href && !item.dropdown ? (
-                    <a href={item.href} ref={setRef} className={linkClass} aria-current={active ? "page" : undefined}>
+                    <a href={item.href} className={linkClass} aria-current={active ? "page" : undefined}>
                       {item.label}
-                      {dot}
+                      {underline}
                     </a>
                   ) : (
-                    <button ref={setRef} className={`${linkClass} bg-transparent border-0 cursor-pointer`} aria-label={`Toggle ${item.label} menu`} aria-expanded={open}>
+                    <button className={`${linkClass} bg-transparent border-0 cursor-pointer`} aria-label={`Toggle ${item.label} menu`} aria-expanded={open}>
                       <span className="leading-none">{item.label}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
-                      {dot}
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${open ? "rotate-180 text-[#fd6e15]" : "text-neutral-500 group-hover:text-[#134698]"}`} />
+                      {underline}
                     </button>
                   )}
 
@@ -468,7 +328,7 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
                                 </span>
                                 {count ? (
                                   <span className="block text-[11px] text-neutral-400 mt-0.5">
-                                    {count} {subItem.subItems.some((s) => s.isPdf) ? (count === 1 ? "file" : "files") : count === 1 ? "page" : "pages"}
+                                    {count} {subItem.subItems.some((s: NavLeaf) => s.isPdf) ? (count === 1 ? "file" : "files") : count === 1 ? "page" : "pages"}
                                   </span>
                                 ) : null}
                               </span>
@@ -523,7 +383,7 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
                                       <Icon className="w-4 h-4 text-[#DE802B]" />
                                       <span className="text-[12.5px] font-bold text-[#134698]">{subItem.label}</span>
                                     </div>
-                                    {subItem.subItems.map((subsub, subIdx) => (
+                                    {subItem.subItems.map((subsub: NavLeaf, subIdx) => (
                                       <a
                                         key={subIdx}
                                         href={subsub.href}
@@ -552,21 +412,15 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
               );
             })}
           </div>
-          {/* ─── Right Side Actions (Login + Mobile Toggle) ─── */}
+          {/* ─── Right Side Actions (GET A QUOTE + Mobile Toggle) ─── */}
           <div className="flex items-center justify-end gap-3 h-full">
-            {/* Desktop Login Button */}
+            {/* Desktop GET A QUOTE Button — orange pill matching the reference */}
             <a
-              href="https://admin.designhouse.co.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              ref={(el) => { toneRefs.current.__login = el; }}
-              className={`group hidden lg:inline-flex items-center gap-1.5 px-4 py-2 text-[10.5px] font-bold tracking-[0.14em] uppercase rounded-full transition-all duration-300 ${toneOf("__login") === "light"
-                ? "bg-[#134698] text-white shadow-[0_6px_16px_-6px_rgba(19,70,152,0.6)] hover:bg-[#DE802B] hover:shadow-[0_6px_16px_-6px_rgba(222,128,43,0.6)]"
-                : "bg-white/10 text-white border border-white/40 backdrop-blur-sm hover:bg-white hover:text-[#134698]"
-                }`}
+              href="/contact"
+              className="group hidden lg:inline-flex items-center gap-2 px-5 py-2.5 text-[11px] font-bold tracking-[0.1em] uppercase rounded-[3px] bg-[#fd6e15] text-white shadow-[0_6px_20px_-6px_rgba(253,110,21,0.55)] hover:bg-[#e05d0e] hover:shadow-[0_8px_24px_-6px_rgba(253,110,21,0.7)] transition-all duration-300"
             >
-              <ShieldCheck className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-              <span>Login</span>
+              <span>Get A Quote</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             </a>
 
             {/* Mobile Toggle */}
@@ -715,7 +569,7 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
                                             {sub.label}
                                           </p>
                                         )}
-                                        {sub.subItems?.map((subsub, subIdx) => (
+                                        {sub.subItems?.map((subsub: NavLeaf, subIdx) => (
                                           <a
                                             key={subIdx}
                                             href={subsub.href}

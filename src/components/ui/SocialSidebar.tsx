@@ -335,7 +335,7 @@ const SocialSidebar = () => {
         }
       `}</style>
 
-      <div className="hidden lg:flex flex-col gap-3 fixed right-4 top-1/2 -translate-y-1/2 z-50">
+      <div className="hidden lg:flex flex-col gap-3 fixed right-2.5 top-1/2 -translate-y-1/2 z-50">
         {socialData.map((social, index) => {
           const Icon = social.icon;
           const isDisabled = !social.url;
