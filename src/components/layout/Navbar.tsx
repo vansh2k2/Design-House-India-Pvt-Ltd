@@ -84,6 +84,7 @@ const navItems = [
 
   {
     label: "Projects",
+    href: "/projects",
     alignRight: true,
     dropdown: [
       {
@@ -178,7 +179,7 @@ const groupIcon = (label: string) => GROUP_ICONS.find(([re]) => re.test(label))?
 // A top-level item is "current" when the page is it, or one of its dropdown links
 const isActiveItem = (item, pathname: string) => {
   if (!pathname) return false;
-  if (item.href) return item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+  if (item.href && (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))) return true;
   const hrefs = (item.dropdown || []).flatMap((d) => [d.href, ...(d.subItems || []).map((s) => s.href)]).filter(Boolean);
   return hrefs.some((h) => !h.endsWith(".pdf") && (pathname === h || pathname.startsWith(h + "/")));
 };
@@ -276,6 +277,13 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
                   {item.href && !item.dropdown ? (
                     <a href={item.href} className={linkClass} aria-current={active ? "page" : undefined}>
                       {item.label}
+                      {underline}
+                    </a>
+                  ) : item.href ? (
+                    // Has its own page as well as a dropdown: clicking opens the page, hovering shows the dropdown
+                    <a href={item.href} className={linkClass} aria-current={active ? "page" : undefined} aria-haspopup="true" aria-expanded={open}>
+                      <span className="leading-none">{item.label}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${open ? "rotate-180 text-[#fd6e15]" : "text-neutral-500 group-hover:text-[#134698]"}`} />
                       {underline}
                     </a>
                   ) : (
@@ -524,6 +532,33 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
                           </a>
                         ) : (
                           <div>
+                            {item.href ? (
+                              // Label opens the item's page; the arrow expands its links
+                              <div className="flex items-center rounded-xl hover:bg-[#134698]/[0.04] transition-all duration-200">
+                                <a
+                                  href={item.href}
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className="flex-1 flex items-center gap-3 text-[11.5px] uppercase tracking-[0.12em] font-semibold py-4 px-3 text-neutral-600 hover:text-[#134698]"
+                                >
+                                  <span className="w-1 h-1 rounded-full bg-[#DE802B] opacity-60" />
+                                  {item.label}
+                                </a>
+                                <button
+                                  onClick={() => toggleMobileItem(item.label)}
+                                  aria-label={`Toggle ${item.label} menu`}
+                                  aria-expanded={!!mobileExpandedItems[item.label]}
+                                  className="py-4 px-3"
+                                >
+                                  <m.span
+                                    animate={{ rotate: mobileExpandedItems[item.label] ? 180 : 0 }}
+                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                    className="inline-flex"
+                                  >
+                                    <ChevronDown className="w-4 h-4 text-[#DE802B]" />
+                                  </m.span>
+                                </button>
+                              </div>
+                            ) : (
                             <button
                               onClick={() => toggleMobileItem(item.label)}
                               className="w-full flex items-center justify-between text-[11.5px] uppercase tracking-[0.12em] font-semibold py-4 px-3 text-neutral-600 hover:text-[#134698] hover:bg-[#134698]/[0.04] rounded-xl transition-all duration-200"
@@ -540,6 +575,7 @@ const Navbar = ({ solid = false, lightHero = false }: { solid?: boolean; lightHe
                                 <ChevronDown className="w-4 h-4 text-[#DE802B]" />
                               </m.span>
                             </button>
+                            )}
 
                             <AnimatePresence>
                               {mobileExpandedItems[item.label] && (

@@ -35,6 +35,7 @@ const STATIC_ROUTES: string[] = [
   "/services/lcd-unit",
   "/services/dressing-table",
   "/services/sofas",
+  "/projects",
   "/portfolio",
   "/portfolio/interior/retail-interior",
   "/portfolio/interior/corporate-interior",
