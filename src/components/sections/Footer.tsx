@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight, ArrowUp, ChevronRight, MapPin, Phone } from "lucide-react";
 
 import { useSettings } from "@/hooks/useSettings";
+import { useSocialProfiles } from "@/context/SocialLinksContext";
+import SocialIcon from "@/components/ui/SocialIcon";
 import bandImg from "@/assets/band.png";
 import iconRetail from "@/assets/icon/f1_11zon.png";
 import iconCorporate from "@/assets/icon/f2_11zon.png";
@@ -144,6 +146,8 @@ const Heading = ({ children }: { children: React.ReactNode }) => (
 // showCta: the "Let's Build Together" band above the footer (only the home page shows it)
 const Footer = ({ showCta = false }: { showCta?: boolean }) => {
   const { settings } = useSettings();
+  // Advanced SEO → Social Media Links (only the ones that are set)
+  const socialProfiles = useSocialProfiles();
 
   const email = settings?.emails?.find(e => e.forContact)?.email || settings?.emails?.[0]?.email || FALLBACK_EMAIL;
 
@@ -287,6 +291,28 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
                 <ArrowRight className="w-4 h-4 2xl:w-[18px] 2xl:h-[18px]" />
               </a>
             </div>
+            {socialProfiles.length > 0 && (
+              <div className="mt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 mb-2">Follow Us</p>
+                <ul className="flex items-center gap-2.5">
+                  {socialProfiles.map(p => (
+                    <li key={p.network}>
+                      <a
+                        href={p.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Design House on ${p.label}`}
+                        title={p.label}
+                        className="w-9 h-9 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white transition-colors hover:border-transparent hover:bg-[var(--brand)]"
+                        style={{ "--brand": p.color === "#000000" ? "#1f2937" : p.color } as React.CSSProperties}
+                      >
+                        <SocialIcon network={p.network} size={16} />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Quick links */}
