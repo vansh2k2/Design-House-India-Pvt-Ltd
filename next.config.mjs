@@ -65,11 +65,7 @@ const nextConfig = {
       { protocol: "http", hostname: "localhost", port: "5000", pathname: "/uploads/**" },
       { protocol: "https", hostname: "api.designhouse.co.in", pathname: "/uploads/**" },
       { protocol: "https", hostname: "images.unsplash.com" },
-<<<<<<< HEAD
-      // Images uploaded in the admin (Pages & CMS) are stored on Cloudinary
-=======
-      // Images uploaded from the admin
->>>>>>> f9a454976c11b0c270001b05147691a5a0895e02
+      // Images uploaded in the admin (Pages & CMS, Downloads) are stored on Cloudinary
       { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },
