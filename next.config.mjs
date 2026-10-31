@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Root files uploaded under Advanced SEO in the admin (e.g. Google verification .html) are stored on
+  // the backend. afterFiles runs after pages and public/ files (so robots.txt, sitemap.xml and llms.txt
+  // keep their own handling) but before the /[slug] route would catch them.
+  async rewrites() {
+    const api = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+    return {
+      afterFiles: [{ source: "/:file([\\w.-]+\\.(?:html|txt|xml))", destination: `${api}/:file` }],
+    };
+  },
   // Old service pages that were removed: their URLs open the Our Services page (the old corporate
   // page opens the new Corporate Interiors page). /services/<slug> pages built from
   // src/components/services/details are left alone.
@@ -56,7 +65,7 @@ const nextConfig = {
       { protocol: "http", hostname: "localhost", port: "5000", pathname: "/uploads/**" },
       { protocol: "https", hostname: "api.designhouse.co.in", pathname: "/uploads/**" },
       { protocol: "https", hostname: "images.unsplash.com" },
-      // Images uploaded from the admin
+      // Images uploaded in the admin (Pages & CMS, Downloads) are stored on Cloudinary
       { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },

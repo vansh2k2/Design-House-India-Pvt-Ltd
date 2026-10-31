@@ -1,40 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Facebook, Instagram, Youtube, Linkedin, Twitter } from "lucide-react";
 import { api } from "@/lib/api";
-import { useFooter } from "@/hooks/useFooter";
+import { useSocialProfiles } from "@/context/SocialLinksContext";
+import SocialIcon from "@/components/ui/SocialIcon";
 
 const SocialSidebar = () => {
-  // Edited in the admin: Pages → Home → Footer & Social Links
-  const { social: socialLinks } = useFooter();
+  // Links saved under Advanced SEO → Social Media Links; networks without a link are not shown
+  const socialData = useSocialProfiles();
 
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [, setHoveredIndex] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   // Trigger animations after mount
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 100);
   }, []);
-
-  // Fix broken links (add https://)
-  const normalizeUrl = (url: string) => {
-    if (!url) return "";
-    let u = url.trim();
-
-    if (u.startsWith("http://") || u.startsWith("https://")) {
-      return u;
-    }
-
-    if (u.startsWith("//")) {
-      return "https:" + u;
-    }
-
-    return "https://" + u;
-  };
-
-  const safeHref = (url: string) =>
-    url && url.trim() !== "" ? normalizeUrl(url) : "#";
 
   const trackClick = async (icon: string) => {
     try {
@@ -44,39 +25,7 @@ const SocialSidebar = () => {
     }
   };
 
-  // Social links array with colors
-  const socialData = [
-    {
-      icon: Facebook,
-      url: socialLinks.facebook,
-      color: "#1877F2",
-      label: "Facebook",
-    },
-    {
-      icon: Instagram,
-      url: socialLinks.instagram,
-      color: "#E4405F",
-      label: "Instagram",
-    },
-    {
-      icon: Twitter,
-      url: socialLinks.twitter,
-      color: "#000000",
-      label: "Twitter",
-    },
-    {
-      icon: Youtube,
-      url: socialLinks.youtube,
-      color: "#FF0000",
-      label: "YouTube",
-    },
-    {
-      icon: Linkedin,
-      url: socialLinks.linkedin,
-      color: "#0A66C2",
-      label: "LinkedIn",
-    },
-  ];
+  if (socialData.length === 0) return null;
 
   return (
     <>
@@ -318,12 +267,9 @@ const SocialSidebar = () => {
 
       <div className="hidden lg:flex flex-col gap-3 fixed right-2.5 top-1/2 -translate-y-1/2 z-50">
         {socialData.map((social, index) => {
-          const Icon = social.icon;
-          const isDisabled = !social.url;
-
           return (
             <div
-              key={index}
+              key={social.network}
               className={`social-item relative ${isVisible ? "visible" : ""}`}
               style={{ "--index": index } as React.CSSProperties}
               onMouseEnter={() => setHoveredIndex(index)}
@@ -343,20 +289,15 @@ const SocialSidebar = () => {
 
               {/* Main Button */}
               <a
-                href={safeHref(social.url)}
+                href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`social-button ${isDisabled ? "disabled" : ""}`}
+                className="social-button"
                 style={{ borderColor: social.color }}
-                onClick={(e) => {
-                   trackClick(social.label);
-                   if (isDisabled || !social.url.trim()) {
-                     e.preventDefault();
-                   }
-                 }}
+                onClick={() => trackClick(social.label)}
               >
                 <div className="icon-wrapper">
-                  <Icon size={18} style={{ color: social.color }} />
+                  <SocialIcon network={social.network} size={18} style={{ color: social.color }} />
                 </div>
                 <span className="sr-only">{social.label}</span>
                 <div className="shine-effect" />

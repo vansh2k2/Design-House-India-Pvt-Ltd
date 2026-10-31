@@ -1,11 +1,15 @@
 import Image from "next/image";
-import { Great_Vibes } from "next/font/google";
+import localFont from "next/font/local";
 import { ChevronRight } from "lucide-react";
 
 import { HOME_SECTION_DEFAULTS, type ApproachContent } from "@/lib/homeSections";
 import { RichText } from "../sectionContent";
 
-const script = Great_Vibes({ subsets: ["latin"], weight: "400", display: "swap" });
+const script = localFont({
+  src: "../../../../node_modules/@fontsource/great-vibes/files/great-vibes-latin-400-normal.woff2",
+  weight: "400",
+  display: "swap",
+});
 
 /* Card outline with an "envelope" cut in its top-right: the top edge dips down in an S-curve at
    NOTCH_AT and runs NOTCH_DEPTH lower to the right edge (the arrow to the next card sits in it).

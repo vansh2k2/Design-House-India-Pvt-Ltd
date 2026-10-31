@@ -90,7 +90,6 @@ const OurAchievements = ({ data = DEFAULT_ACHIEVEMENTS }: { data?: AchievementsC
           fill
           sizes="100vw"
           className="object-cover object-right lg:object-[center_right] scale-110 -translate-x-[4%]"
-          priority
         />
       </div>
 
