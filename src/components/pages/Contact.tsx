@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ComponentType, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Image, { type StaticImageData } from "next/image";
 import { m, AnimatePresence } from "framer-motion";
 import {
+  AlertCircle,
   ArrowRight,
   CheckCircle,
   ChevronDown,
@@ -20,6 +22,7 @@ import {
   Send,
   User,
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import Topbar from "@/components/layout/Topbar";
@@ -114,66 +117,69 @@ const Field = ({
 const inputClass = (error?: string, extra = "") =>
   `w-full h-[46px] pl-10 pr-3 rounded-[3px] border ${error ? "border-red-500" : "border-gray-300"} bg-white text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:border-[#134698] focus:ring-2 focus:ring-[#134698]/10 transition disabled:bg-gray-50 ${extra}`;
 
-const VerifyButton = ({ onClick, loading }: { onClick: () => void; loading: boolean }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={loading}
-    className="px-2.5 py-1.5 bg-[#134698] text-white text-[10px] uppercase font-bold rounded-[3px] hover:bg-[#E8742A] transition-colors disabled:opacity-70"
-  >
-    {loading ? "..." : "Verify"}
-  </button>
-);
+type PhoneAlert = { id: number; type: "success" | "error"; title: string; text?: string; whatsapp?: boolean };
 
-const VerifiedBadge = () => (
-  <span className="px-2 py-1 flex items-center gap-1 rounded bg-green-50 text-green-600">
-    <CheckCircle className="w-3.5 h-3.5" />
-    <span className="text-[9px] font-bold uppercase">Verified</span>
-  </span>
-);
+const PHONE_ALERT_MS = 4500;
 
-// One-time code box shown under the fields after "Verify"
-const OtpBox = ({
-  title,
-  tone,
-  value,
-  onChange,
-  error,
-  loading,
-  onConfirm,
-  onCancel,
-}: {
-  title: string;
-  tone: "orange" | "blue";
-  value: string;
-  onChange: (v: string) => void;
-  error: string;
-  loading: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) => (
-  <div className={`p-3 rounded-[3px] border ${tone === "orange" ? "bg-[#E8742A]/5 border-[#E8742A]/25" : "bg-[#134698]/5 border-[#134698]/20"}`}>
-    <label className={`text-[10px] font-bold uppercase mb-2 block ${tone === "orange" ? "text-[#E8742A]" : "text-[#134698]"}`}>{title}</label>
-    <input
-      type="text"
-      inputMode="numeric"
-      placeholder="Enter 6-digit OTP"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      maxLength={6}
-      className={`w-full px-3 py-2 mb-2 rounded-[3px] border ${error ? "border-red-500" : "border-gray-200"} bg-white text-sm font-mono tracking-widest focus:outline-none focus:border-[#134698]`}
-    />
-    {error && <p className="text-red-500 text-[10px] mb-2 font-bold">{error}</p>}
-    <div className="flex gap-2">
-      <button type="button" onClick={onConfirm} disabled={loading} className="flex-1 py-1.5 bg-[#134698] text-white text-[10px] font-bold uppercase rounded-[3px] hover:bg-[#E8742A] transition-colors disabled:opacity-70">
-        {loading ? "Verifying..." : "Confirm"}
-      </button>
-      <button type="button" onClick={onCancel} className="px-3 py-1.5 text-gray-500 text-[10px] font-bold uppercase hover:text-red-500 transition-colors">
-        Cancel
-      </button>
-    </div>
-  </div>
-);
+const subscribeNoop = () => () => {};
+
+// Mobile-style notification that drops in from the top of the screen (OTP sent / verified / errors)
+const PhoneNotification = ({ alert, onClose }: { alert: PhoneAlert | null; onClose: () => void }) => {
+  // Rendered into <body>, so only once the page is running in the browser
+  const isClient = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  if (!isClient) return null;
+
+  return createPortal(
+    <div className="pointer-events-none fixed inset-x-0 top-3 z-[100000] flex justify-center px-3 sm:top-5">
+      <AnimatePresence>
+        {alert && (
+          <m.div
+            key={alert.id}
+            role="status"
+            aria-live="polite"
+            initial={{ opacity: 0, y: -90, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -90, scale: 0.94 }}
+            transition={{ type: "spring", stiffness: 420, damping: 30 }}
+            onClick={onClose}
+            className="pointer-events-auto relative w-full max-w-[340px] cursor-pointer overflow-hidden rounded-[20px] border border-white/60 px-3 py-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.16)]"
+            style={{
+              // iPhone notification glass: frosted, slightly tinted white
+              background: "linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(245,245,247,0.55) 100%)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif',
+            }}
+          >
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[8px] text-white shadow-[0_1px_3px_rgba(0,0,0,0.18)] ${
+                  alert.whatsapp ? "bg-[#25D366]" : alert.type === "success" ? "bg-[#134698]" : "bg-[#ff3b30]"
+                }`}
+              >
+                {alert.whatsapp ? (
+                  <FaWhatsapp className="h-[20px] w-[20px]" />
+                ) : alert.type === "success" ? (
+                  <CheckCircle className="h-[18px] w-[18px]" />
+                ) : (
+                  <AlertCircle className="h-[18px] w-[18px]" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="truncate text-[13px] font-semibold leading-[1.25] text-black">{alert.title}</p>
+                  <span className="shrink-0 text-[11px] text-black/45">now</span>
+                </div>
+                {alert.text && <p className="line-clamp-2 text-[12.5px] leading-[1.3] text-black/75">{alert.text}</p>}
+              </div>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
+    </div>,
+    document.body
+  );
+};
 
 const ContactItem = ({ icon: Icon, title, children }: { icon: ComponentType<{ className?: string }>; title: string; children: ReactNode }) => (
   <div className="flex items-start gap-4">
@@ -213,17 +219,23 @@ const Contact = () => {
     message: ""
   });
 
-  // OTP States - Separate for Phone and Email
+  // Phone OTP (sent on WhatsApp)
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
-  const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [phoneOtp, setPhoneOtp] = useState("");
-  const [emailOtp, setEmailOtp] = useState("");
-  const [phoneOtpError, setPhoneOtpError] = useState("");
-  const [emailOtpError, setEmailOtpError] = useState("");
   const [phoneOtpLoading, setPhoneOtpLoading] = useState(false);
-  const [emailOtpLoading, setEmailOtpLoading] = useState(false);
+  const [phoneAlert, setPhoneAlert] = useState<PhoneAlert | null>(null);
+  const phoneAlertTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showPhoneAlert = (alert: Omit<PhoneAlert, "id">) => {
+    if (phoneAlertTimer.current) clearTimeout(phoneAlertTimer.current);
+    setPhoneAlert({ ...alert, id: Date.now() });
+    phoneAlertTimer.current = setTimeout(() => setPhoneAlert(null), PHONE_ALERT_MS);
+  };
+
+  useEffect(() => () => {
+    if (phoneAlertTimer.current) clearTimeout(phoneAlertTimer.current);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -246,98 +258,56 @@ const Contact = () => {
       setErrors({ ...errors, [name]: "" });
     }
 
-    // Reset verification if phone/email changes
+    // Reset verification if the phone number changes
     if (name === "phone") { setIsPhoneVerified(false); setPhoneOtpSent(false); setPhoneOtp(""); }
-    if (name === "email") { setIsEmailVerified(false); setEmailOtpSent(false); setEmailOtp(""); }
   };
 
-  const handleSendOtp = async (type: "phone" | "email") => {
-    if (type === "phone") {
-      if (!/^[0-9]{10}$/.test(formData.phone.replace(/[^0-9]/g, ""))) {
-        setErrors({ ...errors, phone: "Enter a valid 10-digit number first" });
-        return;
+  const handleSendPhoneOtp = async () => {
+    if (!/^[0-9]{10}$/.test(formData.phone.replace(/[^0-9]/g, ""))) {
+      setErrors({ ...errors, phone: "Enter a valid 10-digit number first" });
+      return;
+    }
+    setPhoneOtpLoading(true);
+    setPhoneOtp("");
+    setErrors({ ...errors, phone: "" });
+    try {
+      const res = await api.post("/api/otp/send-whatsapp", { mobile: formData.phone });
+      if (res.data.success) {
+        setPhoneOtpSent(true);
+        const digits = formData.phone.replace(/\D/g, "").slice(-10);
+        showPhoneAlert({
+          type: "success",
+          whatsapp: true,
+          title: "OTP sent successfully",
+          text: `Your 6-digit code has been sent to +91 ${digits.slice(0, 5)} ${digits.slice(5)}`,
+        });
+      } else {
+        showPhoneAlert({ type: "error", title: "OTP not sent", text: res.data.message || "Please try again." });
       }
-      setPhoneOtpLoading(true);
-      setPhoneOtpSent(true);
-      setPhoneOtp("");
-      setPhoneOtpError("");
-      try {
-        const res = await api.post("/api/otp/send-whatsapp", { mobile: formData.phone });
-        if (res.data.success) {
-          toast.info(`OTP sent to your WhatsApp (${formData.phone}). Check your WhatsApp!`);
-        } else {
-          toast.error(res.data.message || "Failed to send OTP");
-          setPhoneOtpSent(false);
-        }
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Failed to send WhatsApp OTP");
-        setPhoneOtpSent(false);
-      } finally {
-        setPhoneOtpLoading(false);
-      }
-    } else {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        setErrors({ ...errors, email: "Enter a valid email first" });
-        return;
-      }
-      setEmailOtpLoading(true);
-      setEmailOtpSent(true);
-      setEmailOtp("");
-      setEmailOtpError("");
-      try {
-        const res = await api.post("/api/otp/send-email", { email: formData.email });
-        if (res.data.success) {
-          toast.info(`OTP sent to ${formData.email}. Check your inbox!`);
-        } else {
-          toast.error(res.data.message || "Failed to send OTP");
-          setEmailOtpSent(false);
-        }
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Failed to send OTP");
-        setEmailOtpSent(false);
-      } finally {
-        setEmailOtpLoading(false);
-      }
+    } catch (err: any) {
+      showPhoneAlert({ type: "error", title: "OTP not sent", text: err.response?.data?.message || "Please try again." });
+    } finally {
+      setPhoneOtpLoading(false);
     }
   };
 
   const handleVerifyPhoneOtp = async () => {
-    if (!phoneOtp.trim()) { setPhoneOtpError("Please enter the OTP"); return; }
+    if (!phoneOtp.trim()) { showPhoneAlert({ type: "error", title: "Please enter the OTP" }); return; }
     setPhoneOtpLoading(true);
     try {
       const res = await api.post("/api/otp/verify-whatsapp", { mobile: formData.phone, otp: phoneOtp });
       if (res.data.success) {
         setIsPhoneVerified(true);
         setPhoneOtpSent(false);
-        setPhoneOtpError("");
-        toast.success("Phone verified successfully!");
+        setErrors((prev) => ({ ...prev, phone: "" }));
+        showPhoneAlert({ type: "success", title: "Phone number verified", text: "You can now send your enquiry." });
       } else {
-        setPhoneOtpError(res.data.message || "Invalid OTP");
+        showPhoneAlert({ type: "error", title: "Wrong OTP", text: res.data.message || "Please check the code and try again." });
       }
     } catch (err: any) {
-      setPhoneOtpError(err.response?.data?.message || "Invalid OTP. Please try again.");
+      showPhoneAlert({ type: "error", title: "Wrong OTP", text: err.response?.data?.message || "Please check the code and try again." });
     } finally {
       setPhoneOtpLoading(false);
-    }
-  };
-
-  const handleVerifyEmailOtp = async () => {
-    if (!emailOtp.trim()) { setEmailOtpError("Please enter the OTP"); return; }
-    setEmailOtpLoading(true);
-    try {
-      const res = await api.post("/api/otp/verify-email", { email: formData.email, otp: emailOtp });
-      if (res.data.success) {
-        setIsEmailVerified(true);
-        setEmailOtpSent(false);
-        setEmailOtpError("");
-        toast.success("Email verified successfully!");
-      } else {
-        setEmailOtpError(res.data.message || "Invalid OTP");
-      }
-    } catch (err: any) {
-      setEmailOtpError(err.response?.data?.message || "Invalid OTP. Please try again.");
-    } finally {
-      setEmailOtpLoading(false);
     }
   };
 
@@ -361,9 +331,12 @@ const Contact = () => {
     if (!(digits.length === 10 || (digits.length === 12 && digits.startsWith("91")))) {
       newErrors.phone = "Enter a valid 10-digit phone number";
       isValid = false;
+    } else if (!isPhoneVerified) {
+      newErrors.phone = "Phone number must be verified (OTP on WhatsApp)";
+      isValid = false;
     }
-    if (!isEmailVerified) {
-      newErrors.email = "Email must be verified";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = "Enter a valid email address";
       isValid = false;
     }
     if (!formData.service) {
@@ -381,25 +354,24 @@ const Contact = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      toast.error(isEmailVerified ? "Please fill in the required fields" : "Please verify your email first");
+      toast.error(isPhoneVerified ? "Please fill in the required fields" : "Please verify your phone number first");
       return;
     }
 
     try {
       setSubmitting(true);
 
-      // The enquiry API has no location field, so it goes at the top of the message
-      const location = formData.location.trim();
       const submitData = {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim().toLowerCase(),
         service: formData.service.trim(),
         subService: formData.subService.trim(),
-        message: (location ? `Project Location: ${location}\n\n` : "") + formData.message.trim()
+        location: formData.location.trim(),
+        message: formData.message.trim()
       };
 
-      const response = await api.post("/api/contacts", submitData);
+      const response = await api.post("/api/contact-enquiry", submitData);
 
       if (response.data.success) {
         setIsSuccess(true);
@@ -414,7 +386,6 @@ const Contact = () => {
             message: ""
           });
           setIsPhoneVerified(false);
-          setIsEmailVerified(false);
           setIsSuccess(false);
         }, 4000);
       }
@@ -476,7 +447,7 @@ const Contact = () => {
 
       {/* ================= CONTACT INFO · FORM · OFFICES ================= */}
       <section className="bg-white pt-10 pb-6 sm:pt-12 sm:pb-7 font-sans">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 lg:grid-cols-2 2xl:grid-cols-[0.74fr_1.1fr_1.16fr] 2xl:gap-6 items-start">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 lg:grid-cols-2 2xl:grid-cols-[0.78fr_1.22fr_1.06fr] 2xl:gap-6 items-start">
           {/* Get in touch */}
           <m.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="lg:col-span-2 2xl:col-span-1 2xl:pt-1">
             <Eyebrow>Get in Touch</Eyebrow>
@@ -517,20 +488,49 @@ const Contact = () => {
           >
             <AnimatePresence mode="wait">
               {isSuccess ? (
+                // Same success screen as the Career page form
                 <m.div
                   key="done"
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex flex-col items-center justify-center text-center min-h-[460px]"
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="border-2 border-green-500 p-12 bg-green-50 shadow-lg flex flex-col items-center justify-center min-h-[500px]"
                 >
-                  <CheckCircle className="w-20 h-20 text-green-500 mb-5" />
-                  <h3 className="font-display text-[28px] font-bold text-[#0f2a5c] mb-3">Enquiry Sent!</h3>
-                  <p className="text-gray-600 max-w-sm mb-6">Thank you for contacting us. Our team will get back to you within 24 hours.</p>
-                  <p className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <m.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                  >
+                    <CheckCircle className="w-24 h-24 text-green-500 mb-6" />
+                  </m.div>
+
+                  <m.h3
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-3xl font-bold text-gray-900 mb-4 text-center"
+                  >
+                    Enquiry Submitted Successfully!
+                  </m.h3>
+
+                  <m.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-gray-600 text-center mb-8 max-w-md text-lg"
+                  >
+                    Thank you for contacting us! Our team will review your requirement and get back to you within 24 hours.
+                  </m.p>
+
+                  <m.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="flex items-center gap-2 text-sm text-gray-500"
+                  >
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     Form will reset automatically...
-                  </p>
+                  </m.div>
                 </m.div>
               ) : (
                 <m.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -543,22 +543,82 @@ const Contact = () => {
                       <Field icon={User} error={errors.name}>
                         <input type="text" name="name" placeholder="Full Name *" value={formData.name} onChange={handleInputChange} className={inputClass(errors.name)} disabled={submitting} />
                       </Field>
-                      <Field
-                        icon={Phone}
-                        error={errors.phone}
-                        right={isPhoneVerified ? <VerifiedBadge /> : !phoneOtpSent && formData.phone ? <VerifyButton onClick={() => handleSendOtp("phone")} loading={phoneOtpLoading} /> : null}
-                      >
-                        <input type="tel" name="phone" placeholder="Phone Number *" value={formData.phone} onChange={handleInputChange} className={inputClass(errors.phone, isPhoneVerified || (!phoneOtpSent && formData.phone) ? "pr-20" : "")} disabled={submitting || isPhoneVerified || phoneOtpSent} />
-                      </Field>
+                      {/* Phone: Send OTP -> enter OTP in the same box -> Verified */}
+                      <div className="relative">
+                        <div
+                          className={`flex h-[46px] items-center rounded-[3px] border transition focus-within:border-[#134698] focus-within:ring-2 focus-within:ring-[#134698]/10 ${
+                            isPhoneVerified
+                              ? "border-green-500 bg-green-50/50"
+                              : errors.phone
+                                ? "border-red-500 bg-white"
+                                : "border-gray-300 bg-white"
+                          }`}
+                        >
+                          <Phone className="ml-3.5 h-4 w-4 shrink-0 text-gray-400" />
+                          {phoneOtpSent ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="one-time-code"
+                              aria-label="WhatsApp OTP"
+                              placeholder="Enter 6-digit OTP"
+                              maxLength={6}
+                              value={phoneOtp}
+                              onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                              onKeyDown={(e) => { if (e.key === "Enter" && phoneOtp.length === 6) handleVerifyPhoneOtp(); }}
+                              className="h-full min-w-0 flex-1 bg-transparent px-3 text-center text-[15px] font-bold tracking-[0.45em] text-gray-800 placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-500 focus:outline-none"
+                            />
+                          ) : (
+                            <input
+                              type="tel"
+                              name="phone"
+                              placeholder="Phone Number *"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              maxLength={14}
+                              className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none disabled:text-gray-700"
+                              disabled={submitting || isPhoneVerified}
+                            />
+                          )}
+                          {isPhoneVerified ? (
+                            <span className="mr-2 flex items-center gap-1 rounded bg-green-100 px-2 py-1 text-green-700">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              <span className="text-[9px] font-bold uppercase">Verified</span>
+                            </span>
+                          ) : phoneOtpSent ? (
+                            <button
+                              type="button"
+                              onClick={handleVerifyPhoneOtp}
+                              disabled={phoneOtpLoading || phoneOtp.length !== 6}
+                              className={`m-1.5 flex min-w-[66px] items-center justify-center rounded-[3px] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white transition-colors ${
+                                phoneOtp.length === 6 ? "bg-green-600 hover:bg-green-700" : "cursor-not-allowed bg-gray-300"
+                              }`}
+                            >
+                              {phoneOtpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Verify"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleSendPhoneOtp}
+                              disabled={phoneOtpLoading || submitting}
+                              className={`m-1.5 flex min-w-[78px] items-center justify-center rounded-[3px] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white transition-colors ${
+                                formData.phone.replace(/\D/g, "").length >= 10 ? "bg-[#134698] hover:bg-[#E8742A]" : "bg-gray-300 hover:bg-gray-400"
+                              }`}
+                            >
+                              {phoneOtpLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Send OTP"}
+                            </button>
+                          )}
+                        </div>
+
+                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                        <PhoneNotification alert={phoneAlert} onClose={() => setPhoneAlert(null)} />
+                      </div>
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-3.5">
-                      <Field
-                        icon={Mail}
-                        error={errors.email}
-                        right={isEmailVerified ? <VerifiedBadge /> : !emailOtpSent && formData.email ? <VerifyButton onClick={() => handleSendOtp("email")} loading={emailOtpLoading} /> : null}
-                      >
-                        <input type="email" name="email" placeholder="Email Address *" value={formData.email} onChange={handleInputChange} className={inputClass(errors.email, isEmailVerified || (!emailOtpSent && formData.email) ? "pr-20" : "")} disabled={submitting || isEmailVerified || emailOtpSent} />
+                      <Field icon={Mail} error={errors.email}>
+                        <input type="email" name="email" placeholder="Email Address *" value={formData.email} onChange={handleInputChange} className={inputClass(errors.email)} disabled={submitting} />
                       </Field>
                       <Field icon={LayoutList} error={errors.service} right={<ChevronDown className="pointer-events-none w-4 h-4 text-gray-500 mr-1" />}>
                         <select name="service" value={formData.service} onChange={handleInputChange} className={inputClass(errors.service, `appearance-none !pr-8 ${formData.service ? "" : "text-gray-500 2xl:text-[13px]"}`)} disabled={submitting}>
@@ -585,36 +645,6 @@ const Contact = () => {
                         </m.div>
                       )}
                     </AnimatePresence>
-
-                    {/* One-time codes after "Verify" */}
-                    {(phoneOtpSent || emailOtpSent) && (
-                      <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="grid sm:grid-cols-2 gap-3.5">
-                        {phoneOtpSent && (
-                          <OtpBox
-                            title="WhatsApp OTP"
-                            tone="orange"
-                            value={phoneOtp}
-                            onChange={setPhoneOtp}
-                            error={phoneOtpError}
-                            loading={phoneOtpLoading}
-                            onConfirm={handleVerifyPhoneOtp}
-                            onCancel={() => { setPhoneOtpSent(false); setPhoneOtp(""); setPhoneOtpError(""); }}
-                          />
-                        )}
-                        {emailOtpSent && (
-                          <OtpBox
-                            title="Email OTP"
-                            tone="blue"
-                            value={emailOtp}
-                            onChange={setEmailOtp}
-                            error={emailOtpError}
-                            loading={emailOtpLoading}
-                            onConfirm={handleVerifyEmailOtp}
-                            onCancel={() => { setEmailOtpSent(false); setEmailOtp(""); setEmailOtpError(""); }}
-                          />
-                        )}
-                      </m.div>
-                    )}
 
                     <Field icon={MapPin}>
                       <input type="text" name="location" placeholder="Project Location" value={formData.location} onChange={handleInputChange} className={inputClass()} disabled={submitting} />

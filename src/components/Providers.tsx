@@ -30,8 +30,7 @@ const Providers = ({ children }: { children: ReactNode }) => {
 
   return (
     <LazyMotion features={domAnimation} strict>
-          <ToastContainer position="top-right" autoClose={4000} newestOnTop />
-          <SeoProvider>
+          <ToastContainer position="top-right" autoClose={4000} newestOnTop />          <SeoProvider>
             <SmoothScroll stopped={isBookingOpen}>
               {children}
 

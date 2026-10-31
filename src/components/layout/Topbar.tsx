@@ -1,7 +1,8 @@
 "use client";
 
-import { Phone, Mail, FileText, Building2, Briefcase, Search, type LucideIcon } from "lucide-react";
-import { useSettings } from "@/hooks/useSettings";
+import { Fragment } from "react";
+import { Phone, Mail, FileText, Building2, Briefcase, Link2, Search, type LucideIcon } from "lucide-react";
+import { useTopbar } from "@/hooks/useTopbar";
 
 /* Slim navy bar above the navbar — matches the reference design with phone
    numbers on the left and quick links (Brochure, Company Profile, Careers)
@@ -49,17 +50,21 @@ const QuickLink = ({
   </a>
 );
 
+// Icon for a quick link, picked from its label
+const linkIcon = (label: string): LucideIcon => {
+  if (/brochure/i.test(label)) return FileText;
+  if (/profile|company/i.test(label)) return Building2;
+  if (/career|job/i.test(label)) return Briefcase;
+  return Link2;
+};
+
+const Divider = () => <span className="hidden md:block w-px h-3.5 bg-white/20 mx-3" aria-hidden="true" />;
+
 const Topbar = () => {
-  const { settings, loading } = useSettings();
+  // Phone numbers, email and links are edited in the admin (Pages → Home → Topbar)
+  const { topbar, loading } = useTopbar();
 
-  const topbarPhone1 =
-    settings?.phones?.find((p) => p.forTopbar)?.phone || "+91 9654900525";
-  const topbarPhone2 = "+91 9810247319";
-  const topbarEmail =
-    settings?.emails?.find((e) => e.forTopbar)?.email ||
-    "info@designhouse.co.in";
-
-  if (loading) {
+  if (loading || !topbar) {
     return <div className="h-10 bg-[#0a1a33] animate-pulse" />;
   }
 
@@ -76,63 +81,23 @@ const Topbar = () => {
       <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
         {/* Left: Phone numbers & Email */}
         <div className="flex items-center gap-2 md:gap-0">
-          <ContactChip
-            href={`tel:${topbarPhone1.replace(/[^0-9+]/g, "")}`}
-            icon={Phone}
-            label="Call us"
-            text={topbarPhone1}
-          />
-          <span
-            className="hidden md:block w-px h-3.5 bg-white/20 mx-3"
-            aria-hidden="true"
-          />
-          <ContactChip
-            href={`tel:${topbarPhone2.replace(/[^0-9+]/g, "")}`}
-            icon={Phone}
-            label="Call us"
-            text={topbarPhone2}
-          />
-          <span
-            className="hidden md:block w-px h-3.5 bg-white/20 mx-3"
-            aria-hidden="true"
-          />
-          <ContactChip
-            href={`mailto:${topbarEmail}`}
-            icon={Mail}
-            label="Email us"
-            text={topbarEmail}
-          />
+          {topbar.phones.map((phone) => (
+            <Fragment key={phone}>
+              <ContactChip href={`tel:${phone.replace(/[^0-9+]/g, "")}`} icon={Phone} label="Call us" text={phone} />
+              <Divider />
+            </Fragment>
+          ))}
+          <ContactChip href={`mailto:${topbar.email}`} icon={Mail} label="Email us" text={topbar.email} />
         </div>
 
         {/* Right: Quick links */}
         <div className="flex items-center gap-2 sm:gap-0">
-          <QuickLink
-            href="/downloads"
-            icon={FileText}
-            text="Brochure"
-          />
-          <span
-            className="hidden md:block w-px h-3.5 bg-white/20 mx-3"
-            aria-hidden="true"
-          />
-          <QuickLink
-            href="/downloads"
-            icon={Building2}
-            text="Company Profile"
-          />
-          <span
-            className="hidden md:block w-px h-3.5 bg-white/20 mx-3"
-            aria-hidden="true"
-          />
-          <QuickLink
-            href="/career"
-            icon={Briefcase}
-            text="Careers"
-          />
-          <span
-            className="hidden md:block w-px h-3.5 bg-white/20 mx-3"
-            aria-hidden="true"
-          />
+          {topbar.links.map((link) => (
+            <Fragment key={`${link.label}-${link.href}`}>
+              <QuickLink href={link.href} icon={linkIcon(link.label)} text={link.label} />
+              <Divider />
+            </Fragment>
+          ))}
           <button
             aria-label="Search"
             className="w-7 h-7 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300"
