@@ -138,7 +138,6 @@ const OurAchievements = () => {
           fill
           sizes="100vw"
           className="object-cover object-right lg:object-[center_right] scale-110 -translate-x-[4%]"
-          priority
         />
       </div>
 

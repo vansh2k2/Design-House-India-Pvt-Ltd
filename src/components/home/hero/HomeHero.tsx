@@ -310,6 +310,19 @@ const HomeHero = () => {
 
   useEffect(() => setMounted(true), []);
 
+  // The other slides' photos load after the page has, so they don't compete with the first one
+  // (the page's LCP image) for bandwidth
+  const [restReady, setRestReady] = useState(false);
+  useEffect(() => {
+    const ready = () => setRestReady(true);
+    if (document.readyState === "complete") {
+      const timer = setTimeout(ready, 300);
+      return () => clearTimeout(timer);
+    }
+    window.addEventListener("load", ready, { once: true });
+    return () => window.removeEventListener("load", ready);
+  }, []);
+
   /* Auto-slide carousel every 3 seconds continuously without pausing on hover */
   useEffect(() => {
     const interval = setInterval(() => {
@@ -341,14 +354,17 @@ const HomeHero = () => {
                   activeSlide === idx ? "hh-slide-active z-[1]" : "hh-slide-inactive z-0 pointer-events-none"
                 }`}
               >
-                <Image
-                  src={slide.image}
-                  alt={slide.buttonText}
-                  fill
-                  priority={idx === 0}
-                  sizes="(max-width: 1024px) 100vw, 85vw"
-                  className="object-cover object-center"
-                />
+                {(idx === 0 || restReady) && (
+                  <Image
+                    src={slide.image}
+                    alt={slide.buttonText}
+                    fill
+                    priority={idx === 0}
+                    fetchPriority={idx === 0 ? "high" : "low"}
+                    sizes="(max-width: 1024px) 100vw, 85vw"
+                    className="object-cover object-center"
+                  />
+                )}
               </div>
             ))}
 
