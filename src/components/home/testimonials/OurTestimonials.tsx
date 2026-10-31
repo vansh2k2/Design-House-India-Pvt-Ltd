@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 
 import { api } from "@/lib/api";
+import { HOME_SECTION_DEFAULTS, type TestimonialsHeadingContent } from "@/lib/homeSections";
 import b1Img from "@/assets/image/b1.webp";
 import b2Img from "@/assets/image/b2.webp";
 import b3Img from "@/assets/image/b3.webp";
@@ -22,6 +23,8 @@ interface Testimonial {
   company?: string;
   feedback: string;
   rating: number;
+  image?: string; // card photo uploaded in the admin
+  imageAlt?: string;
 }
 
 // Testimonials have no photo of their own, so each card shows one of our project photos (in turn)
@@ -54,7 +57,8 @@ const usePerView = () => {
 /* "Testimonials": heading with a "View All" button and prev/next arrows, then a sliding row of
    testimonial cards (text on the left, a project photo on the right) with dots below.
    Testimonials come from the admin panel (/api/testimonials/active); hidden when there are none. */
-const OurTestimonials = () => {
+// Heading: edited in the admin (Pages & CMS → Home → Testimonials); reviews: Testimonials Management
+const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?: TestimonialsHeadingContent }) => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
@@ -97,25 +101,26 @@ const OurTestimonials = () => {
           <div className="max-w-[780px]">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-              <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#134698]">Testimonials</span>
+              <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#134698]">{data.eyebrow}</span>
             </div>
             <h2 className="text-[28px] sm:text-[32px] lg:text-[36px] font-serif font-medium leading-[1.08] tracking-tight mb-2.5 text-[#0A2B5E]">
-              What Our Clients <span className="text-[#fd6e15]">Say</span>
+              {data.title} <span className="text-[#fd6e15]">{data.highlight}</span>
             </h2>
             <p className="text-[13.5px] sm:text-[14.5px] text-black leading-relaxed max-w-[640px]">
-              Our clients trust us for our design expertise, quality execution and commitment to delivering spaces that
-              make a difference.
+              {data.description}
             </p>
           </div>
 
           <div className="flex items-center gap-4 lg:gap-6">
+            {data.button?.label && (
             <Link
-              href="/testimonials"
+              href={data.button.href || "/testimonials"}
               className="group inline-flex items-center gap-2 rounded-md border-[1.5px] border-[#134698] px-5 py-2.5 text-[12.5px] font-bold uppercase tracking-wide text-[#134698] hover:bg-[#134698] hover:text-white transition-colors"
             >
-              View All Testimonials
+              {data.button.label}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
+            )}
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -186,11 +191,12 @@ const OurTestimonials = () => {
                       </div>
 
                       <div className="relative min-h-[240px] rounded-md overflow-hidden">
+                        {/* The review's own photo from the admin, or one of our project photos (in turn) */}
                         <Image
-                          src={PHOTOS[i % PHOTOS.length]}
-                          alt=""
+                          src={t.image || PHOTOS[i % PHOTOS.length]}
+                          alt={t.image ? t.imageAlt || `${t.name} project` : ""}
                           fill
-                          placeholder="blur"
+                          placeholder={t.image ? "empty" : "blur"}
                           sizes="(min-width: 1280px) 40vw, 80vw"
                           className="object-cover"
                         />

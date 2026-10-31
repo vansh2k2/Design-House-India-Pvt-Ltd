@@ -2,57 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import type { StaticImageData } from "next/image";
 import { m, useScroll, useTransform } from "framer-motion";
-import hero2Bg from "@/assets/banner/hero2.webp";
-import s1Img from "@/assets/icon/s1.png";
-import s2Img from "@/assets/icon/s2.png";
-import s3Img from "@/assets/icon/s3.png";
-import s4Img from "@/assets/icon/s4.png";
-
-interface StatItem {
-  id: string;
-  end: number;
-  suffix: string;
-  label: string;
-  sublabel: string;
-  image: StaticImageData;
-}
-
-const STATS: StatItem[] = [
-  {
-    id: "experience",
-    end: 21,
-    suffix: "+",
-    label: "Years Experience",
-    sublabel: "Industry leadership since 2004",
-    image: s4Img,
-  },
-  {
-    id: "clients",
-    end: 500,
-    suffix: "+",
-    label: "Happy Clients",
-    sublabel: "Trusted partnerships nationwide",
-    image: s3Img,
-  },
-  {
-    id: "projects",
-    end: 5000,
-    suffix: "+",
-    label: "Projects Completed",
-    sublabel: "Delivering excellence every time",
-    image: s2Img,
-  },
-  {
-    id: "satisfaction",
-    end: 98,
-    suffix: "%",
-    label: "Client Satisfaction",
-    sublabel: "Quality, commitment and trust",
-    image: s1Img,
-  },
-];
+import { DEFAULT_ACHIEVEMENTS, type AchievementsContent } from "@/lib/homeAchievements";
 
 /* Smooth Animated Counter */
 const AnimatedCounter = ({ end, suffix, isVisible }: { end: number; suffix: string; isVisible: boolean }) => {
@@ -96,7 +47,8 @@ const AnimatedCounter = ({ end, suffix, isVisible }: { end: number; suffix: stri
   );
 };
 
-const OurAchievements = () => {
+// Heading, background and stat cards: edited in the admin (Pages & CMS → Home → Our Achievements)
+const OurAchievements = ({ data = DEFAULT_ACHIEVEMENTS }: { data?: AchievementsContent }) => {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -133,8 +85,8 @@ const OurAchievements = () => {
       {/* ─── Background Photo: hero2 Reception with illuminated wall logo ─── */}
       <div className="absolute inset-0 z-0">
         <Image
-          src={hero2Bg}
-          alt="Design House India Corporate Office Reception"
+          src={data.backgroundImage}
+          alt={data.backgroundAlt || "Design House India corporate office reception"}
           fill
           sizes="100vw"
           className="object-cover object-right lg:object-[center_right] scale-110 -translate-x-[4%]"
@@ -164,33 +116,27 @@ const OurAchievements = () => {
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-3.5 h-2 border-l-2 border-t-2 border-[#fd6e15]" />
             <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-white/90">
-              OUR ACHIEVEMENTS
+              {data.eyebrow}
             </span>
           </div>
 
           {/* Heading in font-serif font-medium */}
           <h2 className="text-3xl sm:text-[36px] md:text-[40px] lg:text-[45px] xl:text-[48px] font-serif font-medium leading-[1.08] tracking-tight mb-3 sm:mb-4">
-            <span className="text-white block">
-              Numbers that Reflect
-            </span>
-            <span className="text-[#fd6e15] block">
-              Your Trust in Us
-            </span>
+            <span className="text-white block">{data.title}</span>
+            <span className="text-[#fd6e15] block">{data.highlight}</span>
           </h2>
 
           {/* Description Paragraph */}
           <p className="text-[13.5px] sm:text-[14.5px] text-white/80 leading-relaxed font-normal max-w-[660px]">
-            Over the years, we have delivered successful interior and exhibition <br className="hidden sm:inline" />
-            solutions for leading brands across India. Our focus on quality, <br className="hidden sm:inline" />
-            creativity and timely execution has helped us build long-term relationships.
+            {data.description}
           </p>
         </div>
 
         {/* ─── Bottom Row: 4 Glassmorphism Stat Cards ─── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {STATS.map(({ id, end, suffix, label, sublabel, image }, idx) => (
+          {data.stats.map(({ value: end, suffix, label, sublabel, icon, iconAlt }, idx) => (
             <div
-              key={id}
+              key={`${label}-${idx}`}
               className="group relative p-4 sm:p-5 rounded-lg sm:rounded-xl bg-[#082244]/65 hover:bg-[#0B2C59]/80 backdrop-blur-md border border-white/15 hover:border-[#fd6e15]/40 transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:-translate-y-1 flex items-center gap-3.5 sm:gap-4 overflow-hidden"
               style={{ transitionDelay: `${idx * 40}ms` }}
             >
@@ -199,13 +145,15 @@ const OurAchievements = () => {
 
               {/* 3D Circular Badge Image (s1-s4) */}
               <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_4px_14px_rgba(24,100,219,0.5)]">
-                <Image
-                  src={image}
-                  alt={label}
-                  width={56}
-                  height={56}
-                  className="w-full h-full object-contain"
-                />
+                {icon && (
+                  <Image
+                    src={icon}
+                    alt={iconAlt || label}
+                    width={56}
+                    height={56}
+                    className="w-full h-full object-contain"
+                  />
+                )}
               </div>
 
               {/* Number, Label & Subtitle */}

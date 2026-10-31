@@ -1,21 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import {
   ArrowRight,
   ChevronRight,
 } from "lucide-react";
 
-import hero2Bg from "@/assets/banner/hero2.webp";
-import hero3Bg from "@/assets/banner/hero3.webp";
-
-import h1Icon from "@/assets/icon/h1.png";
-import h2Icon from "@/assets/icon/h2.png";
-import h3Icon from "@/assets/icon/h3.png";
-import h4Icon from "@/assets/icon/h4.png";
-import h5Icon from "@/assets/icon/h5.png";
-import h6Icon from "@/assets/icon/h6.png";
+import { DEFAULT_HOME_HERO, type HeroSlideIcon, type HomeHeroContent } from "@/lib/homeHero";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Custom vector icons for the 6 right-side categories
@@ -85,106 +77,15 @@ const IconSignageBranding = () => (
   </svg>
 );
 
-/* ─── 6 Interactive Carousel Slides with synchronized Sidebar services ─── */
-interface SlideItem {
-  id: string;
-  label: string;
-  href: string;
-  image: StaticImageData;
-  icon: () => React.JSX.Element;
-  tagline?: string[];
-  title1?: string;
-  title2?: string;
-  desc: string;
-  buttonText: string;
-}
-
-const HERO_DESC = "Design House India Private Limited is a premier manufacturer of retail display solutions with nationwide reach. End-to-end interior, display and fit-out solutions across India.";
-
-const SLIDES: SlideItem[] = [
-  {
-    id: "retail",
-    label: "RETAIL\nSHOWROOM\nINTERIORS",
-    href: "/services/retail-interior",
-    image: hero2Bg,
-    icon: IconRetailShowroom,
-    tagline: ["Design", "Manufacturing", "Execution"],
-    title1: "Spaces That",
-    title2: "Build Brands",
-    desc: "Design House India Private Limited is a premier manufacturer of retail display solutions with nationwide reach. End-to-end interior, display and fit-out solutions across India.",
-    buttonText: "Discuss Retail Project",
-  },
-  {
-    id: "corporate",
-    label: "CORPORATE\nINTERIORS",
-    href: "/services/corporate-interior",
-    image: hero3Bg,
-    icon: IconCorporateInteriors,
-    tagline: ["Design", "Manufacturing", "Execution"],
-    title1: "Workspaces That",
-    title2: "Inspire Success",
-    desc: "We design modern corporate office interiors that enhance workplace productivity and reinforce brand identity through turnkey design, manufacturing, and fit-out solutions across India.",
-    buttonText: "Discuss Corporate Interiors",
-  },
-  {
-    id: "restaurant",
-    label: "RESTAURANT\nINTERIORS",
-    href: "/services/restaurant-interior",
-    image: hero2Bg,
-    icon: IconRestaurantInteriors,
-    tagline: ["Design", "Manufacturing", "Execution"],
-    title1: "Ambiances That",
-    title2: "Delight Guests",
-    desc: "We create luxury restaurant and hospitality interiors that delight guests, maximize seating efficiency, and elevate dining ambiances through bespoke turnkey craftsmanship across India.",
-    buttonText: "Discuss Restaurant Design",
-  },
-  {
-    id: "exhibition",
-    label: "EXHIBITION STALL\nMANUFACTURING",
-    href: "/services/exhibitions",
-    image: hero3Bg,
-    icon: IconExhibitionStall,
-    tagline: ["Design", "Manufacturing", "Execution"],
-    title1: "Exhibits That",
-    title2: "Command Attention",
-    desc: "We engineer custom trade show booths and exhibition stalls that maximize visitor engagement, command visual attention, and deliver high-impact turnkey presence at major expos across India.",
-    buttonText: "Explore Exhibition Stalls",
-  },
-  {
-    id: "kiosks",
-    label: "RETAIL\nKIOSKS",
-    href: "/services/retail-kiosk",
-    image: hero2Bg,
-    icon: IconRetailKiosks,
-    tagline: ["Design", "Manufacturing", "Execution"],
-    title1: "Kiosks That",
-    title2: "Drive Footfall",
-    desc: "We manufacture bespoke turnkey retail kiosks and modular display units designed for premier malls and transit hubs to maximize visual merchandising, engagement, and sales across India.",
-    buttonText: "Explore Retail Kiosks",
-  },
-  {
-    id: "signage",
-    label: "SIGNAGE &\nBRANDING",
-    href: "/services/signage",
-    image: hero3Bg,
-    icon: IconSignageBranding,
-    tagline: ["Design", "Manufacturing", "Execution"],
-    title1: "Identities That",
-    title2: "Stand Apart",
-    desc: "We manufacture architectural signage, illuminated facades, and high-visibility branding displays that make your business instantly recognizable and trusted across India.",
-    buttonText: "Discuss Signage & Branding",
-  },
-];
-
-/* ─── Bottom strip service items ─── */
-const BOTTOM_SERVICES: { icon: StaticImageData; label: string; href: string }[] = [
-  { icon: h1Icon, label: "Design\nConsultancy", href: "/services/retail-interior" },
-  { icon: h2Icon, label: "In-house\nManufacturing", href: "/services/retail-kiosk" },
-  { icon: h3Icon, label: "Turnkey\nExecution", href: "/services/corporate-interior" },
-  { icon: h4Icon, label: "Pan India\nPresence", href: "/services/exhibitions" },
-  { icon: h5Icon, label: "On-time\nDelivery", href: "/services" },
-  { icon: h6Icon, label: "Dedicated\nSupport", href: "/contact" },
-];
+// Icon of each slide in the right-hand service list
+const SLIDE_ICONS: Record<HeroSlideIcon, () => React.JSX.Element> = {
+  retail: IconRetailShowroom,
+  corporate: IconCorporateInteriors,
+  restaurant: IconRestaurantInteriors,
+  exhibition: IconExhibitionStall,
+  kiosks: IconRetailKiosks,
+  signage: IconSignageBranding,
+};
 
 const CSS = `
 .home-hero {
@@ -304,7 +205,10 @@ const CSS = `
 }
 `;
 
-const HomeHero = () => {
+// Slides, right-hand service list and bottom strip: edited in the admin (Pages & CMS → Home → Hero)
+const HomeHero = ({ data = DEFAULT_HOME_HERO }: { data?: HomeHeroContent }) => {
+  const SLIDES = data.slides;
+  const BOTTOM_SERVICES = data.bottomServices;
   const [mounted, setMounted] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -336,14 +240,14 @@ const HomeHero = () => {
           <div className="absolute inset-0 z-0">
             {SLIDES.map((slide, idx) => (
               <div
-                key={slide.id}
+                key={idx}
                 className={`absolute inset-0 ${
                   activeSlide === idx ? "hh-slide-active z-[1]" : "hh-slide-inactive z-0 pointer-events-none"
                 }`}
               >
                 <Image
                   src={slide.image}
-                  alt={slide.buttonText}
+                  alt={slide.imageAlt || slide.buttonText}
                   fill
                   priority={idx === 0}
                   sizes="(max-width: 1024px) 100vw, 85vw"
@@ -357,13 +261,13 @@ const HomeHero = () => {
           </div>
 
           {/* Hero text & buttons — synchronized with active slide via key */}
-          <div key={current.id} className="relative z-10 pl-8 sm:pl-14 lg:pl-16 xl:pl-20 pr-6 sm:pr-8 pt-14 sm:pt-16 lg:pt-[72px] xl:pt-[80px] max-w-[850px]">
+          <div key={activeSlide} className="relative z-10 pl-8 sm:pl-14 lg:pl-16 xl:pl-20 pr-6 sm:pr-8 pt-14 sm:pt-16 lg:pt-[72px] xl:pt-[80px] max-w-[850px]">
             {/* Tagline */}
             <div
               className="hh-text-blur-in flex items-center gap-2 sm:gap-2.5 text-[12px] sm:text-[13px] lg:text-[14px] uppercase tracking-[0.22em] font-bold text-white mb-2 sm:mb-2.5"
               style={{ animationDelay: "0.15s" }}
             >
-              {(current.tagline || ["Design", "Manufacturing", "Execution"]).map((tag, idx, arr) => (
+              {(current.tagline?.length ? current.tagline : ["Design", "Manufacturing", "Execution"]).map((tag, idx, arr) => (
                 <span key={tag} className="flex items-center gap-2 sm:gap-2.5">
                   <span>{tag}</span>
                   {idx < arr.length - 1 && <span className="text-[#fd6e15] font-bold hh-pipe-glow">|</span>}
@@ -372,7 +276,8 @@ const HomeHero = () => {
             </div>
 
             {/* Heading with 3D Tilt Reveal and 3D Text Shadow Effect matching Bharat */}
-            <h1
+            {/* Slide title: styled text, not a heading (the home page's H1 is "Turnkey Spaces for Every Business") */}
+            <p
               className="text-[34px] sm:text-[42px] lg:text-[46px] xl:text-[52px] 2xl:text-[56px] font-black uppercase leading-[1.02] tracking-[-0.01em] mb-2 sm:mb-2.5 [perspective:800px]"
               style={{
                 textShadow: "1px 1px 2px rgba(0,0,0,0.8), 0 3px 8px rgba(0,0,0,0.6)",
@@ -393,7 +298,7 @@ const HomeHero = () => {
                   {current.title2 || "Build Brands"}
                 </span>
               </span>
-            </h1>
+            </p>
 
             {/* Dynamic Description matching active carousel slide */}
             <p
@@ -415,33 +320,35 @@ const HomeHero = () => {
                 {current.buttonText || "Discuss Your Project"}
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </a>
+              {data.secondaryButton?.label && (
               <a
-                href="/contact"
+                href={data.secondaryButton.href || "/contact"}
                 className="group inline-flex items-center gap-1.5 sm:gap-2 rounded-[3px] border-[1.5px] border-white/80 bg-black/30 backdrop-blur-sm px-3.5 sm:px-4 py-1.5 sm:py-2 text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-white hover:bg-white hover:text-[#0C1E3A] transition-all"
               >
-                Get A Free Consultation
+                {data.secondaryButton.label}
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </a>
+              )}
             </div>
           </div>
 
           {/* Bottom Service Icons Strip — vibrant transparent blue overlay */}
           <div className="relative z-10 w-full bg-gradient-to-r from-[#0A2F6E]/82 via-[#134B96]/75 to-[#0A2F6E]/72 backdrop-blur-md border-t border-white/25 pl-8 sm:pl-14 lg:pl-16 xl:pl-20 pr-6 sm:pr-8 py-2 sm:py-2.5">
             <div className="flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
-              {BOTTOM_SERVICES.map(({ icon, label, href }, i) => (
+              {BOTTOM_SERVICES.map(({ icon, iconAlt, label, href }, i) => (
                 <a
                   key={i}
                   href={href}
                   className="group flex items-center gap-2.5 sm:gap-3 shrink-0 py-0.5 hover:opacity-90 transition-opacity"
                 >
                   <div className="relative w-10 h-10 sm:w-11 sm:h-11 xl:w-12 xl:h-12 shrink-0 transition-transform duration-200 group-hover:scale-105 drop-shadow-[0_3px_10px_rgba(0,0,0,0.45)]">
-                    <Image
+                    {icon && <Image
                       src={icon}
-                      alt={label.replace("\n", " ")}
+                      alt={iconAlt || label.replace(/\n/g, " ")}
                       fill
                       sizes="64px"
                       className="object-contain"
-                    />
+                    />}
                   </div>
                   <span className="text-[12.5px] sm:text-[13px] xl:text-[13.5px] font-semibold text-white leading-[1.2] whitespace-pre-line drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.9)]">
                     {label}
@@ -459,8 +366,9 @@ const HomeHero = () => {
             Text blue (#0F2C59), bold font, synchronized with carousel.
             ════════════════════════════════════════════════════════════════ */}
         <div className="w-full lg:w-[210px] xl:w-[225px] 2xl:w-[240px] bg-[#f2f6fa] shrink-0 flex flex-col lg:h-full border-t lg:border-t-0 lg:border-l border-[#DCE6F2]">
-          {SLIDES.map(({ icon: Icon, label, href }, i) => {
+          {SLIDES.map(({ icon, label, href }, i) => {
             const isActive = activeSlide === i;
+            const Icon = SLIDE_ICONS[icon] ?? IconRetailShowroom;
             return (
               <a
                 key={i}

@@ -5,134 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-import b1Img from "@/assets/image/b1.webp";
-import b2Img from "@/assets/image/b2.webp";
-import b3Img from "@/assets/image/b3.webp";
-import b4Img from "@/assets/image/b4.webp";
-import b5Img from "@/assets/image/b5.webp";
-import b6Img from "@/assets/image/b6.webp";
-import c1Img from "@/assets/image/c1.webp";
-import c2Img from "@/assets/image/c2.webp";
-import c3Img from "@/assets/image/c3.webp";
-import img1 from "@/assets/image/1.webp";
-import img2 from "@/assets/image/2.webp";
-import img3 from "@/assets/image/3.webp";
-
-const CATEGORIES = [
-  { id: "all", label: "All Projects" },
-  { id: "retail", label: "Retail Showroom" },
-  { id: "corporate", label: "Corporate Interiors" },
-  { id: "restaurant", label: "Restaurant Interiors" },
-  { id: "exhibition", label: "Exhibition Stalls" },
-  { id: "kiosk", label: "Retail Kiosks" },
-  { id: "signage", label: "Signage & Branding" },
-];
-
-const PROJECTS = [
-  // Page 1 projects with b1-b6 images
-  {
-    id: "luxury-retail",
-    category: "retail",
-    title: "Luxury Retail Showroom",
-    subtitle: "Retail Interiors",
-    image: b1Img,
-    href: "/services/retail-interior",
-  },
-  {
-    id: "corporate-office",
-    category: "corporate",
-    title: "Corporate Office Interior",
-    subtitle: "Corporate Interiors",
-    image: b2Img,
-    href: "/services/corporate-interior",
-  },
-  {
-    id: "fine-dine",
-    category: "restaurant",
-    title: "Fine Dine Restaurant",
-    subtitle: "Restaurant Interiors",
-    image: b3Img,
-    href: "/services/restaurant-interior",
-  },
-  {
-    id: "exhibition-stall",
-    category: "exhibition",
-    title: "Exhibition Stall",
-    subtitle: "Stall Design & Build",
-    image: b4Img,
-    href: "/services/exhibitions",
-  },
-  {
-    id: "retail-kiosk",
-    category: "kiosk",
-    title: "Retail Kiosk",
-    subtitle: "Retail Kiosk Design & Manufacturing",
-    image: b5Img,
-    href: "/services/retail-kiosk",
-  },
-  {
-    id: "signage-branding",
-    category: "signage",
-    title: "Signage & Branding",
-    subtitle: "Signage Solutions",
-    image: b6Img,
-    href: "/services/signage",
-  },
-
-  // Page 2 additional portfolio showcases
-  {
-    id: "flagship-store",
-    category: "retail",
-    title: "Premium Flagship Store",
-    subtitle: "Retail Interiors",
-    image: c1Img,
-    href: "/services/retail-interior",
-  },
-  {
-    id: "tech-workspace",
-    category: "corporate",
-    title: "Tech Innovation Hub",
-    subtitle: "Corporate Interiors",
-    image: c2Img,
-    href: "/services/corporate-interior",
-  },
-  {
-    id: "bistro-cafe",
-    category: "restaurant",
-    title: "Artisan Cafe & Bistro",
-    subtitle: "Restaurant Interiors",
-    image: c3Img,
-    href: "/services/restaurant-interior",
-  },
-  {
-    id: "trade-expo",
-    category: "exhibition",
-    title: "Global Expo Pavilion",
-    subtitle: "Stall Design & Build",
-    image: img1,
-    href: "/services/exhibitions",
-  },
-  {
-    id: "modular-kiosk",
-    category: "kiosk",
-    title: "Modular Mall Display Unit",
-    subtitle: "Retail Kiosks",
-    image: img2,
-    href: "/services/retail-kiosk",
-  },
-  {
-    id: "architectural-signage",
-    category: "signage",
-    title: "Architectural Neon & LED Signage",
-    subtitle: "Signage Solutions",
-    image: img3,
-    href: "/services/signage",
-  },
-];
+import { DEFAULT_HOME_PROJECTS, type HomeProjectsContent } from "@/lib/homeProjects";
 
 const ITEMS_PER_PAGE = 6;
 
-export default function OurProjects() {
+// Heading, badge, filter tabs and cards: edited in the admin (Pages & CMS → Home → Our Projects)
+export default function OurProjects({ data = DEFAULT_HOME_PROJECTS }: { data?: HomeProjectsContent }) {
+  const PROJECTS = data.projects;
+  const CATEGORIES = [{ id: "all", label: "All Projects" }, ...data.categories];
   const [activeCategory, setActiveCategory] = useState("all");
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -161,32 +41,33 @@ export default function OurProjects() {
             <div className="flex items-center gap-2 mb-2">
               <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
               <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#134698]">
-                OUR PROJECTS
+                {data.eyebrow}
               </span>
             </div>
 
             {/* Heading in font-serif font-medium matching site branding */}
             <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-serif font-medium leading-[1.08] tracking-tight mb-2.5">
-              <span className="text-[#0A2B5E]">Spaces We Have </span>
-              <span className="text-[#fd6e15]">Brought to Life</span>
+              <span className="text-[#0A2B5E]">{data.title} </span>
+              <span className="text-[#fd6e15]">{data.highlight}</span>
             </h2>
 
             {/* Subtitle Paragraph */}
             <p className="text-[13.5px] sm:text-[14.5px] text-black font-normal leading-relaxed lg:mb-3">
-              From retail and corporate interiors to exhibition stalls and kiosks, explore some of our
-              <br className="hidden lg:block" /> recently completed projects for leading brands across India.
+              {data.description}
             </p>
           </div>
 
           {/* Top-Right: View All Projects CTA + Diverse Industries Pill */}
           <div className="flex flex-col items-start lg:items-end lg:justify-between gap-3 shrink-0">
+            {data.button?.label && (
             <Link
-              href="/projects"
+              href={data.button.href || "/projects"}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white border-[1.5px] border-[#2373F4] text-[#2373F4] hover:bg-[#2373F4] hover:text-white text-[11px] sm:text-[11.5px] font-bold uppercase tracking-wider transition-all duration-200 group self-start lg:self-end"
             >
-              <span>VIEW ALL PROJECTS</span>
+              <span>{data.button.label}</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             </Link>
+            )}
 
             {/* Diverse Industries badge: light-blue panel with a slanted left edge */}
             <div className="hidden lg:flex items-center gap-3 relative isolate pl-11 pr-5 py-3">
@@ -230,10 +111,10 @@ export default function OurProjects() {
 
               <div>
                 <span className="text-[13.5px] font-medium text-[#0A2B5E] block leading-tight">
-                  Diverse Industries
+                  {data.badge?.title}
                 </span>
                 <span className="text-[11px] text-[#46658C] block leading-tight mt-1 whitespace-nowrap">
-                  Retail | Corporate | F&B | Exhibition | Kiosks | Branding
+                  {data.badge?.text}
                 </span>
               </div>
             </div>
@@ -269,9 +150,9 @@ export default function OurProjects() {
             PROJECTS 3x2 GRID (6 Cards Per Page)
             ════════════════════════════════════════════════════════════════ */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-5 mb-2 sm:mb-3">
-          {visibleProjects.map((project) => (
+          {visibleProjects.map((project, idx) => (
             <Link
-              key={project.id}
+              key={`${project.title}-${safePage}-${idx}`}
               href={project.href}
               className="group relative h-[175px] sm:h-[195px] lg:h-[210px] rounded-md sm:rounded-[8px] overflow-hidden shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition-all duration-300 block"
             >
@@ -279,7 +160,7 @@ export default function OurProjects() {
               <div className="absolute inset-0 overflow-hidden">
                 <Image
                   src={project.image}
-                  alt={project.title}
+                  alt={project.imageAlt || project.title}
                   fill
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"

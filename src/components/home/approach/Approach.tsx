@@ -2,8 +2,8 @@ import Image from "next/image";
 import { Great_Vibes } from "next/font/google";
 import { ChevronRight } from "lucide-react";
 
-import showroomImg from "@/assets/image/approach.webp";
-import { STEPS } from "./data";
+import { HOME_SECTION_DEFAULTS, type ApproachContent } from "@/lib/homeSections";
+import { RichText } from "../sectionContent";
 
 const script = Great_Vibes({ subsets: ["latin"], weight: "400", display: "swap" });
 
@@ -48,7 +48,8 @@ const CARD_SHAPE = `polygon(${[
 /* "Our Approach": heading on the left, a showroom photo top right (wavy left edge) with a navy
    corner carrying a handwritten tagline, then five process cards joined by curved arrows. */
 
-const Approach = () => (
+// Content: edited in the admin (Pages & CMS → Home → Our Approach)
+const Approach = ({ data = HOME_SECTION_DEFAULTS.approach }: { data?: ApproachContent }) => (
   <section className="relative w-full overflow-hidden bg-gradient-to-b from-[#F7F8FB] to-white">
     {/* ── Photo + navy corner (lg+): the photo's left edge sweeps down in an S-curve into its bottom edge,
          which sits just behind the top of the cards ── */}
@@ -56,10 +57,9 @@ const Approach = () => (
       <div className="absolute inset-0 lg:[clip-path:polygon(0_0,100%_0,100%_100%,32%_100%,25%_96.5%,19%_90.5%,14%_80%,9.5%_62%,6%_40%,3%_18%,1%_6%)]">
         <div className="absolute inset-0">
           <Image
-            src={showroomImg}
-            alt="Retail showroom interior designed and built by Design House"
+            src={data.image}
+            alt={data.imageAlt}
             fill
-            placeholder="blur"
             sizes="(min-width: 1024px) 56vw, 100vw"
             className="object-cover"
           />
@@ -67,11 +67,7 @@ const Approach = () => (
       </div>
       <div className="absolute inset-y-0 right-0 w-[38%] sm:w-[33%] bg-[#0B2350] [clip-path:polygon(28%_0,100%_0,100%_100%,8%_100%)] flex items-center justify-center pl-[10%] pr-[3%]">
         <p className={`${script.className} -rotate-[14deg] whitespace-nowrap text-white text-[21px] sm:text-[23px] lg:text-[21px] xl:text-[25px] min-[1440px]:text-[27px] leading-[1.15]`}>
-          Your Vision
-          <br />
-          Our Expertise
-          <br />
-          <span className="text-[#fd6e15]">Exceptional Spaces</span>
+          <RichText text={data.tagline} accent={(part, k) => <span key={k} className="text-[#fd6e15]">{part}</span>} />
           <svg viewBox="0 0 160 14" className="block w-[85%] h-3 ml-auto -mt-1 text-[#fd6e15]" fill="none" aria-hidden="true">
             <path d="M2 11 C 40 2, 100 2, 158 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
@@ -84,22 +80,22 @@ const Approach = () => (
       <div className="lg:w-[48%] lg:min-h-[175px]">
         <div className="flex items-center gap-2 mb-2">
           <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-          <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">Our Approach</span>
+          <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">{data.eyebrow}</span>
         </div>
         <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-serif font-medium leading-[1.08] tracking-tight mb-2.5">
-          <span className="text-[#0A2B5E]">Ideas. Design. Build. </span>
-          <span className="text-[#fd6e15]">Deliver.</span>
+          <span className="text-[#0A2B5E]">{data.title} </span>
+          <span className="text-[#fd6e15]">{data.highlight}</span>
         </h2>
         <p className="text-[13.5px] sm:text-[14.5px] text-[#333] leading-relaxed max-w-[540px]">
-          A streamlined process that ensures creativity, quality and on-time delivery for spaces that elevate your brand.
+          {data.description}
         </p>
       </div>
 
       {/* ── Process cards ── */}
       <ol className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-5 gap-y-10 mt-10 lg:mt-6">
-        {STEPS.map(({ stepIcon, title, desc, img }, i) => (
+        {data.steps.map(({ icon, iconAlt, title, desc, image, imageAlt }, i) => (
           <li
-            key={title}
+            key={`${title}-${i}`}
             className="relative px-4 pt-11 pb-4 [filter:drop-shadow(0_1px_1.5px_rgba(0,0,0,0.02))]"
           >
             {/* Card body: a 1px rgba(27,31,35,0.15) outline layer with the white card on top, both cut to CARD_SHAPE */}
@@ -109,19 +105,21 @@ const Approach = () => (
             {/* Icon disc sitting on the card's top edge, with the step number beside it */}
             <div className="absolute -top-7 left-4 flex items-end gap-3">
               <div className="relative w-14 h-14 rounded-full overflow-hidden ring-[5px] ring-white shadow-[0_6px_16px_-6px_rgba(10,43,94,0.45)]">
-                <Image
-                  src={stepIcon}
-                  alt={title}
-                  fill
-                  sizes="56px"
-                  className="object-cover"
-                />
+                {icon && (
+                  <Image
+                    src={icon}
+                    alt={iconAlt || title}
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
+                )}
               </div>
               <span className="mb-0.5 text-[22px] font-semibold text-[#B8C2D3] leading-none">{String(i + 1).padStart(2, "0")}</span>
             </div>
 
             {/* Curved arrow to the next card (lg+) */}
-            {i < STEPS.length - 1 && (
+            {i < data.steps.length - 1 && (
               <div className="hidden lg:block absolute -top-5 left-[46%] -right-5 h-12 pointer-events-none" aria-hidden="true">
                 <span className="absolute left-0 top-4 w-2 h-2 rounded-full bg-[#fd6e15]" />
                 <svg viewBox="0 0 100 48" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" fill="none">
@@ -134,7 +132,7 @@ const Approach = () => (
             <h3 className="relative text-[16px] xl:text-[17px] font-bold text-[#0A2B5E] leading-tight mb-1">{title}</h3>
             <p className="relative text-[12.5px] xl:text-[13px] text-black leading-snug min-h-[36px] mb-3">{desc}</p>
             <div className="relative h-[120px] xl:h-[130px] rounded-md overflow-hidden">
-              <Image src={img} alt={title} fill placeholder="blur" sizes="(min-width: 1024px) 18vw, 50vw" className="object-cover" />
+              <Image src={image} alt={imageAlt || title} fill sizes="(min-width: 1024px) 18vw, 50vw" className="object-cover" />
             </div>
           </li>
         ))}

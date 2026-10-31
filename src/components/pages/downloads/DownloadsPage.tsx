@@ -1,141 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import { Clock, Download, FileText } from "lucide-react";
 
 import Topbar from "@/components/layout/Topbar";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/sections/Footer";
-import { api, API_URL } from "@/lib/api";
+import { countDownloadClick, type DownloadCard } from "@/lib/downloads";
 import { HERO_ACCENT_SHADOW, HERO_BANNER_CSS, HERO_DESC_SHADOW, HERO_TITLE_SHADOW } from "@/components/common/heroBannerEffects";
 import heroBg from "@/assets/banner/downloads.webp";
-import companyImg from "@/assets/image/vision.webp";
-import officeImg from "@/assets/7.jpg";
-import modularImg from "@/assets/hero-interior-1.jpg";
-import kitchenImg from "@/assets/cara1.jpg";
-import ensisImg from "@/assets/about1.webp";
-import corporateImg from "@/assets/hero-corporate-1.jpg";
-import residentialImg from "@/assets/about2.webp";
 import genericImg from "@/assets/image/b2.webp";
-import retailImg from "@/assets/image/b1.webp";
-import restaurantImg from "@/assets/image/b3.webp";
-import exhibitionImg from "@/assets/image/b4.webp";
-
-interface DownloadItem {
-  title: string;
-  coverTitle: string; // printed on the card's cover panel
-  desc: string;
-  href?: string; // no file yet: the card shows a disabled "Coming Soon" button
-  size?: string;
-  img: StaticImageData;
-  action: string;
-  accent?: boolean; // orange cover title (the main company profile)
-  ensis?: boolean; // ENSIS cover style
-}
-
-// Files shipped in /public/downloads (sizes as on disk)
-const DOWNLOADS: DownloadItem[] = [
-  {
-    title: "Company Profile",
-    coverTitle: "Company\nProfile",
-    desc: "Complete overview of our company, capabilities and business verticals.",
-    href: "/downloads/dhipl-profile.pdf",
-    size: "13.4 MB",
-    img: companyImg,
-    action: "Download Profile",
-    accent: true,
-  },
-  {
-    title: "Office Furniture",
-    coverTitle: "Office\nFurniture",
-    desc: "Workstations, cabins and seating solutions for modern offices.",
-    href: "/downloads/ebrochures/office furniture.pdf",
-    size: "15.9 MB",
-    img: officeImg,
-    action: "Download Brochure",
-  },
-  {
-    title: "Modular Furniture",
-    coverTitle: "Modular\nFurniture",
-    desc: "Modular furniture designed for everyday function and style.",
-    href: "/downloads/ebrochures/Modular Furniture.pdf",
-    size: "1.4 MB",
-    img: modularImg,
-    action: "Download Brochure",
-  },
-  {
-    title: "Modular Kitchen",
-    coverTitle: "Modular\nKitchen",
-    desc: "Functional and elegant modular kitchen designs.",
-    href: "/downloads/ebrochures/Modular Kitchen.pdf",
-    size: "1.2 MB",
-    img: kitchenImg,
-    action: "Download Brochure",
-  },
-  {
-    title: "ENSIS Brochure",
-    coverTitle: "Spa & Panchkarma\nFurniture",
-    desc: "Premium spa and Panchkarma furniture solutions.",
-    href: "/downloads/ebrochures/e-broucher.pdf",
-    size: "3.2 MB",
-    img: ensisImg,
-    action: "Download Brochure",
-    ensis: true,
-  },
-  {
-    title: "Corporate Interior Newsletter",
-    coverTitle: "Corporate\nInteriors",
-    desc: "Highlights from our corporate interior projects.",
-    href: "/downloads/newsletter/corprate_nov.pdf",
-    size: "303 KB",
-    img: corporateImg,
-    action: "Download Newsletter",
-  },
-  {
-    title: "Residential Interior Newsletter",
-    coverTitle: "Residential\nInteriors",
-    desc: "Highlights from our residential interior projects.",
-    href: "/downloads/newsletter/residential_nov.pdf",
-    size: "1.8 MB",
-    img: residentialImg,
-    action: "Download Newsletter",
-  },
-];
-
-// Profiles without a PDF yet; shown after everything else with a "Coming Soon" button
-const COMING_SOON: DownloadItem[] = [
-  {
-    title: "Retail Showroom Interiors",
-    coverTitle: "Retail\nShowroom\nInteriors",
-    desc: "Design and build solutions for retail stores and showrooms.",
-    img: retailImg,
-    action: "Coming Soon",
-  },
-  {
-    title: "Restaurant & Hospitality",
-    coverTitle: "Restaurant &\nHospitality\nInteriors",
-    desc: "Creating memorable dining and hospitality experiences.",
-    img: restaurantImg,
-    action: "Coming Soon",
-  },
-  {
-    title: "Exhibition Stall Design",
-    coverTitle: "Exhibition\nStall Design\n& Build",
-    desc: "Innovative exhibition stalls and brand environments.",
-    img: exhibitionImg,
-    action: "Coming Soon",
-  },
-];
 
 const HERO_WORDS = ["Spaces", "Brands", "Businesses", "People"];
 
 
 /* Card cover: the photo with a navy panel over its left part (slanted right edge) carrying the
    "Design House" name and the document title, or a light ENSIS panel for the ENSIS brochure. */
-const Cover = ({ item }: { item: DownloadItem }) => (
+const Cover = ({ item }: { item: DownloadCard }) => (
   <div className="relative aspect-[4/3] rounded-[4px] overflow-hidden shadow-[0_2px_6px_rgba(10,30,74,0.18)]">
-    <Image src={item.img} alt="" fill placeholder="blur" sizes="(min-width: 1280px) 16vw, (min-width: 768px) 33vw, 100vw" className="object-cover object-right" />
+    <Image
+      src={item.cardImage || genericImg}
+      alt={item.imageAlt || ""}
+      fill
+      sizes="(min-width: 1280px) 16vw, (min-width: 768px) 33vw, 100vw"
+      className="object-cover object-right"
+    />
     {item.ensis ? (
       <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 via-45% to-transparent to-70% px-3.5 py-3.5">
         <p className="text-[28px] font-bold text-[#0E6B6B] leading-none tracking-wide mb-2">ENSIS</p>
@@ -171,33 +60,8 @@ const Cover = ({ item }: { item: DownloadItem }) => (
 
 /* Downloads page: banner (navy left with the title, reception photo right with four words), then a grid
    of company profile / brochure / newsletter cards, each with a cover, details and a download button.
-   PDFs added in the admin PDF Manager (other than E-Broucher / Newsletter) are appended to the grid. */
-const DownloadsPage = () => {
-  const [extra, setExtra] = useState<DownloadItem[]>([]);
-
-  useEffect(() => {
-    api
-      .get("/api/pdf-manager")
-      .then((res) => {
-        if (!res.data?.success || !Array.isArray(res.data.data)) return;
-        setExtra(
-          res.data.data
-            .filter((pdf: any) => pdf.status === "Active" && pdf.category !== "E-Broucher" && pdf.category !== "Newsletter")
-            .map((pdf: any) => ({
-              title: pdf.pdfTitle,
-              coverTitle: pdf.subCategory || pdf.pdfTitle,
-              desc: [pdf.category, pdf.subCategory].filter(Boolean).join(" · "),
-              href: `${API_URL}/${pdf.pdfUrl}`,
-              img: genericImg,
-              action: "Download",
-            }))
-        );
-      })
-      .catch((err) => console.error("Error fetching PDFs:", err));
-  }, []);
-
-  const items = [...DOWNLOADS, ...extra, ...COMING_SOON];
-
+   The cards come from the admin (Downloads Management), in its order; "Coming Soon" ones have no file. */
+const DownloadsPage = ({ items = [] }: { items?: DownloadCard[] }) => {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Topbar />
@@ -264,7 +128,7 @@ const DownloadsPage = () => {
           <ul className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             {items.map((item) => (
               <li
-                key={item.href ?? item.title}
+                key={item._id}
                 className="flex flex-col rounded-md bg-white p-3 shadow-[rgba(0,0,0,0.12)_0px_1px_3px,rgba(0,0,0,0.24)_0px_1px_2px]"
               >
                 <Cover item={item} />
@@ -273,16 +137,17 @@ const DownloadsPage = () => {
                 <p className="mt-auto flex items-center gap-2 text-[12px] text-[#3A4A63] mb-2.5">
                   <FileText className="w-4 h-4 text-[#fd6e15]" />
                   PDF
-                  {item.size && (
+                  {item.fileSize && (
                     <>
                       <span className="text-[#C5CFDD]">|</span>
-                      {item.size}
+                      {item.fileSize}
                     </>
                   )}
                 </p>
-                {item.href ? (
+                {item.status === "Active" && item.fileUrl ? (
                   <a
-                    href={item.href}
+                    href={item.fileUrl}
+                    onClick={() => countDownloadClick(item._id)}
                     target="_blank"
                     rel="noopener noreferrer"
                     download

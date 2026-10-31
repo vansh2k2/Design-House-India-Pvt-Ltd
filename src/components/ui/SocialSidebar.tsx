@@ -3,33 +3,14 @@
 import { useState, useEffect } from "react";
 import { Facebook, Instagram, Youtube, Linkedin, Twitter } from "lucide-react";
 import { api } from "@/lib/api";
+import { useFooter } from "@/hooks/useFooter";
 
 const SocialSidebar = () => {
-  const [socialLinks, setSocialLinks] = useState({
-    facebook: "",
-    instagram: "",
-    twitter: "",
-    linkedin: "",
-    youtube: "",
-  });
+  // Edited in the admin: Pages → Home → Footer & Social Links
+  const { social: socialLinks } = useFooter();
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-
-  // Fetch social tokens
-  useEffect(() => {
-    const fetchSocialLinks = async () => {
-      try {
-        const response = await api.get("/api/social-media");
-        if (response.data.success) {
-          setSocialLinks(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching social media links:", error);
-      }
-    };
-    fetchSocialLinks();
-  }, []);
 
   // Trigger animations after mount
   useEffect(() => {

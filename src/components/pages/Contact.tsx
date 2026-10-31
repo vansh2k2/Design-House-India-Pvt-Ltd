@@ -1,11 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, useSyncExternalStore, type ComponentType, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { Fragment, useState, type ComponentType, type ReactNode } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { m, AnimatePresence } from "framer-motion";
 import {
-  AlertCircle,
   ArrowRight,
   CheckCircle,
   ChevronDown,
@@ -22,13 +20,13 @@ import {
   Send,
   User,
 } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import Topbar from "@/components/layout/Topbar";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/sections/Footer";
 import { api } from "@/lib/api";
+import { PhoneNotification, usePhoneAlert } from "@/components/ui/PhoneNotification";
 import { mapsSearchUrl, type ContactPageContent } from "@/lib/contactPage";
 import heroImg from "@/assets/banner/contact.webp";
 import officeGhaziabad from "@/assets/image/c1.webp";
@@ -114,70 +112,6 @@ const Field = ({
 const inputClass = (error?: string, extra = "") =>
   `w-full h-[46px] pl-10 pr-3 rounded-[3px] border ${error ? "border-red-500" : "border-gray-300"} bg-white text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:border-[#134698] focus:ring-2 focus:ring-[#134698]/10 transition disabled:bg-gray-50 ${extra}`;
 
-type PhoneAlert = { id: number; type: "success" | "error"; title: string; text?: string; whatsapp?: boolean };
-
-const PHONE_ALERT_MS = 4500;
-
-const subscribeNoop = () => () => {};
-
-// Mobile-style notification that drops in from the top of the screen (OTP sent / verified / errors)
-const PhoneNotification = ({ alert, onClose }: { alert: PhoneAlert | null; onClose: () => void }) => {
-  // Rendered into <body>, so only once the page is running in the browser
-  const isClient = useSyncExternalStore(subscribeNoop, () => true, () => false);
-  if (!isClient) return null;
-
-  return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 top-3 z-[100000] flex justify-center px-3 sm:top-5">
-      <AnimatePresence>
-        {alert && (
-          <m.div
-            key={alert.id}
-            role="status"
-            aria-live="polite"
-            initial={{ opacity: 0, y: -90, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -90, scale: 0.94 }}
-            transition={{ type: "spring", stiffness: 420, damping: 30 }}
-            onClick={onClose}
-            className="pointer-events-auto relative w-full max-w-[340px] cursor-pointer overflow-hidden rounded-[20px] border border-white/60 px-3 py-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.16)]"
-            style={{
-              // iPhone notification glass: frosted, slightly tinted white
-              background: "linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(245,245,247,0.55) 100%)",
-              backdropFilter: "blur(24px) saturate(180%)",
-              WebkitBackdropFilter: "blur(24px) saturate(180%)",
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif',
-            }}
-          >
-            <div className="flex items-center gap-2.5">
-              <span
-                className={`grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[8px] text-white shadow-[0_1px_3px_rgba(0,0,0,0.18)] ${
-                  alert.whatsapp ? "bg-[#25D366]" : alert.type === "success" ? "bg-[#134698]" : "bg-[#ff3b30]"
-                }`}
-              >
-                {alert.whatsapp ? (
-                  <FaWhatsapp className="h-[20px] w-[20px]" />
-                ) : alert.type === "success" ? (
-                  <CheckCircle className="h-[18px] w-[18px]" />
-                ) : (
-                  <AlertCircle className="h-[18px] w-[18px]" />
-                )}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="truncate text-[13px] font-semibold leading-[1.25] text-black">{alert.title}</p>
-                  <span className="shrink-0 text-[11px] text-black/45">now</span>
-                </div>
-                {alert.text && <p className="line-clamp-2 text-[12.5px] leading-[1.3] text-black/75">{alert.text}</p>}
-              </div>
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
-    </div>,
-    document.body
-  );
-};
-
 const ContactItem = ({ icon: Icon, title, children }: { icon: ComponentType<{ className?: string }>; title: string; children: ReactNode }) => (
   <div className="flex items-start gap-4">
     <span className="w-12 h-12 rounded-full bg-[#0f2a5c] flex items-center justify-center flex-shrink-0 shadow-[0_8px_18px_-8px_rgba(15,42,92,0.7)]">
@@ -221,18 +155,7 @@ const Contact = ({ content }: { content: ContactPageContent }) => {
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
   const [phoneOtp, setPhoneOtp] = useState("");
   const [phoneOtpLoading, setPhoneOtpLoading] = useState(false);
-  const [phoneAlert, setPhoneAlert] = useState<PhoneAlert | null>(null);
-  const phoneAlertTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showPhoneAlert = (alert: Omit<PhoneAlert, "id">) => {
-    if (phoneAlertTimer.current) clearTimeout(phoneAlertTimer.current);
-    setPhoneAlert({ ...alert, id: Date.now() });
-    phoneAlertTimer.current = setTimeout(() => setPhoneAlert(null), PHONE_ALERT_MS);
-  };
-
-  useEffect(() => () => {
-    if (phoneAlertTimer.current) clearTimeout(phoneAlertTimer.current);
-  }, []);
+  const { alert: phoneAlert, show: showPhoneAlert, close: closePhoneAlert } = usePhoneAlert();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -608,7 +531,7 @@ const Contact = ({ content }: { content: ContactPageContent }) => {
                         </div>
 
                         {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                        <PhoneNotification alert={phoneAlert} onClose={() => setPhoneAlert(null)} />
+                        <PhoneNotification alert={phoneAlert} onClose={closePhoneAlert} />
                       </div>
                     </div>
 
