@@ -56,6 +56,8 @@ const nextConfig = {
       { protocol: "http", hostname: "localhost", port: "5000", pathname: "/uploads/**" },
       { protocol: "https", hostname: "api.designhouse.co.in", pathname: "/uploads/**" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      // Images uploaded from the admin
+      { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },
 };

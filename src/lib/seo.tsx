@@ -16,7 +16,32 @@ export interface SeoData {
   schemaMarkup?: string;
   bgImage?: string;
   mainImage?: { url?: string };
+  /** The page's path ("/contact"), used to build its canonical URL when none is saved */
+  pagePath?: string;
 }
+
+// The website's public address (canonical URLs, og:url)
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.designhouse.co.in").replace(/\/+$/, "");
+const SITE_NAME = "Design House India";
+
+/** The admin's canonical field may hold a URL or a whole <link rel="canonical" href="…"> tag */
+const canonicalFrom = (value?: string) => {
+  const raw = (value || "").replace(/&amp;/g, "&").trim();
+  const href = raw.match(/href=["']([^"']+)["']/i)?.[1];
+  const url = (href || raw.replace(/<[^>]*>/g, "")).trim();
+  return /^https?:\/\//i.test(url) ? url : "";
+};
+
+/**
+ * Share previews (WhatsApp, Facebook, LinkedIn) want a 1200×630 image well under 1 MB.
+ * Cloudinary uploads are resized/compressed on the fly; other images are used as they are.
+ */
+const shareImage = (url: string) => {
+  if (/res\.cloudinary\.com\/.+\/image\/upload\//.test(url) && !url.includes("/upload/c_")) {
+    return { url: url.replace("/image/upload/", "/image/upload/c_fill,w_1200,h_630,q_auto,f_jpg/"), width: 1200, height: 630 };
+  }
+  return { url };
+};
 
 const decodeAndStripHtml = (str?: string) => {
   if (!str) return "";
@@ -109,10 +134,9 @@ async function fetchPageSeoUncached(pagePath: string): Promise<SeoData | null> {
       next: { revalidate: 300 },
     });
     const json = await res.json();
-    if (json.success) return json.data as SeoData;
-    return null;
+    return { ...(json.success && json.data ? (json.data as SeoData) : {}), pagePath: path };
   } catch {
-    return null;
+    return { pagePath: pagePath };
   }
 }
 // cache() dedupes this per request so generateMetadata() and the page body
@@ -121,13 +145,15 @@ async function fetchPageSeoUncached(pagePath: string): Promise<SeoData | null> {
 export const fetchPageSeo = cache(fetchPageSeoUncached);
 
 /** Maps the CMS SEO payload onto Next's Metadata shape (replaces SeoHelmet's <Helmet> tags). */
-export function buildMetadata(seo: SeoData | null, fallbackTitle = "Design House India"): Metadata {
-  if (!seo) return { title: fallbackTitle };
+export function buildMetadata(seo: SeoData | null, fallbackTitle = "Design House India", fallbackDescription?: string): Metadata {
+  if (!seo) return { title: fallbackTitle, description: fallbackDescription };
 
   const metaTitle = decodeAndStripHtml(seo.metaTitle) || seo.title || fallbackTitle;
-  const metaDescription = decodeAndStripHtml(seo.metaDescription);
+  const metaDescription = decodeAndStripHtml(seo.metaDescription) || fallbackDescription || "";
   const metaKeywords = decodeAndStripHtml(seo.metaKeywords || seo.metaKeyword);
-  const canonical = (seo.canonicalTag || "").trim();
+  // Saved canonical, or generated from the page path
+  const canonical =
+    canonicalFrom(seo.canonicalTag) || (seo.pagePath ? `${SITE_URL}${seo.pagePath === "/" ? "/" : seo.pagePath}` : "");
   const ogImageRaw = seo.ogImage || seo.bgImage || seo.mainImage?.url;
   const ogImage = ogImageRaw
     ? ogImageRaw.startsWith("http")
@@ -141,15 +167,28 @@ export function buildMetadata(seo: SeoData | null, fallbackTitle = "Design House
   const rawOgTags = parseRawMetaTags(seo.openGraphTags);
   const hasRaw = (prop: string) => rawOgTags.some((t) => t.property === prop);
 
+  const image = ogImage ? shareImage(ogImage) : undefined;
+  const ogTitle = seo.ogTitle || metaTitle;
+  const ogDescription = seo.ogDescription || metaDescription || undefined;
+
   return {
     title: metaTitle,
     description: metaDescription || undefined,
     keywords: metaKeywords || undefined,
     alternates: canonical ? { canonical } : undefined,
     openGraph: {
-      title: hasRaw("og:title") ? undefined : seo.ogTitle || metaTitle,
-      description: hasRaw("og:description") ? undefined : seo.ogDescription || metaDescription || undefined,
-      images: hasRaw("og:image") ? undefined : ogImage ? [ogImage] : undefined,
+      type: "website",
+      siteName: SITE_NAME,
+      url: canonical || undefined,
+      title: hasRaw("og:title") ? undefined : ogTitle,
+      description: hasRaw("og:description") ? undefined : ogDescription,
+      images: hasRaw("og:image") ? undefined : image ? [image] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: ogTitle,
+      description: ogDescription,
+      images: image ? [image.url] : undefined,
     },
   };
 }

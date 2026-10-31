@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type ComponentType, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, useSyncExternalStore, type ComponentType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Image, { type StaticImageData } from "next/image";
 import { m, AnimatePresence } from "framer-motion";
@@ -29,7 +29,7 @@ import Topbar from "@/components/layout/Topbar";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/sections/Footer";
 import { api } from "@/lib/api";
-import { useSettings } from "@/hooks/useSettings";
+import { mapsSearchUrl, type ContactPageContent } from "@/lib/contactPage";
 import heroImg from "@/assets/banner/contact.webp";
 import officeGhaziabad from "@/assets/image/c1.webp";
 import officeDelhi from "@/assets/image/c2.webp";
@@ -45,45 +45,42 @@ const SERVICES_DATA = {
   "Furniture": ["Wardrobe", "Kitchen", "LCD Unit", "Dressing Table", "Sofas"]
 };
 
-// Fixed here, as in the design (not taken from Settings → Phones)
-const CONTACT_PHONES = ["+91 9654900525", "+91 9810247319"];
-const FALLBACK_EMAIL = "info@designhouse.co.in";
+// Icons of the hero highlight points, in order (their labels come from the admin)
+const HERO_ICONS: ComponentType<{ className?: string; strokeWidth?: number }>[] = [MapPin, ClipboardPen, MessageCircleMore];
 
-const HERO_POINTS: { icon: ComponentType<{ className?: string; strokeWidth?: number }>; label: string }[] = [
-  { icon: MapPin, label: "Discuss\nYour Idea" },
-  { icon: ClipboardPen, label: "Expert\nGuidance" },
-  { icon: MessageCircleMore, label: "End-to-End\nSupport" },
-];
+// The page's own images; anything else (uploaded in the admin) is loaded from its URL
+const STATIC_IMAGES: Record<string, StaticImageData> = {
+  "/assets/banner/contact.webp": heroImg,
+  "/assets/image/c1.webp": officeGhaziabad,
+  "/assets/image/c2.webp": officeDelhi,
+  "/assets/image/c3.webp": officeMumbai,
+};
 
-// lines: the address as printed on the card, one entry per line (as in the design)
-const OFFICES: { label: string; city: string; lines: string[]; query: string; img: StaticImageData }[] = [
-  {
-    label: "Head Office",
-    city: "Ghaziabad",
-    lines: ["Plot No. 12/29, Site-II Industrial Area,", "Loni Road, Mohan Nagar, Ghaziabad,", "Uttar Pradesh 201007, India"],
-    query: "Design House India Pvt Ltd, Plot No. 12/29, Site-II Industrial Area, Loni Road, Mohan Nagar, Ghaziabad 201007",
-    img: officeGhaziabad,
-  },
-  {
-    label: "Delhi Branch",
-    city: "New Delhi",
-    lines: ["Ground Floor, Main Market, E-1,", "opposite KFC, Kalkaji,", "New Delhi 110019, India"],
-    query: "Ground Floor, Main Market, E-1, opposite KFC, Kalkaji, New Delhi 110019",
-    img: officeDelhi,
-  },
-  {
-    label: "Mumbai Branch",
-    city: "Vasai East",
-    lines: ["U/IT-II SR Compound, Plot No. 49/459,", "Opp. Dynamic Flow Company,", "Wakanpada Road, Vasai Phata,", "Vasai East – 401208, India"],
-    query: "SR Compound, Wakanpada Road, Vasai Phata, Vasai East 401208",
-    img: officeMumbai,
-  },
-];
+const imageSource = (src: string, fallback: StaticImageData) => {
+  const local = STATIC_IMAGES[src];
+  if (local || !src) return { src: local ?? fallback, placeholder: "blur" as const };
+  return { src, placeholder: "empty" as const };
+};
 
-const mapsUrl = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-
-// Head office, zoomed in, with its marker and place card
-const FALLBACK_MAP = "https://maps.google.com/maps?q=" + encodeURIComponent("Design House India Pvt Ltd, Mohan Nagar, Ghaziabad") + "&z=15&output=embed";
+/** Headline from the admin: a new line starts the next line, *words* show in orange */
+const Headline = ({ text }: { text: string }) => (
+  <>
+    {text.split("\n").map((line, i) => (
+      <Fragment key={i}>
+        {i > 0 && <br />}
+        {line.split(/(\*[^*]+\*)/g).map((part, j) =>
+          /^\*[^*]+\*$/.test(part) ? (
+            <span key={j} className="text-[#F28A2E]">
+              {part.slice(1, -1)}
+            </span>
+          ) : (
+            <Fragment key={j}>{part}</Fragment>
+          )
+        )}
+      </Fragment>
+    ))}
+  </>
+);
 
 /* ─── Small pieces ─── */
 
@@ -195,9 +192,9 @@ const ContactItem = ({ icon: Icon, title, children }: { icon: ComponentType<{ cl
 
 /* ─── Page ─── */
 
-const Contact = () => {
-  const { settings } = useSettings();
-  const email = settings?.emails?.find((e) => e.forContact)?.email || FALLBACK_EMAIL;
+const Contact = ({ content }: { content: ContactPageContent }) => {
+  const { hero, contactInfo, offices, map } = content;
+  const heroImage = imageSource(hero.image, heroImg);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -397,7 +394,6 @@ const Contact = () => {
   };
 
   const subServices = SERVICES_DATA[formData.service as keyof typeof SERVICES_DATA] || [];
-  const mapHtml = settings?.mapIframe?.includes("<iframe") ? settings.mapIframe : "";
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -407,11 +403,11 @@ const Contact = () => {
       {/* ================= HERO ================= */}
       <section className="relative overflow-hidden bg-[#0b1426]">
         <Image
-          src={heroImg}
-          alt="Design House India reception and office"
+          src={heroImage.src}
+          alt={hero.imageAlt}
           fill
           priority
-          placeholder="blur"
+          placeholder={heroImage.placeholder}
           sizes="100vw"
           className="object-cover object-[70%_center]"
         />
@@ -422,24 +418,25 @@ const Contact = () => {
         <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-[120px] pb-12 sm:pt-[132px] sm:pb-14 lg:pt-[112px] lg:pb-6 lg:h-[435px] flex flex-col justify-center">
           <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="max-w-[580px]">
             <p className="flex items-center gap-4 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.4em] text-white/90 mb-3">
-              Contact Us
+              {hero.eyebrow}
               <span className="w-16 sm:w-24 h-[3px] rounded-full bg-gradient-to-r from-[#E8742A] to-[#E8742A]/0" />
             </p>
             <h1 className="font-display font-bold text-white leading-[1.08] text-[35px] sm:text-[46px] lg:text-[52px] mb-3">
-              Let&apos;s Build
-              <br />
-              Your <span className="text-[#F28A2E]">Next Space</span>
+              <Headline text={hero.headline} />
             </h1>
             <p className="text-white/90 text-[14px] sm:text-[16.5px] leading-relaxed mb-6 max-w-[520px]">
-              From concept to completion, our team is here to understand your requirements and create the right solution for your&nbsp;brand.
+              {hero.description}
             </p>
             <ul className="flex flex-wrap gap-y-4">
-              {HERO_POINTS.map(({ icon: Icon, label }, i) => (
-                <li key={label} className={`flex items-center gap-2.5 pr-4 sm:pr-6 ${i > 0 ? "pl-4 sm:pl-6 border-l border-white/30" : ""}`}>
+              {hero.highlights.map((label, i) => {
+                const Icon = HERO_ICONS[i % HERO_ICONS.length];
+                return (
+                <li key={`${label}-${i}`} className={`flex items-center gap-2.5 pr-4 sm:pr-6 ${i > 0 ? "pl-4 sm:pl-6 border-l border-white/30" : ""}`}>
                   <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" strokeWidth={1.4} />
                   <span className="text-white text-[13px] sm:text-[14px] font-medium leading-snug whitespace-pre-line">{label}</span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </m.div>
         </div>
@@ -450,30 +447,29 @@ const Contact = () => {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 lg:grid-cols-2 2xl:grid-cols-[0.78fr_1.22fr_1.06fr] 2xl:gap-6 items-start">
           {/* Get in touch */}
           <m.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="lg:col-span-2 2xl:col-span-1 2xl:pt-1">
-            <Eyebrow>Get in Touch</Eyebrow>
-            <h2 className="font-display font-bold text-[#0f2a5c] text-[32px] sm:text-[38px] leading-[1.08] mb-4">
-              We&apos;re Here
-              <br className="hidden 2xl:block" /> to Help
+            <Eyebrow>{contactInfo.eyebrow}</Eyebrow>
+            <h2 className="font-display font-bold text-[#0f2a5c] text-[32px] sm:text-[38px] leading-[1.08] mb-4 [text-wrap:balance]">
+              {contactInfo.title}
             </h2>
             <p className="text-[14.5px] text-gray-600 leading-relaxed mb-8 max-w-[420px]">
-              Have a project in mind or need expert advice? Our team will be happy to assist you with design, manufacturing and execution tailored to your requirements.
+              {contactInfo.description}
             </p>
             <div className="grid gap-7 sm:grid-cols-3 2xl:grid-cols-1">
               <ContactItem icon={Phone} title="Call Us">
-                {CONTACT_PHONES.map((p) => (
+                {contactInfo.phones.map((p) => (
                   <a key={p} href={`tel:${p.replace(/[^0-9+]/g, "")}`} className="block font-semibold hover:text-[#E8742A] transition-colors">
                     {p}
                   </a>
                 ))}
               </ContactItem>
               <ContactItem icon={Mail} title="Email Us">
-                <a href={`mailto:${email}`} className="font-semibold break-all hover:text-[#E8742A] transition-colors">
-                  {email}
+                <a href={`mailto:${contactInfo.email}`} className="font-semibold break-all hover:text-[#E8742A] transition-colors">
+                  {contactInfo.email}
                 </a>
               </ContactItem>
               <ContactItem icon={Clock} title="Working Hours">
-                <p className="whitespace-nowrap">Monday – Saturday: 9:00 AM – 6:00 PM</p>
-                <p>Sunday: Closed</p>
+                {contactInfo.weekdayHours && <p className="whitespace-nowrap">{contactInfo.weekdayHours}</p>}
+                {contactInfo.weekendHours && <p>{contactInfo.weekendHours}</p>}
               </ContactItem>
             </div>
           </m.div>
@@ -695,27 +691,29 @@ const Contact = () => {
             transition={{ delay: 0.16 }}
             className="bg-[#eef1f6] rounded-md p-4 sm:p-5"
           >
-            <Eyebrow>Our Offices</Eyebrow>
-            <h2 className="font-display font-bold text-[#0f2a5c] text-[30px] sm:text-[34px] leading-tight mb-2">Visit Us</h2>
-            <p className="text-[14px] text-gray-600 mb-5">Meet our team at any of our locations or get in touch to schedule a discussion.</p>
+            <Eyebrow>{offices.eyebrow}</Eyebrow>
+            <h2 className="font-display font-bold text-[#0f2a5c] text-[30px] sm:text-[34px] leading-tight mb-2">{offices.title}</h2>
+            <p className="text-[14px] text-gray-600 mb-5">{offices.description}</p>
 
             <ul className="space-y-2.5">
-              {OFFICES.map((o) => (
-                <li key={o.label} className="flex items-stretch gap-3 p-2 bg-white rounded-md shadow-sm ring-1 ring-black/[0.04]">
+              {offices.items.map((o, i) => {
+                const officeImage = imageSource(o.image, [officeGhaziabad, officeDelhi, officeMumbai][i % 3]);
+                return (
+                <li key={`${o.city}-${i}`} className="flex items-stretch gap-3 p-2 bg-white rounded-md shadow-sm ring-1 ring-black/[0.04]">
                   <div className="relative hidden sm:block w-[112px] min-h-[96px] flex-shrink-0 rounded-[3px] overflow-hidden">
-                    <Image src={o.img} alt={`Design House ${o.city} office`} fill placeholder="blur" sizes="112px" className="object-cover" />
+                    <Image src={officeImage.src} alt={o.imageAlt || `Design House ${o.city} office`} fill placeholder={officeImage.placeholder} sizes="112px" className="object-cover" />
                   </div>
                   <div className="flex-1 min-w-0 py-1 pl-1 sm:pl-0">
                     <p className="text-[12px] font-bold uppercase text-[#E8742A] leading-tight">{o.label}</p>
                     <h3 className="text-[16px] font-extrabold uppercase text-[#0f2a5c] leading-tight mb-1">{o.city}</h3>
                     <div className="text-[12.5px] 2xl:text-[12px] min-[1700px]:text-[12.5px] leading-[1.4] text-gray-600 sm:whitespace-nowrap">
-                      {o.lines.map((l) => (
-                        <p key={l}>{l}</p>
+                      {o.address.split("\n").map((l, k) => (
+                        <p key={k}>{l}</p>
                       ))}
                     </div>
                   </div>
                   <a
-                    href={mapsUrl(o.query)}
+                    href={mapsSearchUrl(o.mapQuery || `${o.address.replace(/\n/g, " ")}`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group w-[80px] flex-shrink-0 rounded-[3px] bg-[#f3f5f9] flex flex-col items-center justify-center gap-2 text-center hover:bg-[#0f2a5c] transition-colors"
@@ -730,7 +728,8 @@ const Contact = () => {
                     </span>
                   </a>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </m.div>
         </div>
@@ -741,19 +740,17 @@ const Contact = () => {
         {/* Navy panel over the map's left side; its right edge slants out towards the bottom (stacked above the map on phones) */}
         <div className="relative z-10 lg:absolute lg:inset-y-0 lg:left-0 lg:w-[38%] xl:w-[34%] bg-[#0f2a5c] lg:[clip-path:polygon(0_0,88%_0,100%_100%,0_100%)]">
           <div className="h-full flex flex-col justify-center px-4 sm:px-6 lg:pl-[max(2rem,calc((100vw-1400px)/2+2rem))] lg:pr-16 py-9 lg:py-6">
-            <Eyebrow>Our Location</Eyebrow>
-            <h2 className="font-display font-bold text-white text-[28px] sm:text-[32px] leading-tight mb-2">Find Us on Map</h2>
-            <p className="text-white/85 text-[13.5px] leading-snug mb-5 max-w-[330px]">
-              Our head office is located in Ghaziabad, with branch offices in New Delhi and Mumbai.
-            </p>
+            <Eyebrow>{map.eyebrow}</Eyebrow>
+            <h2 className="font-display font-bold text-white text-[28px] sm:text-[32px] leading-tight mb-2">{map.title}</h2>
+            <p className="text-white/85 text-[13.5px] leading-snug mb-5 max-w-[330px]">{map.description}</p>
             <a
-              href={mapsUrl(OFFICES[0].query)}
+              href={map.mapLink || mapsSearchUrl(offices.items[0]?.mapQuery || "Design House India Pvt Ltd")}
               target="_blank"
               rel="noopener noreferrer"
               className="self-start inline-flex items-center gap-3 rounded-[3px] border border-white/80 px-4 py-2.5 text-white text-[12px] font-bold uppercase tracking-wide hover:bg-white hover:text-[#0f2a5c] transition-colors"
             >
               <MapPin className="w-4 h-4" />
-              Open in Google Maps
+              {map.buttonLabel || "Open in Google Maps"}
               <ArrowRight className="w-4 h-4" />
             </a>
           </div>
@@ -761,18 +758,15 @@ const Contact = () => {
 
         {/* Map fills the rest; on lg+ it starts under the panel's slant so the marker sits in the open part */}
         <div className="relative h-[300px] lg:absolute lg:inset-y-0 lg:right-0 lg:left-[30%] lg:h-auto [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:border-0">
-          {mapHtml ? (
-            <div className="absolute inset-0" dangerouslySetInnerHTML={{ __html: mapHtml }} />
-          ) : (
-            <iframe
-              src={FALLBACK_MAP}
-              title="Design House India on Google Maps"
-              className="absolute inset-0"
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          )}
+          {/* Google Maps embed set in the admin (only Google Maps links are accepted there) */}
+          <iframe
+            src={map.embedUrl}
+            title="Design House India on Google Maps"
+            className="absolute inset-0"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
         </div>
       </section>
 

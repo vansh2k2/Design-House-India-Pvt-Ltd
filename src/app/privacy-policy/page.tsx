@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { fetchPageSeo, buildMetadata, AdvancedSeoTags } from "@/lib/seo";
 import { CalendarCheck, Cookie, ExternalLink, FileText, RefreshCcw, Settings, Share2, ShieldCheck, User, UserCog } from "lucide-react";
 
 import LegalLayout, { COMPANY, type LegalSection } from "@/components/pages/LegalLayout";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy | Design House India",
-  description: `How ${COMPANY.name} collects, uses and protects your personal information.`,
-  alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.designhouse.co.in"}/privacy-policy` },
-};
+// SEO from the admin (Pages & CMS → SEO Information); this text is used until one is saved
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await fetchPageSeo("/privacy-policy");
+  return buildMetadata(seo, "Privacy Policy | Design House India", `How ${COMPANY.name} collects, uses and protects your personal information.`);
+}
 
 const SECTIONS: LegalSection[] = [
   {
@@ -62,8 +63,11 @@ const SECTIONS: LegalSection[] = [
   },
 ];
 
-export default function Page() {
+export default async function Page() {
+  const seo = await fetchPageSeo("/privacy-policy");
   return (
+    <>
+      <AdvancedSeoTags seo={seo} />
     <LegalLayout
       title="Privacy Policy"
       intro="Your privacy is important to us. This policy explains how we collect, use and protect your information."
@@ -75,5 +79,6 @@ export default function Page() {
       cardTitle={["Transforming Spaces", "Creating Experiences"]}
       cardText="From concept to completion, we deliver spaces that inspire."
     />
+    </>
   );
 }

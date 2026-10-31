@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { fetchPageSeo, buildMetadata, AdvancedSeoTags } from "@/lib/seo";
 import {
   CalendarDays,
   FileText,
@@ -16,11 +17,11 @@ import {
 
 import LegalLayout, { COMPANY, type LegalSection } from "@/components/pages/LegalLayout";
 
-export const metadata: Metadata = {
-  title: "Terms & Conditions | Design House India",
-  description: `Terms and conditions for using the ${COMPANY.name} website and services.`,
-  alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.designhouse.co.in"}/terms-and-conditions` },
-};
+// SEO from the admin (Pages & CMS → SEO Information); this text is used until one is saved
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await fetchPageSeo("/terms-and-conditions");
+  return buildMetadata(seo, "Terms & Conditions | Design House India", `Terms and conditions for using the ${COMPANY.name} website and services.`);
+}
 
 const SECTIONS: LegalSection[] = [
   {
@@ -85,8 +86,11 @@ const SECTIONS: LegalSection[] = [
   },
 ];
 
-export default function Page() {
+export default async function Page() {
+  const seo = await fetchPageSeo("/terms-and-conditions");
   return (
+    <>
+      <AdvancedSeoTags seo={seo} />
     <LegalLayout
       title="Terms & Conditions"
       intro="These terms and conditions govern your use of our website and our services. Please read them carefully."
@@ -98,5 +102,6 @@ export default function Page() {
       cardTitle={["From Concept to", "Lasting Impressions"]}
       cardText="We design and build spaces that inspire brands, engage people and deliver results."
     />
+    </>
   );
 }
