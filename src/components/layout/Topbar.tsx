@@ -81,8 +81,8 @@ const Topbar = () => {
       <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
         {/* Left: Phone numbers & Email */}
         <div className="flex items-center gap-2 md:gap-0">
-          {topbar.phones.map((phone) => (
-            <Fragment key={phone}>
+          {topbar.phones.map((phone, i) => (
+            <Fragment key={`${phone}-${i}`}>
               <ContactChip href={`tel:${phone.replace(/[^0-9+]/g, "")}`} icon={Phone} label="Call us" text={phone} />
               <Divider />
             </Fragment>
@@ -92,8 +92,8 @@ const Topbar = () => {
 
         {/* Right: Quick links */}
         <div className="flex items-center gap-2 sm:gap-0">
-          {topbar.links.map((link) => (
-            <Fragment key={`${link.label}-${link.href}`}>
+          {topbar.links.map((link, i) => (
+            <Fragment key={`${link.label}-${link.href}-${i}`}>
               <QuickLink href={link.href} icon={linkIcon(link.label)} text={link.label} />
               <Divider />
             </Fragment>

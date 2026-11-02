@@ -2,112 +2,90 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight, ChevronDown, Headset } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import { HOME_SECTION_DEFAULTS, type FaqsContent } from "@/lib/homeSections";
+import faqImg from "@/assets/image/faq1.webp";
 
-/* The photo's right edge is a convex curve: x eases from 85% at the top out to 100% at the bottom
-   (quarter sine), sampled into polygon points. */
-const PHOTO_CLIP = `polygon(0 0, ${Array.from({ length: 13 }, (_, k) => {
-  const t = k / 12;
-  return `${(85 + 15 * Math.sin((t * Math.PI) / 2)).toFixed(2)}% ${(t * 100).toFixed(2)}%`;
-}).join(", ")}, 0 100%)`;
-
-// Left edge of the photo fades into the page background
-const PHOTO_MASK = "linear-gradient(to right, transparent 0%, black 38%)";
-
-/* "FAQs": heading, intro and a "Still Have Questions?" contact card on the left over a reception photo
-   (xl+) that fades in from the left; an accordion of numbered questions on the right (first one open). */
+/* "FAQs": heading and intro on the left with a showroom photo below them (the photo's top fades to
+   white, so it tucks in behind the text); on the right an accordion of questions, each a white card
+   with an orange bar, the open one tinted orange (first one open). */
 // Content: edited in the admin (Pages & CMS → Home → Frequently Asked Questions)
 const OurFaqs = ({ data = HOME_SECTION_DEFAULTS.faqs }: { data?: FaqsContent }) => {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section id="faqs" className="relative w-full overflow-hidden bg-white scroll-mt-24">
-      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-6">
-        {/* ── Left: text + contact card over the photo ── */}
-        <div className="relative pt-8 pb-2 xl:py-10">
-          {data.image && <div
-            className="hidden xl:block absolute top-0 bottom-0 left-[36%] -right-6"
-            style={{ clipPath: PHOTO_CLIP, maskImage: PHOTO_MASK, WebkitMaskImage: PHOTO_MASK }}
-            aria-hidden="true"
-          >
-            {/* The frame is narrow and tall, so the photo is scaled to its height and drawn far wider than the
-                frame; `sizes` must request that full drawn width or the browser picks a too-small file */}
-            <Image src={data.image} alt={data.imageAlt || ""} fill sizes="(min-width: 1280px) 80vw, 100vw" className="object-cover object-[55%_center]" />
-            {/* White wash only on the left part, behind the text; fades out before the rest of the photo */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/25 via-25% to-transparent to-40%" />
-          </div>}
+    <section id="faqs" className="relative w-full overflow-hidden bg-gradient-to-br from-white via-[#FFFCFA] to-[#FFF5EE] scroll-mt-24">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-6 xl:gap-10">
+        {/* ── Left: the showroom photo fills the column; a white curve across its top carries the heading ── */}
+        <div className="relative pt-10 xl:pt-[54px] min-h-[520px] xl:min-h-[520px]">
+          <div className="absolute inset-0">
+            <Image
+              src={faqImg}
+              alt={data.imageAlt || "Bathware and sanitaryware showroom designed by Design House India"}
+              fill
+              placeholder="blur"
+              sizes="(min-width: 1280px) 48vw, 100vw"
+              className="object-cover object-left-bottom"
+            />
+            {/* White curve over the top of the photo: deeper on the left (behind the text), rising to the right */}
+            <svg className="absolute inset-x-0 top-0 w-full h-[340px] xl:h-[310px]" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="faq-curve-edge" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#ffffff" stopOpacity="0.9" />
+                  <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {/* Soft band under the edge so the curve fades into the photo */}
+              <path d="M0 80 C 40 98, 74 86, 100 58 L 100 72 C 74 100, 40 112, 0 96 Z" fill="url(#faq-curve-edge)" />
+              <path d="M0 0 H100 V58 C 74 86, 40 98, 0 80 Z" fill="#ffffff" />
+            </svg>
+          </div>
 
-          <div className="relative max-w-[380px]">
+          <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
               <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">{data.eyebrow}</span>
             </div>
-            <h2 className="text-[30px] sm:text-[36px] lg:text-[42px] font-serif font-medium leading-[1.08] tracking-tight mb-3 text-[#0A2B5E]">
+            <h2 className="text-[26px] sm:text-[30px] lg:text-[34px] font-serif font-medium leading-[1.15] tracking-tight mb-3 text-[#0A2B5E]">
               {data.title}
               {data.title && data.highlight && <br />}
               <span className="text-[#fd6e15]">{data.highlight}</span>
             </h2>
-            <p className="text-[13.5px] sm:text-[14.5px] text-black leading-relaxed mb-6 max-w-[340px]">
-              {data.description}
-            </p>
-
-            <div className="rounded-md bg-[#FFF4EC]/95 p-3.5 sm:p-4 max-w-[300px]">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-11 h-11 shrink-0 rounded-full bg-[#FFE3D1] flex items-center justify-center">
-                  <Headset className="w-5 h-5 text-[#fd6e15]" strokeWidth={1.6} />
-                </span>
-                <div>
-                  <p className="text-[14px] font-bold text-[#0A2B5E] leading-tight mb-0.5">{data.help.title}</p>
-                  <p className="text-[11.5px] text-black leading-snug">{data.help.text}</p>
-                </div>
-              </div>
-              {data.help.buttonLabel && (
-              <Link
-                href={data.help.buttonHref || "/contact"}
-                className="group flex items-center justify-center gap-2.5 w-full rounded-md bg-[#fd6e15] hover:bg-[#e05d0e] py-2.5 text-white text-[13px] font-semibold shadow-[0_6px_16px_rgba(253,110,21,0.3)] transition-colors"
-              >
-                {data.help.buttonLabel}
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              )}
-            </div>
+            <p className="text-[13.5px] sm:text-[14.5px] text-[#1F2D44] leading-relaxed max-w-[460px]">{data.description}</p>
           </div>
         </div>
 
         {/* ── Right: accordion ── */}
-        <div className="relative pb-8 xl:py-6 flex flex-col justify-center gap-2.5">
+        <div className="relative pb-8 xl:py-10 flex flex-col justify-center gap-2.5">
           {data.faqs.map(({ question: q, answer: a }, i) => {
             const isOpen = open === i;
             return (
               <div
                 key={`${q}-${i}`}
-                className="flex items-start gap-3 sm:gap-4 rounded-md bg-white px-3 sm:px-4 py-2.5 shadow-[rgba(0,0,0,0.02)_0px_1px_3px_0px,rgba(27,31,35,0.15)_0px_0px_0px_1px]"
+                className={`rounded-xl border transition-colors duration-300 ${
+                  isOpen
+                    ? "border-[#FAD3B5] bg-gradient-to-r from-[#FFEEE1] to-[#FFF7F1] shadow-[0_8px_22px_-10px_rgba(253,110,21,0.35)]"
+                    : "border-[#EEF1F6] bg-white shadow-[0_3px_12px_-4px_rgba(10,43,94,0.12)] hover:border-[#F6CFAF]"
+                }`}
               >
-                <span className="w-10 h-10 shrink-0 rounded-full bg-[#FFF1E8] text-[#fd6e15] text-[17px] font-bold flex items-center justify-center">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="w-px self-stretch bg-[#E3E8F0]" />
-                <div className="flex-1 min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => setOpen(isOpen ? null : i)}
-                    aria-expanded={isOpen}
-                    className="w-full min-h-10 flex items-center justify-between gap-3 text-left"
-                  >
-                    <h3 className="text-[13.5px] sm:text-[14px] font-semibold text-[#0A2B5E] leading-snug">{q}</h3>
-                    <ChevronDown
-                      className={`w-5 h-5 shrink-0 text-[#fd6e15] transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  <div
-                    className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
-                  >
-                    <div className="overflow-hidden">
-                      <p className="pt-0.5 pb-1.5 pr-6 text-[12.5px] text-[#4A5568] leading-relaxed">{a}</p>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => setOpen(isOpen ? null : i)}
+                  aria-expanded={isOpen}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left"
+                >
+                  <span className="w-[3px] h-5 shrink-0 rounded-full bg-[#fd6e15]" />
+                  <h3 className="flex-1 text-[13.5px] sm:text-[14px] font-semibold text-[#0A2B5E] leading-snug">{q}</h3>
+                  <ChevronDown
+                    className={`w-[18px] h-[18px] shrink-0 text-[#fd6e15] transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                    strokeWidth={2.4}
+                  />
+                </button>
+                <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                  <div className="overflow-hidden">
+                    {/* Lined up with the question text (after the orange bar) */}
+                    <p className="pl-[31px] pr-10 pb-3 text-[12.5px] text-[#3B4A63] leading-relaxed">{a}</p>
                   </div>
                 </div>
               </div>

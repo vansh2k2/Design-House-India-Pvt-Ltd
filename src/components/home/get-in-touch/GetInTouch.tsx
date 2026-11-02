@@ -233,8 +233,8 @@ const GetInTouch = ({ data = HOME_SECTION_DEFAULTS["get-in-touch"] }: { data?: G
               </IconCircle>
               <div>
                 <p className="text-[13.5px] font-bold text-[#0A2B5E] leading-tight mb-0.5">{data.callTitle}</p>
-                {data.phones.map((p) => (
-                  <a key={p} href={telHref(p)} className="flex items-center min-h-6 text-[12.5px] text-[#1F2D44] hover:text-[#fd6e15] leading-snug">
+                {data.phones.map((p, i) => (
+                  <a key={`${p}-${i}`} href={telHref(p)} className="flex items-center min-h-6 text-[12.5px] text-[#1F2D44] hover:text-[#fd6e15] leading-snug">
                     {p}
                   </a>
                 ))}

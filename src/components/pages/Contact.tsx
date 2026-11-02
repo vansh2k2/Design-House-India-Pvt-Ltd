@@ -379,8 +379,8 @@ const Contact = ({ content }: { content: ContactPageContent }) => {
             </p>
             <div className="grid gap-7 sm:grid-cols-3 2xl:grid-cols-1">
               <ContactItem icon={Phone} title="Call Us">
-                {contactInfo.phones.map((p) => (
-                  <a key={p} href={`tel:${p.replace(/[^0-9+]/g, "")}`} className="block font-semibold hover:text-[#E8742A] transition-colors">
+                {contactInfo.phones.map((p, i) => (
+                  <a key={`${p}-${i}`} href={`tel:${p.replace(/[^0-9+]/g, "")}`} className="block font-semibold hover:text-[#E8742A] transition-colors">
                     {p}
                   </a>
                 ))}

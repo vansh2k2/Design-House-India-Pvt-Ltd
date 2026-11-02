@@ -6,8 +6,6 @@ import Link from "next/link";
 import { ArrowRight, ArrowUp, ChevronRight, MapPin, Phone } from "lucide-react";
 
 import { useFooter } from "@/hooks/useFooter";
-import { useSocialProfiles } from "@/context/SocialLinksContext";
-import SocialIcon from "@/components/ui/SocialIcon";
 import iconMail from "@/assets/icon/c2.png";
 
 /* ─── Content ─── */
@@ -66,8 +64,6 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
   const { cta, email } = data;
   // The arrow in the Call Us Today box dials the second number
   const arrowPhone = data.phones[1] || data.phones[0] || "";
-  // Advanced SEO → Social Media Links (only the ones that are set)
-  const socialProfiles = useSocialProfiles();
 
   return (
     <footer className="bg-[#01182a] text-white font-sans overflow-x-hidden">
@@ -188,9 +184,9 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
               </span>
               <div className="leading-tight">
                 <p className="text-[11px] font-medium text-[#F7B84B] mb-0.5">{data.callTitle}</p>
-                {data.phones.map(p => (
+                {data.phones.map((p, i) => (
                   <a
-                    key={p}
+                    key={`${p}-${i}`}
                     href={telHref(p)}
                     className="flex items-center min-h-6 whitespace-nowrap font-bold text-[13px] 2xl:text-[14px] tracking-tight hover:text-[#3B9BFF] transition-colors"
                   >
@@ -202,28 +198,6 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
                 <ArrowRight className="w-4 h-4 2xl:w-[18px] 2xl:h-[18px]" />
               </a>
             </div>
-            {socialProfiles.length > 0 && (
-              <div className="mt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 mb-2">Follow Us</p>
-                <ul className="flex items-center gap-2.5">
-                  {socialProfiles.map(p => (
-                    <li key={p.network}>
-                      <a
-                        href={p.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Design House on ${p.label}`}
-                        title={p.label}
-                        className="w-9 h-9 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white transition-colors hover:border-transparent hover:bg-[var(--brand)]"
-                        style={{ "--brand": p.color === "#000000" ? "#1f2937" : p.color } as React.CSSProperties}
-                      >
-                        <SocialIcon network={p.network} size={16} />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
           {/* Quick links */}

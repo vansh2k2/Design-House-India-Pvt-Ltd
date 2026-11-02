@@ -391,15 +391,20 @@ export const HOME_SECTION_DEFAULTS: HomeSectionsContent = {
     "button": {
       "label": "View All Testimonials",
       "href": "/testimonials"
+    },
+    "video": {
+      "url": "https://www.youtube.com/watch?v=y_iRs4lFkUg",
+      "poster": "https://res.cloudinary.com/dqbjxbk6m/image/upload/v1793442065/design-house/home-hero/hero-2.webp",
+      "posterAlt": "Design House India office reception and lounge"
     }
   },
   "faqs": {
     "eyebrow": "FAQs",
-    "title": "Frequently",
-    "highlight": "Asked Questions.",
-    "description": "Find answers to common questions about our services, process, timelines and more. If you need further information, feel free to get in touch with our team.",
-    "image": "https://res.cloudinary.com/dqbjxbk6m/image/upload/v1793447009/design-house/home-faqs/faq.webp",
-    "imageAlt": "Design House India office reception",
+    "title": "Frequently Asked Questions About",
+    "highlight": "Design, Manufacturing & Turnkey Solutions",
+    "description": "Find answers to common questions about our services, capabilities, process, timelines and more.",
+    "image": "https://res.cloudinary.com/dqbjxbk6m/image/upload/v1793608421/design-house/home-faqs/faq1.webp",
+    "imageAlt": "Bathware and sanitaryware showroom designed by Design House India",
     "help": {
       "title": "Still Have Questions?",
       "text": "Our team is happy to help you with your project requirements.",
@@ -408,32 +413,44 @@ export const HOME_SECTION_DEFAULTS: HomeSectionsContent = {
     },
     "faqs": [
       {
-        "question": "What services does Design House India provide?",
-        "answer": "We offer end-to-end solutions for corporate interiors, retail showrooms, restaurant interiors, exhibition stall design and build, retail kiosks, and signage & branding. Our services include design, fabrication, manufacturing, installation and project management."
+        "question": "What services does Design House India Pvt. Ltd. offer?",
+        "answer": "Design House India provides end-to-end design, manufacturing and execution solutions, including corporate interiors, retail showroom interiors, restaurant interiors, exhibition stall design and build, retail kiosks, signage and branding solutions."
       },
       {
-        "question": "Do you have in-house manufacturing facilities?",
-        "answer": "Yes. Our in-house manufacturing facility handles woodworking, metal fabrication, finishing, printing and signage, which lets us control quality and timelines from design through to installation."
+        "question": "Do you provide turnkey interior design and execution services?",
+        "answer": "Yes. We handle the complete project under one roof — space planning and design, in-house manufacturing, on-site execution and handover — so you deal with a single team from concept to completion."
       },
       {
-        "question": "How long does a typical project take to complete?",
-        "answer": "Timelines depend on the size, scope and complexity of the project. Once we understand your requirements, we share a detailed schedule covering design, production and on-site execution."
+        "question": "Do you undertake retail showroom design and manufacturing projects?",
+        "answer": "Yes. We design and build retail showrooms and brand stores, including layouts, display fixtures, lighting, signage and branding, and we can roll out a consistent store design across multiple locations."
       },
       {
-        "question": "Do you work across India?",
-        "answer": "Yes. We execute and support projects across India, with our team managing production, logistics and on-site installation wherever your space is located."
+        "question": "Does Design House India have its own manufacturing facility?",
+        "answer": "Yes. Our in-house manufacturing facility in Ghaziabad handles woodworking, metal fabrication, finishing, printing and signage, which lets us control quality and timelines from design through to installation."
       },
       {
-        "question": "Can you handle custom designs and brand-specific requirements?",
-        "answer": "Absolutely. Every space we create is designed around your brand guidelines, functional needs and budget, from bespoke fixtures and furniture to custom signage and branding elements."
+        "question": "Do you provide interior design and execution services in Delhi NCR?",
+        "answer": "Yes. Our corporate office and manufacturing unit are in Ghaziabad and our regional office is in Kalkaji, New Delhi, so we serve Delhi, Noida, Ghaziabad, Gurugram and the rest of NCR, and execute projects across India."
       },
       {
-        "question": "What information do you need to provide a quotation?",
-        "answer": "Share the project type, location, approximate area, your design references or brand guidelines, the expected timeline and your budget range. Layouts or drawings, if available, help us quote more accurately."
+        "question": "Can you create customised retail displays and brand fixtures?",
+        "answer": "Absolutely. We design and manufacture custom display units, gondolas, shelving, counters, kiosks and point-of-purchase fixtures built to your brand guidelines, product range and store space."
       },
       {
-        "question": "Do you provide support after project completion?",
-        "answer": "Yes. After handover we stay available for maintenance, repairs and any modifications, so your space keeps performing the way it should."
+        "question": "How much does a commercial interior or showroom project cost?",
+        "answer": "The cost depends on the area, scope of work, materials, finishes and location. Share your requirements, layout and budget range with us and we will prepare a detailed quotation for your project."
+      },
+      {
+        "question": "How long does it take to complete an interior or exhibition project?",
+        "answer": "Timelines depend on the size, scope and complexity of the project. Once we understand your requirements, we share a detailed schedule covering design, production and on-site execution, and exhibition stalls are planned around your event dates."
+      },
+      {
+        "question": "Which industries does Design House India serve?",
+        "answer": "We work with corporate offices, retail brands and showrooms, restaurants and cafes, exhibitors at trade fairs and events, and hospitality and wellness businesses, with more than 5,000 projects delivered over 21+ years."
+      },
+      {
+        "question": "How can I get a quotation for my interior or retail project?",
+        "answer": "Fill in the enquiry form on our Contact page or call us at +91 96549 00525. Share the project type, location, approximate area, timeline and budget range, and our team will get back to you with a quotation."
       }
     ]
   },
