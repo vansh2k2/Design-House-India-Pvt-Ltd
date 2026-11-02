@@ -1,9 +1,66 @@
-/* Spoken replies for the website chat (components/ui/Chatbot.tsx), using the browser's own
-   text-to-speech (Web Speech API): no audio files, no external service. */
+/* Spoken replies for the website chat (components/ui/Chatbot.tsx). Replies are read by a natural voice
+   generated on the backend (OpenAI). If that can't play, the browser's own voice (Web Speech API) reads
+   them instead, so a reply is never silently skipped. */
 
 type Lang = "en" | "hi";
 
-const supported = () => typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+const VOICE_START_TIMEOUT_MS = 10000; // no sound by then: use the browser's voice
+const VOICE_MAX_MS = 120000; // never hold the chat up longer than this
+
+/* ───────────────────────── Natural voice (audio from the backend) ───────────────────────── */
+
+// A tiny silent clip: playing it during a click lets Safari play later replies through the same element
+const SILENCE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+
+let player: HTMLAudioElement | null = null;
+let stopPlayer: (() => void) | null = null;
+
+/** Call inside a click, so replies that arrive later are allowed to play. */
+export function unlockVoice() {
+  if (player || typeof Audio === "undefined") return;
+  player = new Audio(SILENCE);
+  void player.play().catch(() => {});
+}
+
+// "failed" means nothing was heard, so another voice should read it
+const playClip = (url: string) =>
+  new Promise<"finished" | "failed">((resolve) => {
+    const audio = (player ??= new Audio());
+    let started = false;
+    let settled = false;
+
+    const finish = (how: "finished" | "failed") => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(startGuard);
+      clearTimeout(endGuard);
+      audio.onplaying = audio.onended = audio.onerror = null;
+      stopPlayer = null;
+      audio.pause();
+      // Also ends the download, so the backend stops generating (and paying for) audio nobody will hear
+      audio.removeAttribute("src");
+      audio.load();
+      resolve(how);
+    };
+
+    const startGuard = setTimeout(() => finish("failed"), VOICE_START_TIMEOUT_MS);
+    const endGuard = setTimeout(() => finish("finished"), VOICE_MAX_MS);
+    stopPlayer = () => finish("finished");
+
+    audio.onplaying = () => {
+      started = true;
+      clearTimeout(startGuard);
+    };
+    audio.onended = () => finish("finished");
+    audio.onerror = () => finish(started ? "finished" : "failed");
+
+    audio.src = url;
+    audio.play().catch(() => finish("failed"));
+  });
+
+/* ───────────────────────── Browser voice (the fallback) ───────────────────────── */
+
+const browserVoiceSupported = () => typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
 
 let voices: SpeechSynthesisVoice[] = [];
 const loadVoices = () => {
@@ -12,7 +69,7 @@ const loadVoices = () => {
 
 /** Starts loading the browser's voices (they arrive asynchronously in Chrome/Edge). */
 export function prepareVoices(): () => void {
-  if (!supported()) return () => {};
+  if (!browserVoiceSupported()) return () => {};
   loadVoices();
   window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
   return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
@@ -34,7 +91,7 @@ const pickVoice = (lang: Lang): SpeechSynthesisVoice | undefined => {
   return voices.find((v) => v.lang.toLowerCase().startsWith(lang));
 };
 
-// What is written for the eye, rewritten for the ear
+// What is written for the eye, rewritten for the ear (the backend has already done this for its own replies)
 const forSpeech = (text: string, lang: Lang) =>
   text
     .replace(/[\p{Extended_Pictographic}️‍]/gu, "") // emoji
@@ -47,16 +104,12 @@ const forSpeech = (text: string, lang: Lang) =>
     .replace(/\s{2,}/g, " ")
     .trim();
 
-/**
- * Reads `text` aloud and resolves when it has been spoken (or straight away if speech is
- * unavailable). Never rejects; a cut-off or failed utterance just resolves.
- */
-export function speak(text: string, lang: Lang): Promise<void> {
-  if (!supported()) return Promise.resolve();
+const speakWithBrowser = (text: string) => {
+  const lang: Lang = /[ऀ-ॿ]/.test(text) ? "hi" : "en";
   const spoken = forSpeech(text, lang);
-  if (!spoken) return Promise.resolve();
+  if (!browserVoiceSupported() || !spoken) return Promise.resolve();
 
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(spoken);
     const voice = pickVoice(lang);
     if (voice) utterance.voice = voice;
@@ -78,9 +131,21 @@ export function speak(text: string, lang: Lang): Promise<void> {
 
     window.speechSynthesis.speak(utterance);
   });
+};
+
+/* ───────────────────────── Used by the chat ───────────────────────── */
+
+/**
+ * Reads `text` aloud and resolves when it has been spoken (or straight away if speech is unavailable).
+ * `audioUrl` is the natural voice's audio for the same text, when the backend has one. Never rejects.
+ */
+export async function speak(text: string, audioUrl?: string): Promise<void> {
+  if (audioUrl && (await playClip(audioUrl)) === "finished") return;
+  await speakWithBrowser(text);
 }
 
 /** Stops anything being read out (closing the chat, the visitor sending a new message, muting). */
 export function stopSpeaking() {
-  if (supported()) window.speechSynthesis.cancel();
+  stopPlayer?.();
+  if (browserVoiceSupported()) window.speechSynthesis.cancel();
 }

@@ -1,29 +1,29 @@
 import {
   BadgeCheck,
-  Box,
   Car,
   Cpu,
   Gem,
   GraduationCap,
-  Hammer,
   HeartPulse,
   Building2,
   LayoutGrid,
   Leaf,
-  Palette,
-  Shapes,
   ShoppingCart,
-  Truck,
   Users,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/os4.webp";
+import heroImg from "../../../../public/service/optimized/exhibition/e1.webp";
+import whiteStallImg from "../../../../public/service/optimized/exhibition/e2.webp";
+import blueStallImg from "../../../../public/service/optimized/exhibition/e3.webp";
+import redStallImg from "../../../../public/service/optimized/exhibition/e4.webp";
+import greenWallStallImg from "../../../../public/service/optimized/exhibition/e5.webp";
 import overviewImg from "@/assets/image/es.webp";
 import healthcareImg from "@/assets/image/b4.webp";
 import wellnessImg from "@/assets/what-we-do/exhibition.jpg";
 import organicImg from "@/assets/image/os4.webp";
 import corporateImg from "@/assets/image/t4.webp";
 
+import { ExhibitionBooth, GearOutline, LightBulbGlow, TeamGroup } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const exhibitionStalls: ServiceDetail = {
@@ -32,19 +32,27 @@ export const exhibitionStalls: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Exhibition Stall", "Design & Build"],
-    tagline: "Creating Impactful Brand Experiences at Every Exhibition",
-    text: "We design and build innovative exhibition stalls that attract visitors, showcase your brand and create meaningful business opportunities. From concept to execution, our turnkey solutions help you stand out at industry events across India.",
+    tagline: "Creating Impactful Spaces for Stronger Brand Presence",
+    text: "We design and build custom exhibition stalls that reflect your brand identity, attract attention and create meaningful visitor experiences. From concept and design to fabrication and on-site execution, we deliver end-to-end solutions for trade shows, expos and industry events.",
     image: heroImg,
-    photoStyle: "cut",
-    photoWords: ["Spaces", "Brands", "Experiences"],
-    secondaryCta: true,
+    secondaryCtaLink: { label: "View Projects", href: "/portfolio/signage/exhibition-events-portfolio" },
     features: [
-      { icon: Shapes, label: "Stall Concept Design", text: "Creative and functional designs" },
-      { icon: Box, label: "3D Visualization", text: "Realistic 3D concepts before execution" },
-      { icon: Hammer, label: "Fabrication & Build", text: "High-quality materials and finishing" },
-      { icon: Palette, label: "Graphics & Branding", text: "Eye-catching visuals and displays" },
-      { icon: Truck, label: "On-Site Execution", text: "Timely installation and support" },
+      { icon: LightBulbGlow, label: "Creative Designs", text: "Unique and brand-focused concepts" },
+      { icon: GearOutline, label: "End-to-End Execution", text: "From design to on-site installation" },
+      { icon: ExhibitionBooth, label: "Custom Fabrication", text: "High-quality and durable structures" },
+      { icon: TeamGroup, label: "Engaging Experiences", text: "Spaces that attract and connect" },
     ],
+    showcase: {
+      layout: "photo-left-cut-navy",
+      imageAlt: "Exhibition stall with a lit reception counter, wooden columns and a seating area",
+      gallery: [
+        { image: whiteStallImg, alt: "White exhibition stall with gold lighting and a seating area" },
+        { image: blueStallImg, alt: "Blue and white exhibition stall with a reception desk and screens" },
+        { image: redStallImg, alt: "Red and white exhibition stall with screens and a branded counter" },
+        { image: greenWallStallImg, alt: "Exhibition stall with wooden slats and a green plant wall" },
+      ],
+      stat: { icon: ExhibitionBooth, value: "200+", label: "Exhibition Stalls Delivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

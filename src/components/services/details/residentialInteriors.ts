@@ -1,27 +1,28 @@
 import {
-  Armchair,
   Building,
   Building2,
   Clock,
   Gem,
-  Headset,
   Home,
   Hotel,
   LayoutGrid,
   Laptop,
-  Lightbulb,
-  Settings,
   Sparkles,
   Warehouse,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/os9.webp";
+import heroImg from "../../../../public/service/optimized/resedential/re1.webp";
+import secondBedroomImg from "../../../../public/service/optimized/resedential/re2.webp";
+import diningImg from "../../../../public/service/optimized/resedential/re3.webp";
+import kitchenImg from "../../../../public/service/optimized/resedential/re4.webp";
+import wardrobeImg from "../../../../public/service/optimized/resedential/re5.webp";
 import overviewImg from "@/assets/image/res.webp";
 import apartmentImg from "@/assets/image/res1.webp";
 import villaImg from "@/assets/image/res2.webp";
 import penthouseImg from "@/assets/image/res3.webp";
 import builderFloorImg from "@/assets/image/res4.webp";
 
+import { BedWide, HomeOutline, KitchenUnits, LoungeSofa, WardrobeDoors } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const residentialInteriors: ServiceDetail = {
@@ -30,19 +31,26 @@ export const residentialInteriors: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Residential", "Interiors"],
-    tagline: "Homes Designed Around You",
-    text: "We design and execute beautiful, functional and personalized home interiors that reflect your lifestyle. From space planning to custom furniture, we create comfortable, elegant and timeless homes with end-to-end turnkey solutions.",
+    tagline: "Beautiful Spaces for a Better Everyday",
+    text: "We design and execute personalized home interiors that blend style, comfort and functionality. From modern apartments to luxury villas, we create living spaces that reflect your lifestyle and make every corner truly yours.",
     image: heroImg,
-    photoStyle: "cut",
-    secondaryCta: true,
     features: [
-      { icon: LayoutGrid, label: "Space Planning", text: "Functional and beautiful layouts" },
-      { icon: Armchair, label: "Modular Furniture", text: "Custom and space-saving designs" },
-      { icon: Sparkles, label: "Premium Materials", text: "Wide range of finishes and textures" },
-      { icon: Lightbulb, label: "Lighting Design", text: "Aesthetic and practical solutions" },
-      { icon: Settings, label: "Turnkey Execution", text: "Design, build and installation" },
-      { icon: Headset, label: "After-Sales Support", text: "Assistance beyond project handover" },
+      { icon: LoungeSofa, label: "Living & Dining", text: "Stylish and functional spaces" },
+      { icon: BedWide, label: "Bedrooms", text: "Comfortable and personalized designs" },
+      { icon: KitchenUnits, label: "Modular Kitchens", text: "Smart and efficient kitchen solutions" },
+      { icon: WardrobeDoors, label: "Wardrobes & Storage", text: "Space-saving and elegant designs" },
     ],
+    showcase: {
+      layout: "photo-right-band",
+      imageAlt: "Bedroom with an upholstered bed, warm lighting and a glass-fronted wardrobe",
+      gallery: [
+        { image: secondBedroomImg, alt: "Bedroom with a bench at the foot of the bed and a walk-in wardrobe" },
+        { image: diningImg, alt: "Dining room with a chandelier and upholstered chairs" },
+        { image: kitchenImg, alt: "Modular kitchen with a marble island and bar stools" },
+        { image: wardrobeImg, alt: "Walk-in wardrobe with a dressing table and a round mirror" },
+      ],
+      stat: { icon: HomeOutline, value: "250+", label: "Residential Projects Delivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

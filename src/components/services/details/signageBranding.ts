@@ -2,29 +2,33 @@ import {
   BadgeCheck,
   Building2,
   Clock,
-  Gem,
   GraduationCap,
   Hospital,
   Hotel,
-  Layers,
+  LayoutGrid,
   Lightbulb,
-  Palette,
+  PencilRuler,
   Presentation,
   Settings,
   Shapes,
-  SignpostBig,
   Store,
   Target,
   UtensilsCrossed,
+  Wrench,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/vision.webp";
+import heroImg from "../../../../public/service/optimized/signage/s1.webp";
+import exteriorSignImg from "../../../../public/service/optimized/signage/s2.webp";
+import wayfindingSignImg from "../../../../public/service/optimized/signage/s3.webp";
+import indoorBrandingImg from "../../../../public/service/optimized/signage/s4.webp";
+import storeBrandingImg from "../../../../public/service/optimized/signage/s5.webp";
 import overviewImg from "@/assets/image/sg.webp";
 import retailSignImg from "@/assets/image/gs1.webp";
 import officeBrandingImg from "@/assets/image/gs2.webp";
 import restaurantSignImg from "@/assets/image/gs3.webp";
 import wayfindingImg from "@/assets/image/gs4.webp";
 
+import { HangingSign } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const signageBranding: ServiceDetail = {
@@ -33,20 +37,27 @@ export const signageBranding: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Signage &", "Branding"],
-    tagline: "Transforming Spaces into Powerful Brand Experiences",
-    text: "We design and execute signage and branding solutions that strengthen your brand identity, create visibility and deliver a lasting impression. From indoor and outdoor signage to wayfinding and environmental graphics, our end-to-end solutions help businesses communicate effectively and stand out.",
+    tagline: "Make a Stronger First Impression",
+    text: "We design, manufacture and install custom signage and branding solutions that enhance visibility, strengthen brand identity and create lasting impressions. From exterior signage to indoor branding, we deliver impactful solutions for retail, corporate, hospitality and commercial spaces.",
     image: heroImg,
-    photoStyle: "cut",
-    photoWords: ["Spaces", "Brands", "Experiences"],
-    secondaryCta: true,
+    secondaryCtaLink: { label: "View Projects", href: "/portfolio/signage/signage-portfolio" },
     features: [
-      { icon: Gem, label: "Brand Identity\nSignage", text: "Building a strong brand presence" },
-      { icon: Layers, label: "Indoor Signage", text: "Reception, wall and directional signage" },
-      { icon: Building2, label: "Outdoor Signage", text: "Facades, pylon and hoarding solutions" },
-      { icon: SignpostBig, label: "Wayfinding Systems", text: "Clear navigation for better experience" },
-      { icon: Palette, label: "Environmental Graphics", text: "Wall graphics and brand storytelling" },
-      { icon: Settings, label: "Turnkey Execution", text: "Design, manufacture and installation" },
+      { icon: PencilRuler, label: "Concept & Design", text: "Creative signage as per brand identity" },
+      { icon: Settings, label: "Fabrication", text: "High-quality materials & finish" },
+      { icon: Wrench, label: "Installation", text: "Professional\non-site execution" },
+      { icon: LayoutGrid, label: "Brand Consistency", text: "Cohesive look across all touchpoints" },
     ],
+    showcase: {
+      layout: "photo-right-edge-captions",
+      imageAlt: "Store front with a lit Design House sign, a glass entrance and plants along the wall",
+      gallery: [
+        { image: exteriorSignImg, alt: "Building front with large lit letters above a glass store front", caption: "Exterior Signage" },
+        { image: indoorBrandingImg, alt: "Reception wall in marble with a lit logo above the desk", caption: "Indoor Branding" },
+        { image: wayfindingSignImg, alt: "Hanging sign pointing to reception, meeting room, cafeteria and exit", caption: "Wayfinding Signage" },
+        { image: storeBrandingImg, alt: "Restaurant front with a large lit sign on a dark fascia", caption: "Retail Branding" },
+      ],
+      stat: { icon: HangingSign, value: "100+", label: "Signage & Branding\nProjects Delivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import type { StaticImageData } from "next/image";
 
+type ShowcaseStat = { icon: LucideIcon; value: string; label: string }; // a line break in the label is kept
+
 /* Everything a service detail page (/services/<slug>) shows; one object per service in ../details.
    Optional fields pick a section's alternative look; leave them out for the default (Corporate) look. */
 export interface ServiceDetail {
@@ -21,6 +23,16 @@ export interface ServiceDetail {
     secondaryCta?: boolean; // adds an outlined "View Projects" button
     // Without text: compact card overlapping the photo. With text: a full-width strip under the banner
     features: { icon: LucideIcon; label: string; text?: string }[];
+    // Showcase banner (ServiceShowcaseHero): text beside the photo, then a row of photos and one figure.
+    // It also uses eyebrow, title, tagline, text, image, photoWords, features and the buttons above.
+    showcase?: {
+      layout?: "photo-left" | "photo-right-cut" | "photo-right-band" | "photo-right-cut-navy" | "photo-left-cut-navy" | "photo-right-slant-navy" | "photo-right-slant-stats" | "photo-right-edge-captions" | "photo-left-edge-captions" | "photo-left-wedge-captions"; // default photo-left; see ServiceShowcaseHero
+      number?: string; // beside the eyebrow, e.g. "01" (photo-left only)
+      imageAlt: string;
+      gallery: { image: StaticImageData; alt: string; caption?: string }[];
+      stat: ShowcaseStat;
+      moreStats?: ShowcaseStat[]; // shown in a row with stat (photo-right-slant-stats)
+    };
   };
   why: {
     eyebrow?: string; // default "Why Choose Us"
