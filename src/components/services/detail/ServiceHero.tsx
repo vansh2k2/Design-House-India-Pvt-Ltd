@@ -30,7 +30,15 @@ const ServiceHero = ({ data }: { data: ServiceDetail }) => {
                 className="absolute inset-0"
                 style={{ clipPath: `polygon(calc(${GOLD_CUT_TOP} + ${GOLD_BORDER}) 0, 100% 0, 100% 100%, ${GOLD_BORDER} 100%)` }}
               >
-                <Image src={hero.image} alt="" fill priority placeholder="blur" sizes="58vw" className="object-cover" />
+                <Image
+                  src={hero.image}
+                  alt=""
+                  fill
+                  priority
+                  placeholder={typeof hero.image !== "string" ? "blur" : undefined}
+                  sizes="58vw"
+                  className="object-cover"
+                />
                 {hero.photoWords && <div className="absolute inset-y-0 right-0 w-[30%] bg-gradient-to-l from-black/55 to-transparent" />}
               </div>
               {hero.photoWords && (
@@ -48,7 +56,15 @@ const ServiceHero = ({ data }: { data: ServiceDetail }) => {
             </>
           ) : (
             <>
-              <Image src={hero.image} alt="" fill priority placeholder="blur" sizes="62vw" className="object-cover" />
+              <Image
+                src={hero.image}
+                alt=""
+                fill
+                priority
+                placeholder={typeof hero.image !== "string" ? "blur" : undefined}
+                sizes="62vw"
+                className="object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 via-25% to-transparent to-55%" />
             </>
           )}
@@ -116,7 +132,15 @@ const ServiceHero = ({ data }: { data: ServiceDetail }) => {
 
         {/* Photo on phones/tablets */}
         <div className="lg:hidden relative h-[240px] sm:h-[320px]">
-          <Image src={hero.image} alt="" fill priority placeholder="blur" sizes="100vw" className="object-cover" />
+          <Image
+            src={hero.image}
+            alt=""
+            fill
+            priority
+            placeholder={typeof hero.image !== "string" ? "blur" : undefined}
+            sizes="100vw"
+            className="object-cover"
+          />
         </div>
       </div>
 

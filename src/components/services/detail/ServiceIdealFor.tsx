@@ -46,7 +46,14 @@ const ServiceIdealFor = ({ data }: { data: ServiceDetail }) => {
       <div className="grid lg:grid-cols-2">
         {idealFor.image && (
           <div className="relative h-[260px] sm:h-[340px] lg:h-auto lg:min-h-[300px]">
-            <Image src={idealFor.image} alt="" fill placeholder="blur" sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+            <Image
+              src={idealFor.image}
+              alt=""
+              fill
+              placeholder={typeof idealFor.image !== "string" ? "blur" : undefined}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
           </div>
         )}
 
