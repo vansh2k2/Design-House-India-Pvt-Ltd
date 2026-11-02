@@ -6,10 +6,11 @@ import ProjectCta from "@/components/common/ProjectCta";
 import ServicesHero from "./ServicesHero";
 import ServicesIntro from "./ServicesIntro";
 import ServicesGrid from "./ServicesGrid";
+import type { PublicServiceItem } from "@/lib/services";
 
 /* Our Services page: banner, "From Concept to Completion" intro, the service cards, an enquiry band and
    the footer (with its "Let's Build Together" band). */
-const ServicesPage = () => (
+const ServicesPage = ({ initialServices }: { initialServices?: PublicServiceItem[] }) => (
   <div className="min-h-screen bg-white flex flex-col">
     <Topbar />
     <Navbar />
@@ -17,7 +18,7 @@ const ServicesPage = () => (
     <main className="flex-1">
       <ServicesHero />
       <ServicesIntro />
-      <ServicesGrid />
+      <ServicesGrid initialServices={initialServices} />
       <ProjectCta
         narrow
         eyebrow="Let's Build Together"

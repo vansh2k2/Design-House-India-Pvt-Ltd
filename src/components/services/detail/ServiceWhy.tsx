@@ -47,7 +47,14 @@ const ServiceWhy = ({ data }: { data: ServiceDetail }) => {
         {/* Same photo / text split as the default layout */}
         <div className="grid lg:grid-cols-2">
           <div className="relative h-[260px] sm:h-[340px] lg:h-auto lg:min-h-[340px]">
-            <Image src={why.image} alt="" fill placeholder="blur" sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+            <Image
+              src={why.image}
+              alt=""
+              fill
+              placeholder={typeof why.image !== "string" ? "blur" : undefined}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
           </div>
           <div className="px-4 sm:px-8 lg:px-12 py-5 lg:py-6 max-w-[700px] self-center">
             <Heading why={why} />
@@ -70,7 +77,14 @@ const ServiceWhy = ({ data }: { data: ServiceDetail }) => {
     <section className="w-full bg-white mt-5 lg:mt-6">
       <div className="grid lg:grid-cols-2">
         <div className="relative h-[260px] sm:h-[340px] lg:h-auto lg:min-h-[340px]">
-          <Image src={why.image} alt="" fill placeholder="blur" sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+          <Image
+            src={why.image}
+            alt=""
+            fill
+            placeholder={typeof why.image !== "string" ? "blur" : undefined}
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover"
+          />
         </div>
 
         <div className="px-4 sm:px-8 lg:px-12 py-5 lg:py-6 max-w-[700px] self-center">
