@@ -3,27 +3,30 @@ import {
   Clock,
   Diamond,
   Gem,
-  Hammer,
   LayoutGrid,
-  Palette,
+  PencilRuler,
   Pill,
-  Shapes,
   ShieldCheck,
   Shirt,
+  ShoppingCart,
   Smartphone,
   Sofa,
   Sparkles,
-  Truck,
   UtensilsCrossed,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/os6.webp";
+import heroImg from "../../../../public/service/optimized/display/d1.webp";
+import bagsDisplayImg from "../../../../public/service/optimized/display/d2.webp";
+import phonesDisplayImg from "../../../../public/service/optimized/display/d3.webp";
+import apparelDisplayImg from "../../../../public/service/optimized/display/d4.webp";
+import devicesDisplayImg from "../../../../public/service/optimized/display/d5.webp";
 import overviewImg from "@/assets/image/dr.webp";
 import apparelImg from "@/assets/image/ds1.png";
 import cosmeticsImg from "@/assets/image/ds2.webp";
 import electronicsImg from "@/assets/image/ds3.webp";
 import luxuryImg from "@/assets/image/ds4.webp";
 
+import { GearOutline, StoreFront, TeamGroup, ToteBag } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const displayFixtures: ServiceDetail = {
@@ -32,18 +35,31 @@ export const displayFixtures: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Display", "Fixtures"],
-    tagline: "Custom Displays for Stronger Brands",
-    text: "We design and manufacture high-quality display fixtures that showcase your products, enhance your brand identity and create engaging retail experiences. From concept to installation, our end-to-end solutions are tailored to your space, product range and business goals.",
+    tagline: "Showcase Your Brand, Beautifully.",
+    text: "We design and manufacture custom display fixtures that enhance product visibility, strengthen brand identity and create engaging retail experiences. From concept to installation, we deliver functional and aesthetically appealing fixtures for all retail formats.",
     image: heroImg,
-    photoStyle: "cut",
-    secondaryCta: true,
+    secondaryCtaLink: { label: "View Projects", href: "/portfolio/merchandising/merchandising-images" },
     features: [
-      { icon: Shapes, label: "Display Concept Design", text: "Creative and functional display solutions" },
-      { icon: Hammer, label: "Custom Manufacturing", text: "Tailored to product and space requirements" },
-      { icon: Sparkles, label: "Material & Finishes", text: "Wide range of premium materials" },
-      { icon: Palette, label: "Branding Integration", text: "Consistent and impactful brand presentation" },
-      { icon: Truck, label: "Installation Support", text: "Professional execution and on-site installation" },
+      { icon: PencilRuler, label: "Custom Design", text: "Brand-focused display solutions" },
+      { icon: GearOutline, label: "Durable Fabrication", text: "Premium materials & finishes" },
+      { icon: ToteBag, label: "Retail Ready", text: "For all store formats" },
+      { icon: StoreFront, label: "End-to-End Support", text: "Design to installation" },
     ],
+    showcase: {
+      layout: "photo-right-slant-stats",
+      imageAlt: "Beauty store with lit wooden shelves, display counters and a large poster on a central column",
+      gallery: [
+        { image: bagsDisplayImg, alt: "Handbag store with lit shelves and a central display table" },
+        { image: phonesDisplayImg, alt: "Phone showroom with wall screens and long wooden display counters" },
+        { image: apparelDisplayImg, alt: "Clothing store with mannequins, metal racks and wooden display tables" },
+        { image: devicesDisplayImg, alt: "Electronics store with lit shelves, wall screens and display tables" },
+      ],
+      stat: { icon: StoreFront, value: "200+", label: "Display\nFixtures\nDelivered" },
+      moreStats: [
+        { icon: ShoppingCart, value: "100+", label: "Retail\nBrands\nServed" },
+        { icon: TeamGroup, value: "20+", label: "Retail\nFormats\nPan India" },
+      ],
+    },
   },
   why: {
     eyebrow: "Overview",

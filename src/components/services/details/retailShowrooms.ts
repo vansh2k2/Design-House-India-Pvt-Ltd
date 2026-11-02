@@ -5,22 +5,24 @@ import {
   Diamond,
   Gem,
   Lamp,
-  LayoutDashboard,
   LayoutGrid,
-  Lightbulb,
   Monitor,
-  Settings,
   Shirt,
   ShoppingBag,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/b1.webp";
+import heroImg from "../../../../public/service/optimized/retail/r1.webp";
+import fashionStoreImg from "../../../../public/service/optimized/retail/r2.webp";
+import electronicsStoreImg from "../../../../public/service/optimized/retail/r3.webp";
+import footwearStoreImg from "../../../../public/service/optimized/retail/r4.webp";
+import premiumStoreImg from "../../../../public/service/optimized/retail/r5.webp";
 import overviewImg from "@/assets/image/rs1.webp";
 import fashionImg from "@/assets/image/sr1.webp";
 import electronicsImg from "@/assets/image/sr2.webp";
 import lifestyleImg from "@/assets/image/sr3.webp";
 import furnishingImg from "@/assets/image/sr4.webp";
 
+import { DisplayRack, KioskCounter, LightBulbGlow, StoreFront } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const retailShowrooms: ServiceDetail = {
@@ -28,20 +30,28 @@ export const retailShowrooms: ServiceDetail = {
   name: "Retail Showrooms",
   hero: {
     eyebrow: "Our Services",
-    title: ["Retail", "Showrooms"],
-    tagline: "Engaging Spaces for Memorable Customer Experiences",
-    text: "We design and build retail showrooms that reflect your brand identity, enhance product display and create a seamless customer journey. From concept to execution, our turnkey solutions help you attract, engage and convert more customers.",
+    title: ["Retail Showroom", "Interiors"],
+    tagline: "Engaging Spaces That Drive Business",
+    text: "We create innovative and immersive retail environments that showcase your products, enhance customer experience and strengthen brand identity. From showrooms and stores to kiosks and experience centres, our designs are tailored to attract, engage and convert.",
     image: heroImg,
-    photoStyle: "cut",
-    photoWords: ["Brands", "People", "Spaces"],
-    secondaryCta: true,
+    secondaryCtaLink: { label: "View Projects", href: "/portfolio/interior/retail-interior" },
     features: [
-      { icon: LayoutDashboard, label: "Store Design\n& Planning", text: "Layout and customer flow optimization" },
-      { icon: Boxes, label: "Display Fixtures", text: "Custom fixtures and visual merchandising" },
-      { icon: Lightbulb, label: "Lighting Solutions", text: "Product-focused lighting design" },
-      { icon: Gem, label: "Brand Experience", text: "Interiors that reflect your brand identity" },
-      { icon: Settings, label: "Turnkey Execution", text: "Design, manufacture and on-site installation" },
+      { icon: StoreFront, label: "Showrooms & Stores", text: "Branded and experiential spaces" },
+      { icon: KioskCounter, label: "Kiosks & Counters", text: "Compact and impactful designs" },
+      { icon: DisplayRack, label: "Display Solutions", text: "Product-focused fixtures and styling" },
+      { icon: LightBulbGlow, label: "Lighting & Visual Merchandising", text: "Engaging retail atmospheres" },
     ],
+    showcase: {
+      layout: "photo-right-cut",
+      imageAlt: "Retail showroom with a central display counter and lit shelves of bags and clothing",
+      gallery: [
+        { image: fashionStoreImg, alt: "Fashion store with clothing racks and a central display table" },
+        { image: electronicsStoreImg, alt: "Electronics showroom with wall screens and display counters" },
+        { image: footwearStoreImg, alt: "Footwear and bags store with a lounge seating area" },
+        { image: premiumStoreImg, alt: "Premium store with lit shoe walls and a seating area" },
+      ],
+      stat: { icon: StoreFront, value: "200+", label: "Retail Projects Delivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

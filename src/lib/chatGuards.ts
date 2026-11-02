@@ -25,6 +25,7 @@ const EXACT_WORDS = [
   "harami", "haramzada", "haramzadi", "kamina", "kamine", "kameena", "kameene", "kutta", "kutte", "kuttiya", "suar", "suwar",
   "gand", "gaand", "gandu", "gaandu", "lund", "lauda", "laude", "lavda", "lavde", "lawda", "lawde", "lodu", "randi",
   "randiya", "randwa", "chodu", "chut", "chinal", "bsdk", "bkl", "mkc", "mkb", "tharki",
+  "pagal", "ullu", "gadha", "gadhe", "bewakoof", "bewkoof", "kaminey", "bastord", "bastad",
   // Hindi
   "गांड", "गाँड", "गांडू", "लंड", "लौड़ा", "लोड़ा", "रंडी", "हरामी", "हरामज़ादा", "कमीना", "कमीने", "कुत्ता", "कुत्ते", "कुतिया",
   "सुअर", "चूत", "छिनाल", "ठरकी",
@@ -40,6 +41,9 @@ const WORD_STARTS = [
 
 const EXACT_SET = new Set(EXACT_WORDS);
 
+// These squeeze into ordinary words ("saale" would become "sale"), so they are compared letter for letter
+const UNSQUEEZED_WORDS = new Set(["saale", "saala", "saali"]);
+
 // Letters, marks (Hindi vowel signs) and "*" (as in "f*ck"); everything else separates words
 const tokensOf = (text: string) => squeeze(text).split(/[^\p{L}\p{M}*]+/u).filter(Boolean);
 
@@ -54,6 +58,7 @@ const isBadWord = (token: string) => {
 
 /** True if the text contains an abusive word, also when spelled "f u c k", "f.u.c.k" or "f*ck". */
 export function isAbusive(text: string): boolean {
+  if (text.toLowerCase().split(/[^\p{L}]+/u).some((w) => UNSQUEEZED_WORDS.has(w))) return true;
   const tokens = tokensOf(text);
   if (tokens.some(isBadWord)) return true;
 

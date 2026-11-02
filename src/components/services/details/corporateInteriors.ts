@@ -1,6 +1,10 @@
-import { Armchair, BadgeCheck, Clock, Gem, LayoutGrid, LayoutPanelTop, PencilRuler, Settings } from "lucide-react";
+import { Armchair, BadgeCheck, Gem, LayoutGrid } from "lucide-react";
 
-import heroImg from "@/assets/image/b2.webp";
+import heroImg from "../../../../public/service/optimized/corporate/i1.webp";
+import workstationsImg from "../../../../public/service/optimized/corporate/i2.webp";
+import boardroomImg from "../../../../public/service/optimized/corporate/i3.webp";
+import receptionImg from "../../../../public/service/optimized/corporate/i4.webp";
+import loungePhotoImg from "../../../../public/service/optimized/corporate/i5.webp";
 import meetingImg from "@/assets/image/so1.webp";
 import itOfficeImg from "@/assets/hero-corporate-1.jpg";
 import headquartersImg from "@/assets/image/co1.webp";
@@ -8,22 +12,37 @@ import coworkingImg from "@/assets/image/co2.webp";
 import consultingImg from "@/assets/image/co3.webp";
 import loungeImg from "@/assets/image/ws1.webp";
 
+import { LoungeSofa, MeetingTable, OfficeDesk, OfficeTowers, TeamGroup } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const corporateInteriors: ServiceDetail = {
   slug: "corporate-interiors",
   name: "Corporate Interiors",
   hero: {
+    eyebrow: "Our Services",
     title: ["Corporate", "Interiors"],
-    tagline: "Workspaces Designed for Productivity, Brand Identity and Growth.",
-    text: "We create modern, functional and inspiring corporate spaces that reflect your brand culture and enhance team performance. From space planning to final execution, we deliver complete turnkey solutions tailored to your business needs.",
+    tagline: "Productive Spaces for Modern Businesses",
+    text: "We design and execute high-performance corporate interiors that reflect your brand culture and enhance productivity. From office fit-outs to meeting rooms, workstations and collaborative spaces, we create functional and inspiring workplaces.",
     image: heroImg,
+    secondaryCtaLink: { label: "View Projects", href: "/portfolio/interior/corporate-interior" },
+    photoWords: ["People", "Ideas", "Spaces", "Growth"],
     features: [
-      { icon: LayoutPanelTop, label: "Workspace\nPlanning" },
-      { icon: PencilRuler, label: "Modern Design\nSolutions" },
-      { icon: Settings, label: "End-to-End\nExecution" },
-      { icon: Clock, label: "On-Time\nDelivery" },
+      { icon: OfficeDesk, label: "Office Fit-Outs", text: "End-to-end workspace solutions" },
+      { icon: TeamGroup, label: "Workstations", text: "Ergonomic and modular designs" },
+      { icon: MeetingTable, label: "Meeting Rooms", text: "Functional and flexible spaces" },
+      { icon: LoungeSofa, label: "Reception & Lounges", text: "Strong first impressions" },
     ],
+    showcase: {
+      number: "01",
+      imageAlt: "Corporate office reception with a marble desk and open workstations behind it",
+      gallery: [
+        { image: boardroomImg, alt: "Boardroom with a long wooden table and leather chairs" },
+        { image: workstationsImg, alt: "Open-plan office with rows of workstations and a city view" },
+        { image: loungePhotoImg, alt: "Office lounge with navy sofas and lit wooden shelves" },
+        { image: receptionImg, alt: "Reception desk in marble with a glass-walled meeting room beside it" },
+      ],
+      stat: { icon: OfficeTowers, value: "100+", label: "Corporate Projects Delivered" },
+    },
   },
   why: {
     title: ["Corporate Spaces", "That Perform"],

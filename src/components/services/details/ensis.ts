@@ -3,12 +3,12 @@ import {
   BadgeCheck,
   Dumbbell,
   Flower2,
-  Gem,
+  Headset,
   Home,
   Hospital,
   Hotel,
-  Leaf,
   Ruler,
+  Settings,
   ShieldCheck,
   Sparkles,
   Trees,
@@ -16,6 +16,11 @@ import {
   Wrench,
 } from "lucide-react";
 
+import heroImg from "../../../../public/service/optimized/spa/s1.webp";
+import therapyTablesImg from "../../../../public/service/optimized/spa/s2.webp";
+import massageBedsImg from "../../../../public/service/optimized/spa/s3.webp";
+import trolleyImg from "../../../../public/service/optimized/spa/s4.webp";
+import cabinetImg from "../../../../public/service/optimized/spa/s5.webp";
 import spaImg from "@/assets/image/os10.webp";
 import panchkarmaImg from "@/assets/image/en1.webp";
 import massageImg from "@/assets/image/en2.webp";
@@ -24,38 +29,43 @@ import spaFurnitureImg from "@/assets/image/en4.webp";
 import steamImg from "@/assets/image/en5.webp";
 import accessoriesImg from "@/assets/image/en6.webp";
 
+import { Lotus } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
-/* ENSIS (our own spa & panchkarma furniture brand). Only one spa photo is in the project so far (os10);
-   swap the product images below as soon as product photos are added. */
+/* ENSIS (our own spa & panchkarma furniture brand). The banner's photos are in public/service/optimized/spa; the
+   sections below it still use older photos. */
 export const ensis: ServiceDetail = {
   slug: "ensis",
   name: "ENSIS",
   servicesCrumb: false,
   hero: {
-    eyebrow: "Our Brand",
     brandLogo: {
-      src: "/Ensis Panchakarma.png",
-      alt: "ENSIS Panchkarma Solutions",
-      width: 472,
-      height: 193,
-      tagline: "Wellness Furniture for Healthier Spaces",
+      src: "/ensis.jpeg",
+      alt: "ENSIS: Wellness Furniture for Healthier Spaces",
+      width: 1600,
+      height: 639,
     },
-    title: ["Wellness Spaces", "Designed for Healing"],
-    text: "Premium spa and panchkarma furniture that blends traditional wellness wisdom with modern design, durability and functionality.",
-    image: spaImg,
-    photoStyle: "cut",
-    primaryCta: { label: "Explore Products", href: "#products" },
-    secondaryCta: true,
-    secondaryCtaLink: { label: "Our Projects", href: "/portfolio" },
+    title: ["Spa & Panchkarma", "Furniture"],
+    tagline: "Traditional Wellness. Modern Design.",
+    text: "We design and manufacture premium spa and panchkarma furniture that blends traditional wellness practices with modern functionality. Crafted for comfort, durability and authentic therapy experiences, our furniture is ideal for spas, wellness centres, resorts and healthcare spaces.",
+    image: heroImg,
     features: [
-      { icon: Flower2, label: "Traditional Design", text: "Modern Functionality" },
-      { icon: Gem, label: "Premium Materials", text: "and Finishes" },
-      { icon: Ruler, label: "Custom Designs", text: "as per Space" },
-      { icon: Leaf, label: "Suitable for Spas,", text: "Wellness Centres & Resorts" },
-      { icon: ShieldCheck, label: "Durable & Long Lasting", text: "Construction" },
-      { icon: Truck, label: "Pan India Delivery", text: "and Installation Support" },
+      { icon: Lotus, label: "Authentic Design", text: "Inspired by traditional\nwellness practices" },
+      { icon: ShieldCheck, label: "Premium Quality", text: "Durable and\nlong-lasting" },
+      { icon: Settings, label: "Custom Solutions", text: "Designed for your\nspace and therapy needs" },
+      { icon: Headset, label: "End-to-End Support", text: "From design to\ninstallation" },
     ],
+    showcase: {
+      layout: "photo-left-wedge-captions",
+      imageAlt: "Panchkarma therapy table in polished wood with the ENSIS name, beside a brass shirodhara stand",
+      gallery: [
+        { image: therapyTablesImg, alt: "Two polished wood therapy tables in a spa room with lit walls", caption: "Panchkarma Therapy Tables" },
+        { image: massageBedsImg, alt: "Two spa massage beds with raised headrests and rolled towels", caption: "Spa & Massage Beds" },
+        { image: trolleyImg, alt: "Wooden therapy trolley with towels, brass bowls, candles and plants", caption: "Therapy Accessories & Trolleys" },
+        { image: cabinetImg, alt: "Wooden spa cabinet with drawers, folded towels and brass bowls", caption: "Spa Furniture & Custom Designs" },
+      ],
+      stat: { icon: Lotus, value: "100+", label: "Wellness Projects\nDelivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

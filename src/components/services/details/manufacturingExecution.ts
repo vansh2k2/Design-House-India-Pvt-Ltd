@@ -1,31 +1,34 @@
 import {
-  Armchair,
   BadgeCheck,
-  Boxes,
   Building2,
   Clock,
   Factory,
   GraduationCap,
-  Hammer,
   Hospital,
   Hotel,
+  Layers,
   Presentation,
   Settings,
   Shapes,
-  Sparkles,
+  ShieldCheck,
   Store,
-  UtensilsCrossed,
+  Truck,
   Users,
-  Wrench,
+  UtensilsCrossed,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/os8.webp";
+import heroImg from "../../../../public/service/optimized/manufacturing/m1.webp";
+import cncImg from "../../../../public/service/optimized/manufacturing/m2.webp";
+import productionImg from "../../../../public/service/optimized/manufacturing/m3.webp";
+import modularImg from "../../../../public/service/optimized/manufacturing/m4.webp";
+import installationImg from "../../../../public/service/optimized/manufacturing/m5.webp";
 import overviewImg from "@/assets/image/ma.webp";
 import officeFurnitureImg from "@/assets/image/am1.webp";
 import displayFixturesImg from "@/assets/image/am2.webp";
 import restaurantJoineryImg from "@/assets/image/w2.webp";
 import turnkeyImg from "@/assets/image/am4.webp";
 
+import { FactoryOutline } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const manufacturingExecution: ServiceDetail = {
@@ -34,20 +37,26 @@ export const manufacturingExecution: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Manufacturing &", "Execution"],
-    tagline: "Turning Designs into Real Spaces",
-    text: "We manufacture and execute high-quality interior solutions with precision, advanced technology and skilled workmanship. From custom furniture and display fixtures to complete turnkey execution, we ensure designs are delivered exactly as planned.",
+    tagline: "Precision Manufacturing. Flawless Execution.",
+    text: "We combine advanced manufacturing capabilities with skilled craftsmanship to deliver high-quality interior solutions. From custom furniture and fixtures to complete on-site execution, we ensure precision, durability and timely delivery for every project.",
     image: heroImg,
-    photoStyle: "cut",
-    photoWords: ["Design", "Manufacturing", "Execution", "Quality", "On Time"],
-    secondaryCta: true,
     features: [
-      { icon: Armchair, label: "Custom Furniture\nManufacturing", text: "Office, retail & hospitality" },
-      { icon: Boxes, label: "Display Fixtures", text: "Kiosks, showcases and retail displays" },
-      { icon: Hammer, label: "Joinery & Woodwork", text: "Modular furniture and interior elements" },
-      { icon: Wrench, label: "Metal & Fabrication", text: "MS, SS and other fabrication works" },
-      { icon: Sparkles, label: "Quality & Finishing", text: "Premium materials and finish options" },
-      { icon: Settings, label: "Turnkey Execution", text: "Manufacture, deliver and on-site installation" },
+      { icon: Settings, label: "In-House Manufacturing", text: "Modern machinery & skilled team" },
+      { icon: Layers, label: "Custom Solutions", text: "Tailored to design & project needs" },
+      { icon: ShieldCheck, label: "Quality Control", text: "Multi-stage inspection process" },
+      { icon: Truck, label: "Timely Delivery", text: "Efficient production & on-site installation" },
     ],
+    showcase: {
+      layout: "photo-left-edge-captions",
+      imageAlt: "Workers in Design House India uniforms building furniture on a factory floor, with a large machine behind them",
+      gallery: [
+        { image: cncImg, alt: "CNC machine cutting a wooden panel, with sawdust flying", caption: "Custom Furniture Manufacturing" },
+        { image: productionImg, alt: "Factory floor with wooden shelf units and stacks of cut panels", caption: "Display Fixtures Production" },
+        { image: modularImg, alt: "Workers building wooden modular cabinets on a factory floor", caption: "Modular Units Fabrication" },
+        { image: installationImg, alt: "Two installers fitting lit wooden shelves on site", caption: "On-Site Execution & Installation" },
+      ],
+      stat: { icon: FactoryOutline, value: "100+", label: "Projects\nManufactured & Delivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

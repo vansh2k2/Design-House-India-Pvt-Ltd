@@ -1,13 +1,8 @@
 import {
-  Armchair,
   ChefHat,
   Coffee,
   Gem,
   Hotel,
-  LayoutGrid,
-  Lightbulb,
-  Palette,
-  Settings,
   ShieldCheck,
   Truck,
   UtensilsCrossed,
@@ -16,13 +11,18 @@ import {
   Users,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/b3.webp";
+import heroImg from "../../../../public/service/optimized/restaurant/rs1.webp";
+import barImg from "../../../../public/service/optimized/restaurant/rs2.webp";
+import openKitchenImg from "../../../../public/service/optimized/restaurant/rs3.webp";
+import seatingImg from "../../../../public/service/optimized/restaurant/rs4.webp";
+import diningHallImg from "../../../../public/service/optimized/restaurant/rs5.webp";
 import overviewImg from "@/assets/image/ri1.webp";
 import fineDiningImg from "@/assets/image/ir1.webp";
 import cafeImg from "@/assets/image/ir2.webp";
 import qsrImg from "@/assets/image/ir3.webp";
 import loungeImg from "@/assets/image/ir4.webp";
 
+import { BarCounter, Cloche, DiningTable, HangingLamp } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const restaurantInteriors: ServiceDetail = {
@@ -31,19 +31,27 @@ export const restaurantInteriors: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Restaurant", "Interiors"],
-    tagline: "Creating Dining Spaces That Leave a Lasting Impression",
-    text: "We design and build restaurant interiors that combine aesthetics, functionality and brand identity. From concept to execution, our turnkey solutions create dining experiences that attract guests, enhance comfort and drive business growth.",
+    tagline: "Inviting Spaces That Create Memorable Experiences",
+    text: "We design and execute restaurant interiors that blend ambience, functionality and brand identity. From casual dining to fine-dine, we create spaces that enhance guest experiences and drive business growth.",
     image: heroImg,
-    photoStyle: "cut",
-    photoWords: ["Good", "Food", "Great", "Spaces"],
-    secondaryCta: true,
+    secondaryCtaLink: { label: "View Projects", href: "/portfolio/interior/restaurant-interior" },
     features: [
-      { icon: Palette, label: "Concept & Theme Design", text: "Unique dining experiences" },
-      { icon: LayoutGrid, label: "Space Planning", text: "Optimized layouts and seating" },
-      { icon: Armchair, label: "Custom Furniture", text: "Tables, seating and display elements" },
-      { icon: Lightbulb, label: "Lighting & Ambience", text: "Mood-enhancing design solutions" },
-      { icon: Settings, label: "Turnkey Execution", text: "Design, manufacture and on-site installation" },
+      { icon: DiningTable, label: "Dining Areas", text: "Comfortable and engaging spaces" },
+      { icon: BarCounter, label: "Bars & Beverage Zone", text: "Stylish and functional designs" },
+      { icon: ChefHat, label: "Open Kitchens", text: "Modern and efficient layouts" },
+      { icon: HangingLamp, label: "Lighting & Ambience", text: "Setting the perfect mood" },
     ],
+    showcase: {
+      layout: "photo-right-cut-navy",
+      imageAlt: "Restaurant with green banquette seating, wooden tables and woven pendant lights",
+      gallery: [
+        { image: seatingImg, alt: "Dining area with green and cream chairs and tropical plants" },
+        { image: barImg, alt: "Bar with a lit bottle wall and a row of leather stools" },
+        { image: diningHallImg, alt: "Dining hall with round tables under woven pendant lights" },
+        { image: openKitchenImg, alt: "Open kitchen with chefs behind a green counter" },
+      ],
+      stat: { icon: Cloche, value: "150+", label: "Restaurant Projects Delivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

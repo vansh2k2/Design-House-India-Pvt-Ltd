@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Cloudinary images skip this server and go straight to the browser (see SiteImage.tsx)
+  turbopack: {
+    resolveAlias: { "next/image": "./src/components/ui/SiteImage.tsx" },
+  },
   // Root files uploaded under Advanced SEO in the admin (e.g. Google verification .html) are stored on
   // the backend. afterFiles runs after pages and public/ files (so robots.txt, sitemap.xml and llms.txt
   // keep their own handling) but before the /[slug] route would catch them.

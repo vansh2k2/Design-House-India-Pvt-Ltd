@@ -1,12 +1,8 @@
 import {
   Coffee,
   Gem,
-  Hammer,
   HeartPulse,
   LayoutGrid,
-  Palette,
-  Settings,
-  Shapes,
   ShoppingBag,
   Smartphone,
   Sparkles,
@@ -15,13 +11,18 @@ import {
   Diamond,
 } from "lucide-react";
 
-import heroImg from "@/assets/image/os5.webp";
+import heroImg from "../../../../public/service/optimized/kiosk/k1.webp";
+import coffeeKioskImg from "../../../../public/service/optimized/kiosk/k2.webp";
+import jewelryKioskImg from "../../../../public/service/optimized/kiosk/k3.webp";
+import techKioskImg from "../../../../public/service/optimized/kiosk/k4.webp";
+import foodKioskImg from "../../../../public/service/optimized/kiosk/k5.webp";
 import overviewImg from "@/assets/image/rk.webp";
 import wellnessImg from "@/assets/image/kr1.webp";
 import fashionImg from "@/assets/image/kr2.webp";
 import foodImg from "@/assets/image/kr3.webp";
 import electronicsImg from "@/assets/image/kr4.webp";
 
+import { GearOutline, StoreFront, TeamGroup, ToteBag } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const retailKiosks: ServiceDetail = {
@@ -30,19 +31,27 @@ export const retailKiosks: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Retail", "Kiosks"],
-    tagline: "Compact Spaces, Big Brand Impact",
-    text: "We design and build retail kiosks that create strong brand presence in high footfall locations such as malls, airports, metro stations and commercial complexes. Our turnkey solutions combine smart design, quality materials and efficient execution to help you engage customers and drive sales.",
+    tagline: "Compact Spaces. Big Brand Impact.",
+    text: "We design and build innovative retail kiosks that make your brand stand out in high-footfall spaces. From concept and design to fabrication and installation, we create functional, eye-catching kiosks that drive engagement, boost sales and deliver memorable customer experiences.",
     image: heroImg,
-    photoStyle: "cut",
-    photoWords: ["Natural", "Beauty", "Everyday"],
-    secondaryCta: true,
+    secondaryCtaLink: { label: "View Projects", href: "/portfolio/kiosk/kiosk-images" },
     features: [
-      { icon: Shapes, label: "Kiosk Concept Design", text: "Creative and functional designs" },
-      { icon: LayoutGrid, label: "Space Optimization", text: "Smart layouts for small spaces" },
-      { icon: Hammer, label: "Custom Fabrication", text: "High-quality materials and finishing" },
-      { icon: Palette, label: "Branding & Graphics", text: "Eye-catching visuals and displays" },
-      { icon: Settings, label: "Turnkey Execution", text: "Design, manufacture and on-site installation" },
+      { icon: StoreFront, label: "Custom Designs", text: "Unique and brand-focused kiosks" },
+      { icon: GearOutline, label: "Space Optimization", text: "Smart layouts for maximum impact" },
+      { icon: ToteBag, label: "End-to-End Execution", text: "Design to on-site installation" },
+      { icon: TeamGroup, label: "Engaging Experiences", text: "Kiosks that attract and convert" },
     ],
+    showcase: {
+      layout: "photo-right-slant-navy",
+      imageAlt: "Beauty kiosk in a shopping mall with lit shelves, display counters and plants on the roof",
+      gallery: [
+        { image: coffeeKioskImg, alt: "Coffee kiosk with a lit counter and seating in a shopping mall" },
+        { image: techKioskImg, alt: "Electronics kiosk with blue lighting and device displays" },
+        { image: jewelryKioskImg, alt: "Jewellery kiosk with arched lit niches and glass counters" },
+        { image: foodKioskImg, alt: "Food and beverage kiosk with green branding and packed products" },
+      ],
+      stat: { icon: StoreFront, value: "150+", label: "Retail Kiosks\nDelivered" },
+    },
   },
   why: {
     eyebrow: "Overview",

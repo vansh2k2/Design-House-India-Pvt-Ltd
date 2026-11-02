@@ -4,6 +4,7 @@ import Footer from "@/components/sections/Footer";
 import ProjectCta from "@/components/common/ProjectCta";
 
 import ServiceHero from "./ServiceHero";
+import ServiceShowcaseHero from "./ServiceShowcaseHero";
 import ServiceWhy from "./ServiceWhy";
 import ServiceProcess from "./ServiceProcess";
 import ServiceProjects from "./ServiceProjects";
@@ -19,7 +20,7 @@ const ServiceDetailPage = ({ data }: { data: ServiceDetail }) => (
     <Navbar />
 
     <main className="flex-1">
-      <ServiceHero data={data} />
+      {data.hero.showcase ? <ServiceShowcaseHero hero={data.hero} showcase={data.hero.showcase} /> : <ServiceHero data={data} />}
       <ServiceWhy data={data} />
       <ServiceProcess data={data} />
       <ServiceProjects data={data} />
