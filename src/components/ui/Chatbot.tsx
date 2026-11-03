@@ -1,23 +1,14 @@
 "use client";
 
-<<<<<<< HEAD
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
-=======
-import { useEffect, useRef, useState, type FormEvent } from "react";
->>>>>>> 2cd7bcf1896bbdfd0933de381ad5a7e9dc2d334f
 import Image from "next/image";
 import Link from "next/link";
 import { Bell, BellOff, Download, Mic, Minus, Send, Square, Volume2, VolumeX, X } from "lucide-react";
 
 import { api, API_URL } from "@/lib/api";
 import { isAbusive } from "@/lib/chatGuards";
-<<<<<<< HEAD
 import { canOpenMic, openMic, STOP_AFTER_QUIET_MS, type Mic as OpenMic } from "@/lib/chatMic";
 import { pauseSpeaking, prepareVoices, resumeSpeaking, speak, stopSpeaking, unlockVoice } from "@/lib/chatVoice";
-=======
-import { prepareVoices, speak, stopSpeaking, unlockVoice } from "@/lib/chatVoice";
-import RobotLoader from "@/components/ui/RobotLoader";
->>>>>>> 2cd7bcf1896bbdfd0933de381ad5a7e9dc2d334f
 
 /* The conversation itself lives on the backend (backend/src/modules/chatbot): it asks the name first,
    answers from the website's content, blocks abusive visitors and saves every chat with its IP. This
@@ -719,25 +710,6 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         .dh-dot { animation: dhDot 1.1s infinite ease-in-out; }
       `}</style>
 
-<<<<<<< HEAD
-=======
-      {/* Launcher: "May I help you?" bubble above the animated robot */}
-      {!isOpen && (
-        <button
-          onClick={open}
-          className="group fixed bottom-1 right-1 sm:bottom-3 sm:right-5 z-50 flex flex-col items-center cursor-pointer"
-          aria-label="May I help you? Open chat"
-        >
-          <span className="dh-bubble-float relative z-10 -mb-2 whitespace-nowrap rounded-[14px] border border-[#d5deee] bg-white px-4 py-2 text-[14px] sm:text-[15px] font-bold tracking-[-0.01em] text-[#0A2B5E] shadow-[0_6px_16px_rgba(10,43,94,0.15)]">
-            May I help you?
-            <span className="absolute left-1/2 -bottom-[7px] h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-[#d5deee] bg-white" />
-          </span>
-          {/* Animated CSS robot (16 × 21 of --rb-size) */}
-          <RobotLoader className="[--rb-size:5.4px] sm:[--rb-size:6.4px] transition-transform duration-300 group-hover:scale-105" />
-        </button>
-      )}
-
->>>>>>> 2cd7bcf1896bbdfd0933de381ad5a7e9dc2d334f
       {/* Chat window */}
       {isOpen && (
         <>
