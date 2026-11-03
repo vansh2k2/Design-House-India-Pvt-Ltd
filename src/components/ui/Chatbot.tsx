@@ -1,14 +1,23 @@
 "use client";
 
+<<<<<<< HEAD
+import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
+=======
 import { useEffect, useRef, useState, type FormEvent } from "react";
+>>>>>>> 2cd7bcf1896bbdfd0933de381ad5a7e9dc2d334f
 import Image from "next/image";
 import Link from "next/link";
 import { Bell, BellOff, Download, Mic, Minus, Send, Square, Volume2, VolumeX, X } from "lucide-react";
 
 import { api, API_URL } from "@/lib/api";
 import { isAbusive } from "@/lib/chatGuards";
+<<<<<<< HEAD
+import { canOpenMic, openMic, STOP_AFTER_QUIET_MS, type Mic as OpenMic } from "@/lib/chatMic";
+import { pauseSpeaking, prepareVoices, resumeSpeaking, speak, stopSpeaking, unlockVoice } from "@/lib/chatVoice";
+=======
 import { prepareVoices, speak, stopSpeaking, unlockVoice } from "@/lib/chatVoice";
 import RobotLoader from "@/components/ui/RobotLoader";
+>>>>>>> 2cd7bcf1896bbdfd0933de381ad5a7e9dc2d334f
 
 /* The conversation itself lives on the backend (backend/src/modules/chatbot): it asks the name first,
    answers from the website's content, blocks abusive visitors and saves every chat with its IP. This
@@ -39,12 +48,14 @@ const COPY = {
     soundOff: "Notification sound off",
     voiceOn: "Voice replies on",
     voiceOff: "Voice replies off",
-    micStart: "Ask by voice",
-    micStop: "Stop listening",
-    listening: "Listening... speak now",
+    micStart: "Start talking",
+    micStop: "Stop talking",
+    listening: "I'm listening, just speak...",
+    interruptHint: "Speak any time, I'll stop and listen",
     understanding: "Understanding...",
     micDenied: "Microphone access is blocked. Click the icon in the address bar and allow the microphone.",
-    micNoSpeech: "I didn't hear anything. Tap the mic and try again.",
+    micNoSpeech: "I can't hear anything. Please check your microphone.",
+    micAutoOff: "I switched the mic off because it was quiet for a while. Tap it to talk again.",
     micNotFound: "No microphone was found on this device.",
     micBusy: "Another app is using the microphone. Close it and try again.",
     micFailed: "Sorry, I couldn't understand that. Please try again or type your message.",
@@ -70,12 +81,14 @@ const COPY = {
     soundOff: "नोटिफ़िकेशन साउंड बंद",
     voiceOn: "बोलकर जवाब चालू",
     voiceOff: "बोलकर जवाब बंद",
-    micStart: "बोलकर पूछें",
-    micStop: "सुनना बंद करें",
-    listening: "सुन रही हूँ... बोलिए",
+    micStart: "बात शुरू करें",
+    micStop: "बात बंद करें",
+    listening: "सुन रही हूँ, बस बोलिए...",
+    interruptHint: "कभी भी बोलिए, मैं रुककर सुनूँगी",
     understanding: "समझ रही हूँ...",
     micDenied: "माइक्रोफ़ोन की अनुमति नहीं है। एड्रेस बार के आइकन पर क्लिक करके माइक्रोफ़ोन की अनुमति दें।",
-    micNoSpeech: "कुछ सुनाई नहीं दिया। माइक दबाकर दोबारा बोलें।",
+    micNoSpeech: "कुछ सुनाई नहीं दे रहा। अपना माइक्रोफ़ोन देख लीजिए।",
+    micAutoOff: "काफ़ी देर से कोई आवाज़ नहीं आई, इसलिए माइक बंद कर दिया। बात करनी हो तो माइक दबाइए।",
     micNotFound: "इस डिवाइस पर माइक्रोफ़ोन नहीं मिला।",
     micBusy: "कोई दूसरा ऐप माइक्रोफ़ोन इस्तेमाल कर रहा है। उसे बंद करके दोबारा कोशिश करें।",
     micFailed: "माफ़ कीजिए, समझ नहीं पाई। दोबारा बोलिए या लिख दीजिए।",
@@ -110,6 +123,7 @@ interface ChatResponse {
   blocked: boolean;
   flagged?: boolean;
   history?: Array<Reply & { from: "bot" | "user" }>;
+  repeatGreeting?: Reply; // the welcome already in the chat, to be said again
 }
 
 const SESSION_KEY = "dh_chat_session";
@@ -117,27 +131,38 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const LOGO = "/logotransparent-sm.webp";
 const CHAT_BG = "/assets/chatbot/bg.webp";
 
-/* Voice input: the mic is recorded here and turned into text on the backend (OpenAI). The browsers' own
-   speech recognition heard speech but returned no text in Chrome or Edge, with no error to go on. */
-const SPEECH_LEVEL = 0.012; // louder than this counts as speaking (laptop mics can be quiet)
-const FAINT_LEVEL = 0.004; // below this a clip is silence: not worth sending
-const STOP_AFTER_QUIET_MS = 1600; // the visitor has finished
-const GIVE_UP_NO_SPEECH_MS = 8000;
-const MAX_RECORDING_MS = 30000;
+/* Voice input: the mic is listened to here (lib/chatMic) and what the visitor says is turned into text on the
+   backend (OpenAI). The browsers' own speech recognition heard speech but returned no text in Chrome or Edge,
+   with no error to go on. */
+const FAINT_LEVEL = 0.004; // below this the mic is hearing nothing at all
+const MIC_SILENT_NOTE_MS = 10000;
+const MIC_IDLE_MS = 120000; // the mic switches itself off after this long without anyone talking
 // The words so far are fetched again and again while the visitor speaks; long messages less often, since
-// each request sends the whole recording
-const LIVE_TEXT_EVERY_MS = 1000;
+// each request sends the whole clip
+const LIVE_TEXT_EVERY_MS = 800;
 const LIVE_TEXT_SLOWER_MS = 3000;
 const LIVE_TEXT_SLOWER_AFTER_MS = 15000;
-const LIVE_TEXT_MIN_SPEECH_MS = 700; // less than this is too little to make out words from
 
-const canRecord = () => typeof navigator.mediaDevices?.getUserMedia === "function" && typeof MediaRecorder !== "undefined";
+// Did the mic just hear the assistant's own voice? Speakers can get past the browser's echo removal.
+const isOwnVoice = (heard: string, spoken: string) => {
+  const words = (value: string) => value.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const heardWords = words(heard);
+  if (heardWords.length < 3) return false;
+  const said = new Set(words(spoken));
+  return heardWords.filter((word) => said.has(word)).length / heardWords.length >= 0.8;
+};
 
-const EnhancedChatbot = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface ChatbotProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  openRef: RefObject<(() => void) | null>; // the robot (ChatbotLauncher) opens the chat through this, inside its click
+  openAtOnce: boolean; // the robot was clicked before this code had arrived
+}
+
+const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProps) => {
   const [isMinimized, setIsMinimized] = useState(false);
-  const [lang, setLang] = useState<Lang>("en");
   // Browser-only component (loaded with ssr: false), so localStorage is available here
+  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("dh_chat_lang") === "en" ? "en" : "hi"));
   const [muted, setMuted] = useState(() => localStorage.getItem("dh_chat_muted") === "1");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -145,18 +170,26 @@ const EnhancedChatbot = () => {
   const [input, setInput] = useState("");
   const [blocked, setBlocked] = useState(false);
   // Spoken replies (separate from the notification chime) and voice input
-  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("dh_chat_voice") !== "0");
+  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("dh_chat_voice_on") !== "0");
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
   const [transcribing, setTranscribing] = useState(false); // recording finished, final text on its way
   const [liveText, setLiveText] = useState(""); // words recognised so far, shown in the chat while speaking
-  const [canListen] = useState(canRecord);
+  const [hearing, setHearing] = useState(false); // the visitor is talking right now
+  const [canListen] = useState(canOpenMic);
   const [voiceNote, setVoiceNote] = useState("");
   const voiceOnRef = useRef(voiceOn);
-  const micRef = useRef<{ stop: () => void; abort: () => void } | null>(null); // the recording in progress
-  const micRingRef = useRef<HTMLSpanElement>(null); // grows with the sound level while recording
-  // Always the latest send function, for when a recording finishes
-  const handleTextRef = useRef<(text: string) => void>(() => {});
+  const micRef = useRef<OpenMic | null>(null); // the open mic of a spoken conversation
+  const micRingRef = useRef<HTMLSpanElement>(null); // grows with the sound level while the mic is on
+  const openingMicRef = useRef(false);
+  const conversationCleanupRef = useRef<(() => void) | null>(null);
+  const speakingRef = useRef(false);
+  const userTalkingRef = useRef(false);
+  const interruptedRef = useRef(false); // the visitor has talked over the assistant's current reply
+  const lastSpokenRef = useRef("");
+  const sendChainRef = useRef<Promise<void>>(Promise.resolve());
+  // Always the latest function, for when the mic or a timer calls it
+  const endConversationRef = useRef<() => void>(() => {});
 
   const t = COPY[lang];
   const inputIsAbusive = input.trim().length > 0 && isAbusive(input);
@@ -164,7 +197,9 @@ const EnhancedChatbot = () => {
   const mutedRef = useRef(muted);
   const idRef = useRef(0);
   const aliveRef = useRef(true);
-  const startedRef = useRef(false);
+  const openingChatRef = useRef(false);
+  const chatLoadedRef = useRef(false);
+  const greetAgainRef = useRef(false);
   const sessionIdRef = useRef(localStorage.getItem(SESSION_KEY) || "");
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   const audioRef = useRef<AudioContext | null>(null);
@@ -185,7 +220,7 @@ const EnhancedChatbot = () => {
       aliveRef.current = false;
       forgetVoices();
       stopSpeaking();
-      micRef.current?.abort();
+      endConversationRef.current();
       void audioRef.current?.close();
     };
   }, []);
@@ -194,9 +229,24 @@ const EnhancedChatbot = () => {
   useEffect(() => {
     if (!isOpen || isMinimized) {
       stopSpeaking();
-      micRef.current?.abort();
+      endConversationRef.current();
     }
   }, [isOpen, isMinimized]);
+
+  // The conversation also ends when the visitor is blocked or goes to another tab: the mic shouldn't stay on unseen
+  useEffect(() => {
+    if (blocked) endConversationRef.current();
+  }, [blocked]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (!document.hidden || !micRef.current) return;
+      stopSpeaking();
+      endConversationRef.current();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
   // Mic messages ("didn't hear anything") fade after a few seconds
   useEffect(() => {
@@ -208,7 +258,7 @@ const EnhancedChatbot = () => {
   // Keep the newest message in view
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, isTyping, liveText, listening, transcribing]);
+  }, [messages, isTyping, liveText, hearing, transcribing]);
 
   // On phones the chat covers the page: stop the page scrolling underneath
   useEffect(() => {
@@ -290,30 +340,42 @@ const EnhancedChatbot = () => {
   };
 
   /* ── Bot replies: queued so they appear one after another, each after a short "typing..." ── */
+  // Reads a line aloud, unless voice replies are off, the chat is closed or the visitor is talking
+  const readOut = async (line: Reply) => {
+    if (!voiceOnRef.current || !activeRef.current || interruptedRef.current) return;
+    if (!micRef.current) await sleep(150);
+    if (!activeRef.current || interruptedRef.current) return;
+    const spoken = line.spoken || [line.title, line.text].filter(Boolean).join(". ");
+    const audioUrl = line.speakId === undefined ? undefined : `${API_URL}/api/chatbot/speak?session=${sessionIdRef.current}&message=${line.speakId}`;
+    lastSpokenRef.current = spoken;
+    speakingRef.current = true;
+    setSpeaking(true);
+    micRef.current?.setAssistantTalking(true);
+    await speak(spoken, audioUrl);
+    micRef.current?.setAssistantTalking(false);
+    speakingRef.current = false;
+    setSpeaking(false);
+  };
+
   const botSay = (lines: Reply[]) => {
     queueRef.current = queueRef.current.then(async () => {
       for (const line of lines) {
         if (!aliveRef.current) return;
-        setIsTyping(true);
-        await sleep(350 + Math.min(line.text.length * 4, 500));
-        if (!aliveRef.current) return;
-        setIsTyping(false);
+        // The visitor has started talking: the rest of the reply just appears, without the wait or the voice
+        if (!interruptedRef.current && !micRef.current) {
+          setIsTyping(true);
+          await sleep(350 + Math.min(line.text.length * 4, 500));
+          if (!aliveRef.current) return;
+          setIsTyping(false);
+        }
         // Only the newest message keeps its quick questions
         setMessages((prev) => [...prev.map((m) => (m.chips ? { ...m, chips: undefined } : m)), { id: ++idRef.current, from: "bot", ...line }]);
-        // A reply that arrives while the chat is closed just waits in the chat, silently
-        if (activeRef.current) playIncoming();
-        // Read it out (unless voice replies are off or the mic is listening), and let the next
-        // message wait until it has been spoken
-        if (voiceOnRef.current && !micRef.current) {
-          await sleep(150);
-          if (activeRef.current) {
-            setSpeaking(true);
-            const audioUrl = line.speakId === undefined ? undefined : `${API_URL}/api/chatbot/speak?session=${sessionIdRef.current}&message=${line.speakId}`;
-            await speak(line.spoken || [line.title, line.text].filter(Boolean).join(". "), audioUrl);
-            setSpeaking(false);
-          }
-        }
-        await sleep(280);
+        // A reply that arrives while the chat is closed just waits in the chat, silently. In a spoken
+        // conversation the voice itself is the signal, and a chime would only get into the mic.
+        if (activeRef.current && !micRef.current) playIncoming();
+        // Let the next message wait until this one has been spoken
+        await readOut(line);
+        if (!interruptedRef.current) await sleep(280);
       }
     });
     return queueRef.current;
@@ -323,7 +385,7 @@ const EnhancedChatbot = () => {
     const id = ++idRef.current;
     stopSpeaking(); // the visitor moved on: don't keep reading the old reply
     setMessages((prev) => [...prev.map((m) => (m.chips ? { ...m, chips: undefined } : m)), { id, from: "user", text }]);
-    playSent();
+    if (!micRef.current) playSent();
     return id;
   };
 
@@ -334,11 +396,20 @@ const EnhancedChatbot = () => {
     }
     setStep(data.step);
     setBlocked(Boolean(data.blocked));
-    if (data.lang) setLang(data.lang); // writing or speaking in Hindi switches the chat to Hindi
+    if (data.lang) {
+      langRef.current = data.lang;
+      setLang(data.lang); // a whole sentence in the other language switches the chat to it
+      localStorage.setItem("dh_chat_lang", data.lang);
+    }
   };
 
-  /* ── Opening the chat: greet, or bring back the saved conversation ── */
+  /* ── Opening the chat: every time it opens it welcomes the visitor and asks how it can help ── */
   const startChat = async () => {
+    if (openingChatRef.current) {
+      greetAgainRef.current = true; // opened again, or the language changed, during the welcome
+      return;
+    }
+    openingChatRef.current = true;
     setIsTyping(true);
     try {
       const res = await api.post("/api/chatbot/session", {
@@ -349,16 +420,39 @@ const EnhancedChatbot = () => {
       const data: ChatResponse = res.data.data;
       applyResponse(data);
       setIsTyping(false);
-      if (data.history?.length) {
+      if (!chatLoadedRef.current && data.history?.length) {
         const lastBot = data.history.map((m) => m.from).lastIndexOf("bot");
         setMessages(data.history.map((m, i) => ({ ...m, id: ++idRef.current, chips: i === lastBot ? m.chips : undefined })));
       }
-      if (data.replies.length) await botSay(data.replies);
+      chatLoadedRef.current = true;
+      if (data.repeatGreeting) {
+        // Nothing has been said since the last welcome: say it again without adding it to the chat again
+        const line = data.repeatGreeting;
+        queueRef.current = queueRef.current.then(() => readOut(line));
+        await queueRef.current;
+      } else if (data.replies.length) {
+        await botSay(data.replies);
+      }
     } catch {
-      startedRef.current = false; // try again next time the chat is opened
       setIsTyping(false);
-      await botSay([{ text: COPY[langRef.current].offline }]);
+      if (!chatLoadedRef.current) await botSay([{ text: COPY[langRef.current].offline }]);
+    } finally {
+      openingChatRef.current = false;
+      if (greetAgainRef.current) {
+        greetAgainRef.current = false;
+        void startChat();
+      }
     }
+  };
+
+  // The welcome comes again in the chosen language, so that its quick questions are in that language too
+  const switchLanguage = (next: Lang) => {
+    if (next === langRef.current) return;
+    stopSpeaking();
+    langRef.current = next;
+    setLang(next);
+    localStorage.setItem("dh_chat_lang", next);
+    void startChat();
   };
 
   const open = () => {
@@ -366,11 +460,21 @@ const EnhancedChatbot = () => {
     unlockVoice();
     setIsOpen(true);
     setIsMinimized(false);
-    if (!startedRef.current) {
-      startedRef.current = true;
-      void startChat();
-    }
+    activeRef.current = true; // the welcome below is read out before the next render
+    void startChat();
   };
+
+  useEffect(() => {
+    openRef.current = open;
+  });
+
+  const openedAtOnceRef = useRef(false);
+  useEffect(() => {
+    if (!openAtOnce || openedAtOnceRef.current) return;
+    openedAtOnceRef.current = true;
+    open();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openAtOnce]);
 
   /* ── Sending a typed or spoken message, or a clicked chip, to the assistant ── */
   const sendToAssistant = async (text: string, action?: Chip["action"]) => {
@@ -413,37 +517,120 @@ const EnhancedChatbot = () => {
     setInput("");
     void sendToAssistant(text);
   };
-  handleTextRef.current = handleText;
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     handleText(input);
   };
 
-  /* ── Voice input: record the mic, show the words as they come, send when the visitor stops talking ── */
-  const transcribeClip = async (chunks: Blob[], type: string) => {
-    const blob = new Blob(chunks, { type });
+  /* ── Spoken conversation: one tap on the mic, then it goes back and forth like a phone call. The mic stays on
+     between turns, the visitor can talk over the assistant at any moment, and only what they say is uploaded. ── */
+  const transcribeClip = async (clip: Blob) => {
     const form = new FormData();
-    form.append("audio", blob, type.includes("mp4") ? "speech.mp4" : type.includes("ogg") ? "speech.ogg" : "speech.webm");
+    form.append("audio", clip, "speech.wav");
     const res = await api.post(`/api/chatbot/transcribe?lang=${langRef.current}`, form);
     return res.data.data as { text: string; blocked?: boolean };
   };
 
-  const startListening = async () => {
-    if (micRef.current) return;
+  const endConversation = () => {
+    conversationCleanupRef.current?.();
+    conversationCleanupRef.current = null;
+    micRef.current?.stop();
+    micRef.current = null;
+    userTalkingRef.current = false;
+    interruptedRef.current = false;
+    setListening(false);
+    setHearing(false);
+    setLiveText("");
+  };
+
+  // Spoken turns go one at a time, in order, even if the visitor talks again before a reply has arrived
+  const sendSpoken = (text: string) => {
+    sendChainRef.current = sendChainRef.current.then(async () => {
+      await queueRef.current;
+      if (!userTalkingRef.current) interruptedRef.current = false;
+      await sendToAssistant(text);
+    });
+  };
+
+  const startConversation = async () => {
+    if (micRef.current || openingMicRef.current) return;
     const copy = () => COPY[langRef.current];
-    stopSpeaking(); // don't let the mic hear the bot
+    openingMicRef.current = true;
     audio(); // unlock audio while this is still part of the click
     unlockVoice();
     setVoiceNote("");
-    setLiveText("");
-    setInput("");
     setListening(true);
 
-    let stream: MediaStream;
+    let startedOverAssistant = false;
+    let lastActivity = Date.now();
+    let lastPreview = 0;
+    let previewBusy = false;
+    let preview: { startedAt: number; words: ReturnType<typeof transcribeClip> } | null = null;
+    let heardAnything = false;
+    let warned = false;
+    const opened = Date.now();
+
+    let mic: OpenMic;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      mic = await openMic({
+        onLevel: (level) => {
+          if (micRingRef.current) micRingRef.current.style.transform = `scale(${1 + Math.min(level * 7, 0.9)})`;
+          if (level > FAINT_LEVEL) heardAnything = true;
+        },
+        onInterruptSuspected: pauseSpeaking,
+        onFalseAlarm: resumeSpeaking,
+        onSpeechStart: () => {
+          startedOverAssistant = speakingRef.current;
+          // Only paused: the reply is dropped once real words have been heard, not for a cough or a door
+          if (startedOverAssistant) pauseSpeaking();
+          userTalkingRef.current = true;
+          interruptedRef.current = true;
+          lastActivity = Date.now();
+          lastPreview = lastActivity;
+          preview = null;
+          setLiveText("");
+          setHearing(true);
+        },
+        onSpeechEnd: async (clip) => {
+          userTalkingRef.current = false;
+          lastActivity = Date.now();
+          setHearing(false);
+          const carryOn = () => {
+            interruptedRef.current = false;
+            if (!startedOverAssistant) return;
+            micRef.current?.falseStart();
+            resumeSpeaking();
+          };
+          if (!clip) {
+            carryOn();
+            setLiveText("");
+            return;
+          }
+          setTranscribing(true);
+          try {
+            // A preview that started after the last word has the whole sentence: no need to ask again
+            const finished = preview && Date.now() - preview.startedAt < STOP_AFTER_QUIET_MS - 100 ? preview.words : null;
+            const { text, blocked: isBlocked } = await (finished ? finished.catch(() => transcribeClip(clip)) : transcribeClip(clip));
+            if (isBlocked) setBlocked(true);
+            // The chat was closed meanwhile: leave the words in the box instead of sending them
+            else if (text && !activeRef.current) setInput(text);
+            else if (text && !(startedOverAssistant && isOwnVoice(text, lastSpokenRef.current))) {
+              stopSpeaking();
+              sendSpoken(text);
+            } else carryOn();
+          } catch {
+            carryOn();
+            setVoiceNote(copy().micFailed);
+          } finally {
+            setTranscribing(false);
+            setLiveText("");
+            lastActivity = Date.now();
+          }
+        },
+      });
     } catch (error) {
+      openingMicRef.current = false;
       setListening(false);
       const name = (error as DOMException).name;
       if (name === "NotAllowedError" || name === "SecurityError") setVoiceNote(copy().micDenied);
@@ -452,121 +639,55 @@ const EnhancedChatbot = () => {
       else setVoiceNote(copy().micFailed);
       return;
     }
+    openingMicRef.current = false;
 
-    // The chat was closed while the browser was asking for permission: the mic must not start
+    // The chat was closed while the browser was asking for permission: the mic must not stay on
     if (!activeRef.current) {
-      stream.getTracks().forEach((track) => track.stop());
+      mic.stop();
       setListening(false);
       return;
     }
+    micRef.current = mic;
+    mic.setAssistantTalking(speakingRef.current);
 
-    const type = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find((t) => MediaRecorder.isTypeSupported(t)) || "";
-    const recorder = type ? new MediaRecorder(stream, { mimeType: type }) : new MediaRecorder(stream);
-    const chunks: Blob[] = [];
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
-
-    // Sound level: shows the visitor they're being heard, and tells when they have stopped talking
-    const ctx = audioRef.current;
-    const analyser = ctx?.createAnalyser();
-    const source = ctx && analyser ? ctx.createMediaStreamSource(stream) : null;
-    if (source && analyser) source.connect(analyser);
-    const samples = analyser ? new Uint8Array(analyser.fftSize) : null;
-
-    const started = Date.now();
-    let spoke = !analyser; // can't measure the level: assume there is speech and let the mic button or timers stop it
-    let loudest = 0;
-    let lastSound = started;
-    let firstSpeech = 0;
-    let lastLiveText = started;
-    let liveBusy = false;
-    let finished = false;
-    let discarded = false;
-
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      clearInterval(meter);
-      if (recorder.state !== "inactive") recorder.stop();
-    };
-
-    const meter = setInterval(() => {
+    const tick = setInterval(() => {
       const now = Date.now();
-      if (analyser && samples) {
-        analyser.getByteTimeDomainData(samples);
-        let sum = 0;
-        for (const s of samples) sum += ((s - 128) / 128) ** 2;
-        const level = Math.sqrt(sum / samples.length);
-        if (micRingRef.current) micRingRef.current.style.transform = `scale(${1 + Math.min(level * 7, 0.9)})`;
-        loudest = Math.max(loudest, level);
-        if (level > SPEECH_LEVEL) {
-          spoke = true;
-          lastSound = now;
-          firstSpeech ||= now;
-        }
+      if (speakingRef.current) lastActivity = now;
+
+      // No sound at all: the mic is probably muted or the wrong one
+      if (!heardAnything && !warned && now - opened > MIC_SILENT_NOTE_MS) {
+        warned = true;
+        setVoiceNote(copy().micNoSpeech);
       }
-      if ((spoke && analyser && now - lastSound > STOP_AFTER_QUIET_MS) || (!spoke && now - started > GIVE_UP_NO_SPEECH_MS) || now - started > MAX_RECORDING_MS) {
-        finish();
+      // Nobody has said anything for a while: don't leave the mic open
+      if (!userTalkingRef.current && now - lastActivity > MIC_IDLE_MS) {
+        endConversation();
+        setVoiceNote(copy().micAutoOff);
         return;
       }
       // The words so far, so what's being said shows up in the chat while it is being said
-      const liveGap = now - started > LIVE_TEXT_SLOWER_AFTER_MS ? LIVE_TEXT_SLOWER_MS : LIVE_TEXT_EVERY_MS;
-      const heardEnough = !analyser || (firstSpeech > 0 && now - firstSpeech > LIVE_TEXT_MIN_SPEECH_MS);
-      if (spoke && heardEnough && !liveBusy && chunks.length && now - lastLiveText > liveGap) {
-        liveBusy = true;
-        lastLiveText = now;
-        transcribeClip([...chunks], recorder.mimeType)
-          .then(({ text, blocked: isBlocked }) => {
-            if (isBlocked) setBlocked(true);
-            if (!finished && text) setLiveText(text);
-          })
-          .catch(() => {}) // only a preview: the final text is what counts
-          .finally(() => {
-            liveBusy = false;
-          });
-      }
-    }, 100);
-
-    recorder.onstop = async () => {
-      clearInterval(meter);
-      micRef.current = null;
-      stream.getTracks().forEach((track) => track.stop());
-      source?.disconnect();
-      setListening(false);
-      if (discarded) return setLiveText("");
-      // Quiet speech may never reach SPEECH_LEVEL; only true silence is not sent
-      if ((!spoke && loudest < FAINT_LEVEL) || !chunks.length) {
-        setLiveText("");
-        return setVoiceNote(copy().micNoSpeech);
-      }
-
-      setTranscribing(true);
-      try {
-        const { text, blocked: isBlocked } = await transcribeClip(chunks, recorder.mimeType);
-        if (isBlocked) setBlocked(true);
-        // Closed while the words were being worked out: leave them in the box instead of sending
-        else if (text && !activeRef.current) setInput(text);
-        else if (text) handleTextRef.current(text);
-        else setVoiceNote(copy().micNoSpeech);
-      } catch {
-        setVoiceNote(copy().micFailed);
-      } finally {
-        setTranscribing(false);
-        setLiveText("");
-      }
-    };
-
-    micRef.current = {
-      stop: finish,
-      abort: () => {
-        discarded = true;
-        finish();
-      },
-    };
-    recorder.start(250); // short chunks, so the live text includes the latest words
+      const gap = now - lastActivity > LIVE_TEXT_SLOWER_AFTER_MS ? LIVE_TEXT_SLOWER_MS : LIVE_TEXT_EVERY_MS;
+      if (!userTalkingRef.current || previewBusy || now - lastPreview < gap) return;
+      const clip = mic.clip();
+      if (!clip) return;
+      previewBusy = true;
+      lastPreview = now;
+      const words = transcribeClip(clip);
+      preview = { startedAt: now, words };
+      words
+        .then(({ text, blocked: isBlocked }) => {
+          if (isBlocked) setBlocked(true);
+          if (userTalkingRef.current && text) setLiveText(text);
+        })
+        .catch(() => {}) // only a preview: the final text is what counts
+        .finally(() => {
+          previewBusy = false;
+        });
+    }, 200);
+    conversationCleanupRef.current = () => clearInterval(tick);
   };
-  const stopListeningToMic = () => micRef.current?.stop();
+
+  endConversationRef.current = endConversation;
 
   const toggleMute = () => {
     const next = !muted;
@@ -580,7 +701,7 @@ const EnhancedChatbot = () => {
     const next = !voiceOn;
     setVoiceOn(next);
     voiceOnRef.current = next;
-    localStorage.setItem("dh_chat_voice", next ? "1" : "0");
+    localStorage.setItem("dh_chat_voice_on", next ? "1" : "0");
     if (!next) stopSpeaking();
   };
 
@@ -593,13 +714,13 @@ const EnhancedChatbot = () => {
         @keyframes dhChatIn { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
         @keyframes dhMsgIn { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
         @keyframes dhDot { 0%, 80%, 100% { transform: translateY(0); opacity: .45; } 40% { transform: translateY(-4px); opacity: 1; } }
-        @keyframes dhBubble { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
         .dh-chat-in { animation: dhChatIn .32s cubic-bezier(.2,.9,.3,1.2) both; transform-origin: bottom right; }
         .dh-msg-in { animation: dhMsgIn .28s ease-out both; }
         .dh-dot { animation: dhDot 1.1s infinite ease-in-out; }
-        .dh-bubble-float { animation: dhBubble 2.8s ease-in-out infinite; }
       `}</style>
 
+<<<<<<< HEAD
+=======
       {/* Launcher: "May I help you?" bubble above the animated robot */}
       {!isOpen && (
         <button
@@ -616,6 +737,7 @@ const EnhancedChatbot = () => {
         </button>
       )}
 
+>>>>>>> 2cd7bcf1896bbdfd0933de381ad5a7e9dc2d334f
       {/* Chat window */}
       {isOpen && (
         <>
@@ -644,11 +766,11 @@ const EnhancedChatbot = () => {
 
               {/* Language */}
               <div className="flex shrink-0 items-center rounded-full bg-white/15 p-0.5 text-[11px] font-bold">
-                {(["en", "hi"] as Lang[]).map((l) => (
+                {(["hi", "en"] as Lang[]).map((l) => (
                   <button
                     key={l}
                     type="button"
-                    onClick={() => setLang(l)}
+                    onClick={() => switchLanguage(l)}
                     aria-pressed={lang === l}
                     className={`rounded-full px-2 py-1 transition cursor-pointer ${lang === l ? "bg-white text-[#0A2B5E] shadow" : "text-white/85 hover:text-white"}`}
                   >
@@ -739,7 +861,7 @@ const EnhancedChatbot = () => {
                     )}
 
                     {/* What you're saying, live, while the mic listens */}
-                    {(listening || transcribing) && (
+                    {(hearing || transcribing) && (
                       <div className="dh-msg-in flex justify-end" aria-live="polite">
                         <p className="max-w-[80%] whitespace-pre-line rounded-[16px] rounded-tr-[6px] border border-dashed border-[#134698]/60 bg-white px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-[#0A2B5E] shadow-[0_2px_6px_rgba(10,43,94,0.12)]">
                           <Mic className="-mt-0.5 mr-1.5 inline h-3.5 w-3.5 animate-pulse text-red-500" />
@@ -778,7 +900,7 @@ const EnhancedChatbot = () => {
                       ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder={blocked ? t.blockedPlaceholder : listening ? t.listening : t.placeholder[step]}
+                      placeholder={blocked ? t.blockedPlaceholder : listening ? (speaking ? t.interruptHint : t.listening) : t.placeholder[step]}
                       disabled={blocked}
                       aria-invalid={inputIsAbusive}
                       inputMode={step === "phone" ? "tel" : step === "email" ? "email" : "text"}
@@ -806,8 +928,8 @@ const EnhancedChatbot = () => {
                     {canListen && (
                       <button
                         type="button"
-                        onClick={listening ? stopListeningToMic : () => void startListening()}
-                        disabled={blocked || transcribing}
+                        onClick={listening ? endConversation : () => void startConversation()}
+                        disabled={blocked}
                         title={listening ? t.micStop : t.micStart}
                         aria-label={listening ? t.micStop : t.micStart}
                         aria-pressed={listening}

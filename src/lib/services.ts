@@ -187,6 +187,10 @@ export async function fetchPublicServices(): Promise<PublicServiceItem[]> {
 // copy of the photo for those. Anything else (a photo uploaded in the admin) is used as it is.
 const uploadedImage = (image: any): any => (image && !/^\/?(services\/detail|assets\/image)\//.test(image) ? image : null);
 
+// The seed script saved fewer projects for some pages, with no photos of their own, which left holes in the row:
+// those pages keep their own list. Once a project photo has been uploaded in the admin, what's saved is used as it is.
+const isSeededShortList = (saved: any[], own: unknown[]) => saved.length < own.length && !saved.some((item) => uploadedImage(item.image));
+
 export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | null> {
   const fallback = getServiceDetail(slug);
 
@@ -282,7 +286,7 @@ export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | 
               title: detail.projects?.title ?? fallback.projects.title,
               text: detail.projects?.text ?? fallback.projects.text,
               linkStyle: detail.projects?.linkStyle ?? fallback.projects.linkStyle,
-              items: Array.isArray(detail.projects?.items) && detail.projects.items.length > 0
+              items: Array.isArray(detail.projects?.items) && detail.projects.items.length > 0 && !isSeededShortList(detail.projects.items, fallback.projects.items)
                 ? detail.projects.items.map((it: any, idx: number) => ({
                     title: it.title || "",
                     place: it.place || "",

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { ShowcaseMainPhoto, ShowcasePreview, ShowcaseThumbs } from "./ServiceShowcasePreview";
 import type { ServiceDetail } from "./types";
 
 type Hero = ServiceDetail["hero"];
@@ -136,6 +137,9 @@ const GALLERY_STYLES: Record<Layout, { list: string; photo: string }> = {
   "photo-left-edge-captions": { list: "lg:w-[76.06%] lg:grid-cols-[269fr_265fr_266fr_263fr] lg:gap-[19px] lg:pb-[17px] lg:pl-[6.125vw] lg:pr-0 lg:pt-[16px]", photo: "lg:h-[5.94vw]" },
   "photo-left-wedge-captions": { list: "lg:w-[76.38%] lg:grid-cols-[263fr_263fr_265fr_266fr] lg:gap-[22px] lg:pb-[19px] lg:pl-[6.19vw] lg:pr-0 lg:pt-[16px]", photo: "lg:h-[5.81vw]" },
 };
+
+// Corporate: the navy block's thin end runs along the bottom of the whole row, to the screen's left edge
+const BOTTOM_LINE = "polygon(0 calc(100% - 4px), 76.37% 90.3%, 77% 90.3%, 77% 100%, 0 100%)";
 
 // The navy shape under the banner: a wide block on one side that runs on as a thin bar along the bottom
 const BAND_SHAPES: Partial<Record<Layout, { shape: string; stat: string; rings?: boolean; statLabel?: string }>> = {
@@ -382,24 +386,6 @@ const ShowcaseFeatures = ({ features, layout }: { features: Hero["features"]; la
   );
 };
 
-const ShowcaseGallery = ({ gallery, layout }: { gallery: Showcase["gallery"]; layout: Layout }) => (
-  <ul className={`relative grid grid-cols-2 gap-3 px-4 py-4 sm:grid-cols-4 sm:px-6 ${GALLERY_STYLES[layout].list}`}>
-    {gallery.map(({ image, alt, caption }) => (
-      <li key={alt}>
-        <div className={`relative aspect-[271/112] overflow-hidden rounded-md lg:aspect-auto ${GALLERY_STYLES[layout].photo}`}>
-          <Image src={image} alt={alt} fill placeholder="blur" sizes="(min-width: 1024px) 18vw, (min-width: 640px) 25vw, 50vw" className="object-cover" />
-        </div>
-        {caption && (
-          <>
-            <p className="mt-1.5 text-[12px] font-bold leading-[14px] text-[#0A2B5E] 2xl:text-[13px]">{caption}</p>
-            <span className="mt-1.5 block h-[2px] w-8 bg-[#C98F4E]" />
-          </>
-        )}
-      </li>
-    ))}
-  </ul>
-);
-
 // One figure in white and gold, for a navy background
 const NavyStat = ({ stat, labelSize }: { stat: Showcase["stat"]; labelSize?: string }) => {
   const { icon: StatIcon, value, label } = stat;
@@ -458,10 +444,11 @@ const ServiceShowcaseHero = ({ hero, showcase }: { hero: Hero; showcase: Showcas
 
   return (
     <section className="relative w-full bg-white pt-[56px] sm:pt-[68px]">
+      <ShowcasePreview gallery={showcase.gallery}>
       {layout === "photo-right-band" ? (
         <div className="lg:grid lg:grid-cols-[41.125%_58.875%]">
           <div className="relative h-[240px] sm:h-[340px] lg:order-2 lg:h-auto">
-            <Image src={hero.image} alt={showcase.imageAlt} fill priority placeholder="blur" sizes="(min-width: 1024px) 59vw, 100vw" className="object-cover" />
+            <ShowcaseMainPhoto image={hero.image} alt={showcase.imageAlt} sizes="(min-width: 1024px) 59vw, 100vw" />
           </div>
 
           <div className="relative overflow-hidden bg-white lg:order-1">
@@ -499,7 +486,7 @@ const ServiceShowcaseHero = ({ hero, showcase }: { hero: Hero; showcase: Showcas
             {left.accent && <div className={`absolute inset-0 hidden lg:block ${left.accent}`} />}
             {left.band && <div className={`absolute inset-0 hidden lg:block ${left.band}`} />}
             <div className={`absolute inset-0 ${left.photo}`}>
-              <Image src={hero.image} alt={showcase.imageAlt} fill priority placeholder="blur" sizes="(min-width: 1024px) 63vw, 100vw" className="object-cover" />
+              <ShowcaseMainPhoto image={hero.image} alt={showcase.imageAlt} sizes="(min-width: 1024px) 63vw, 100vw" />
             </div>
           </div>
 
@@ -542,7 +529,7 @@ const ServiceShowcaseHero = ({ hero, showcase }: { hero: Hero; showcase: Showcas
             <div className={`absolute inset-0 hidden lg:block ${cut.band}`} />
             <div className={`absolute inset-0 hidden lg:block ${cut.line}`} />
             <div className={`absolute inset-0 ${cut.photo}`}>
-              <Image src={hero.image} alt={showcase.imageAlt} fill priority placeholder="blur" sizes="(min-width: 1024px) 64vw, 100vw" className={`object-cover ${cut.photoPosition ?? ""}`} />
+              <ShowcaseMainPhoto image={hero.image} alt={showcase.imageAlt} sizes="(min-width: 1024px) 64vw, 100vw" position={cut.photoPosition} />
             </div>
           </div>
 
@@ -574,7 +561,7 @@ const ServiceShowcaseHero = ({ hero, showcase }: { hero: Hero; showcase: Showcas
       ) : (
         <div className="lg:grid lg:grid-cols-[58.75%_41.25%]">
           <div className="relative h-[240px] sm:h-[340px] lg:h-auto">
-            <Image src={hero.image} alt={showcase.imageAlt} fill priority placeholder="blur" sizes="(min-width: 1024px) 59vw, 100vw" className="object-cover" />
+            <ShowcaseMainPhoto image={hero.image} alt={showcase.imageAlt} sizes="(min-width: 1024px) 59vw, 100vw" />
           </div>
 
           <div className="relative overflow-hidden bg-white">
@@ -622,6 +609,7 @@ const ServiceShowcaseHero = ({ hero, showcase }: { hero: Hero; showcase: Showcas
 
       <div className={`relative border-t border-[#ECEEF2] ${band ? "bg-white lg:border-t-0" : "bg-[#F8F8F9]"}`}>
         {band && <div aria-hidden="true" className="absolute inset-0 hidden bg-[#03254F] lg:block" style={{ clipPath: band.shape }} />}
+        {layout === "photo-left" && <div aria-hidden="true" className="absolute inset-0 hidden bg-[#03254F] lg:block" style={{ clipPath: BOTTOM_LINE }} />}
         {band?.rings && (
           <svg aria-hidden="true" viewBox="0 0 110 62" fill="none" className="pointer-events-none absolute bottom-0 right-0 hidden h-[62px] w-[110px] lg:block">
             <g stroke="#C9A26E" strokeOpacity="0.35" strokeWidth="0.8">
@@ -632,7 +620,7 @@ const ServiceShowcaseHero = ({ hero, showcase }: { hero: Hero; showcase: Showcas
           </svg>
         )}
 
-        <ShowcaseGallery gallery={showcase.gallery} layout={layout} />
+        <ShowcaseThumbs listClassName={`relative grid grid-cols-2 gap-3 px-4 py-4 sm:grid-cols-4 sm:px-6 ${GALLERY_STYLES[layout].list}`} photoClassName={GALLERY_STYLES[layout].photo} />
 
         {band && showcase.moreStats ? (
           <ul className={`relative grid grid-cols-1 items-center gap-4 bg-[#03254F] px-4 py-5 sm:grid-cols-3 sm:px-6 lg:absolute lg:top-0 lg:grid-cols-[131fr_128fr_121fr] lg:gap-0 lg:bg-transparent lg:p-0 ${band.stat}`}>
@@ -657,13 +645,14 @@ const ServiceShowcaseHero = ({ hero, showcase }: { hero: Hero; showcase: Showcas
             </div>
           </div>
         ) : (
-          <div className="relative bg-[#03254F] lg:absolute lg:inset-y-0 lg:right-0 lg:w-[28.06%] lg:[clip-path:polygon(31%_0,100%_0,100%_100%,0_100%,15.8%_90.3%)]">
+          <div className="relative bg-[#03254F] lg:absolute lg:inset-y-0 lg:right-0 lg:w-[28.06%] lg:[clip-path:polygon(31%_0,100%_0,100%_100%,15.8%_100%,15.8%_90.3%)]">
             <div className="flex items-center gap-4 px-4 py-5 sm:px-6 lg:absolute lg:inset-y-0 lg:left-[35%] lg:right-0 lg:gap-3 lg:p-0 xl:gap-4 2xl:left-[36.5%] 2xl:gap-6">
               <NavyStat stat={showcase.stat} />
             </div>
           </div>
         )}
       </div>
+      </ShowcasePreview>
     </section>
   );
 };

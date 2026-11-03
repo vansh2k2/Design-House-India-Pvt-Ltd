@@ -7,12 +7,11 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import { SeoProvider } from "@/context/SeoContext";
+import ChatbotLauncher from "@/components/ui/ChatbotLauncher";
 // Shown only after the page is idle, so their code (incl. the booking form) is split out of the first load
 const WhatsAppFloat = dynamic(() => import("@/components/ui/WhatsAppFloat"), { ssr: false });
 const SocialSidebar = dynamic(() => import("@/components/ui/SocialSidebar"), { ssr: false });
 const BookingFloat = dynamic(() => import("@/components/layout/BookingFloat"), { ssr: false });
-// "May I help you?" robot (bottom right) that opens the chat
-const Chatbot = dynamic(() => import("@/components/ui/Chatbot"), { ssr: false });
 
 const Providers = ({ children }: { children: ReactNode }) => {
   const [showFloating, setShowFloating] = useState(false);
@@ -41,9 +40,9 @@ const Providers = ({ children }: { children: ReactNode }) => {
                   <WhatsAppFloat />
                   <SocialSidebar />
                   <BookingFloat open={isBookingOpen} onOpenChange={setIsBookingOpen} />
-                  <Chatbot />
                 </Suspense>
               )}
+              <ChatbotLauncher loadChat={showFloating} />
             </SmoothScroll>
           </SeoProvider>
     </LazyMotion>
