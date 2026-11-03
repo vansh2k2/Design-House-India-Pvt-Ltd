@@ -1,46 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { preload } from "react-dom";
+
+import RobotLoader from "@/components/ui/RobotLoader";
 
 // The chat window and everything behind it: only needed once the page is idle, or the robot is clicked
 const Chatbot = dynamic(() => import("@/components/ui/Chatbot"), { ssr: false });
 
-// The animation's first frame. Being a plain picture in the page's HTML, the robot shows with the page.
-const ROBOT_PICTURE = "/assets/chatbot/robot-first-frame.webp";
-const START_MOVING_WITHIN_MS = 1500;
-
+// Pure CSS robot (RobotLoader): it is part of the page's HTML and styles, so it shows and moves with the page
 const RobotButton = ({ onClick, label }: { onClick: () => void; label: string }) => {
-  preload(ROBOT_PICTURE, { as: "image", fetchPriority: "high" });
-
-  const stage = useRef<HTMLSpanElement>(null);
-  const [moving, setMoving] = useState(false);
-
-  useEffect(() => {
-    let stopped = false;
-    let robot: { destroy: () => void } | null = null;
-
-    const startMoving = () => {
-      Promise.all([import("lottie-web/build/player/lottie_light"), import("./robotAnimation.json")])
-        .then(([{ default: lottie }, { default: animationData }]) => {
-          if (stopped || !stage.current) return;
-          const animation = lottie.loadAnimation({ container: stage.current, renderer: "svg", loop: true, autoplay: true, animationData });
-          animation.addEventListener("DOMLoaded", () => setMoving(true));
-          robot = animation;
-        })
-        .catch(() => {}); // the picture stays: a still robot that still opens the chat
-    };
-
-    if ("requestIdleCallback" in window) requestIdleCallback(startMoving, { timeout: START_MOVING_WITHIN_MS });
-    else setTimeout(startMoving, 500);
-
-    return () => {
-      stopped = true;
-      robot?.destroy();
-    };
-  }, []);
-
   return (
     <>
       <style>{`
@@ -57,18 +26,15 @@ const RobotButton = ({ onClick, label }: { onClick: () => void; label: string })
           {label}
           <span className="absolute left-1/2 -bottom-[7px] h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-[#d5deee] bg-white" />
         </span>
-        <span className="relative block h-[110px] w-[110px] sm:h-[130px] sm:w-[130px] transition-transform duration-300 group-hover:scale-105">
-          {/* eslint-disable-next-line @next/next/no-img-element -- already small: the image optimizer would only delay it */}
-          {!moving && <img src={ROBOT_PICTURE} alt="" width={260} height={260} className="absolute inset-0 h-full w-full" />}
-          <span ref={stage} className="absolute inset-0 block" />
-        </span>
+        {/* Animated CSS robot (16 × 21 of --rb-size) */}
+        <RobotLoader className="[--rb-size:5.4px] sm:[--rb-size:6.4px] transition-transform duration-300 group-hover:scale-105" />
       </button>
     </>
   );
 };
 
 /* "May I help you?" robot (bottom right) that opens the chat. It is sent with the page, so it doesn't wait for
-   the chat's code or the animation player; both load afterwards, without the visitor noticing. */
+   the chat's code; that loads afterwards, without the visitor noticing. */
 const ChatbotLauncher = ({ loadChat }: { loadChat: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [clickedEarly, setClickedEarly] = useState(false);
