@@ -8,7 +8,7 @@ import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight } from "lucide-reac
 
 import type { StaticImageData } from "next/image";
 
-import blogsImg from "@/assets/image/blogs.webp";
+import blogsImg from "@/assets/banner/bloghome.webp";
 import corporateImg from "@/assets/image/b2.webp";
 import retailImg from "@/assets/image/b1.webp";
 import exhibitionImg from "@/assets/image/b4.webp";
@@ -93,9 +93,9 @@ const usePerView = () => {
   return perView;
 };
 
-/* "Blogs": heading + "View All Articles", category filter pills and a sliding row of blog cards with
-   side arrows and dots. On xl+ an office photo fills the right edge (diagonal left side) with a navy
-   overlay along its bottom carrying a tagline. */
+/* "Blogs": a dark section over the office lounge photo (darkened, deepest on the left). Heading +
+   "View All Articles", glass category pills and a sliding row of frosted-glass blog cards with side
+   arrows and dots. On xl+ a tagline sits at the bottom right, over the lit part of the photo. */
 const OurBlogs = () => {
   const [category, setCategory] = useState("All");
   const [index, setIndex] = useState(0);
@@ -116,16 +116,23 @@ const OurBlogs = () => {
   const cardWidth = `calc((100% - ${(perView - 1) * GAP}px) / ${perView})`;
 
   return (
-    <section className="relative w-full overflow-hidden bg-gradient-to-br from-[#F3F6FB] to-[#F8FAFD]">
-      {/* ── Right photo (xl+): slanted left edge, navy overlay rising from the bottom with the tagline.
-           Its width reaches from the viewport's right edge to just past the cards' right edge. ── */}
-      <div
-        className="hidden xl:block absolute top-0 bottom-0 right-0 [clip-path:polygon(29%_0,100%_0,100%_100%,0_100%)]"
-        style={{ width: "calc((100vw - min(100vw, 1400px)) / 2 + 360px)" }}
-      >
-        <Image src={blogsImg} alt="" fill placeholder="blur" sizes="(min-width: 1280px) 60vw, 100vw" className="object-cover object-[70%_center]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A2B5E] via-[#0A2B5E]/80 via-25% to-transparent to-55%" />
-        <div className="absolute bottom-0 left-0 pl-[72px] pr-6 pb-8">
+    <section className="relative w-full overflow-hidden bg-[#070d18]">
+      {/* ── Background: the dark lobby banner (lit lounge on the right), a little darker behind the text ── */}
+      <Image
+        src={blogsImg}
+        alt=""
+        fill
+        placeholder="blur"
+        sizes="100vw"
+        className="object-cover object-right"
+      />
+      {/* Dark overlay: deepest behind the heading and cards, clearing towards the lit lounge on the right */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#050a12]/90 via-[#050a12]/65 via-55% to-transparent to-85%" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050a12]/55 via-transparent to-transparent" />
+
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-7 pb-5 lg:pb-6">
+        {/* ── Tagline (xl+), bottom right over the lit part of the photo ── */}
+        <div className="hidden xl:block absolute right-6 lg:right-8 bottom-8 w-[270px]">
           <p className="font-serif text-[30px] 2xl:text-[34px] leading-[1.12] text-white">
             Design Stories
             <br />
@@ -134,10 +141,9 @@ const OurBlogs = () => {
           <p className="mt-4 text-[11px] font-medium uppercase tracking-[0.2em] text-white/85 whitespace-nowrap">
             Ideas <span className="mx-2 text-white/50">|</span> Trends <span className="mx-2 text-white/50">|</span> Project Insights
           </p>
+          <span className="block w-12 h-[3px] bg-[#fd6e15] rounded-full mt-3" />
         </div>
-      </div>
 
-      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-5 pb-4 lg:pb-5">
         <div className="xl:pr-[300px]">
           {/* ── Header ── */}
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-5">
@@ -146,17 +152,17 @@ const OurBlogs = () => {
                 <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
                 <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">Blogs</span>
               </div>
-              <h2 className="text-[28px] sm:text-[32px] lg:text-[36px] font-serif font-medium leading-[1.08] tracking-tight mb-2.5 text-[#0A2B5E]">
+              <h2 className="text-[28px] sm:text-[32px] lg:text-[36px] font-serif font-medium leading-[1.08] tracking-tight mb-2.5 text-white">
                 Insights. Ideas. <span className="text-[#fd6e15]">Inspirations.</span>
               </h2>
-              <p className="text-[13.5px] sm:text-[14.5px] text-black leading-relaxed">
+              <p className="text-[13.5px] sm:text-[14.5px] text-white/80 leading-relaxed">
                 Explore our latest insights on interior design, retail environments, exhibition spaces and branding
                 <br className="hidden lg:block" /> to help you create spaces that perform and inspire.
               </p>
             </div>
             <Link
               href="/blogs"
-              className="group self-start shrink-0 inline-flex items-center gap-2 rounded-md border-[1.5px] border-[#fd6e15] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#fd6e15] hover:bg-[#fd6e15] hover:text-white transition-colors"
+              className="group self-start shrink-0 inline-flex items-center gap-2 rounded-lg bg-[#fd6e15] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_8px_22px_-6px_rgba(253,110,21,0.6)] hover:bg-[#e05d0e] transition-colors"
             >
               View All Articles
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -170,10 +176,10 @@ const OurBlogs = () => {
                   key={c}
                   type="button"
                   onClick={() => setCategory(c)}
-                  className={`px-4 py-2 rounded-md border text-[12.5px] font-medium whitespace-nowrap transition-colors ${
+                  className={`px-4 py-2 rounded-lg border text-[12.5px] font-medium whitespace-nowrap backdrop-blur-sm transition-colors ${
                     category === c
-                      ? "bg-[#fd6e15] border-[#fd6e15] text-white"
-                      : "bg-white border-[#DCE3EE] text-[#1F2D44] hover:border-[#B9C8DD]"
+                      ? "bg-[#fd6e15] border-[#fd6e15] text-white shadow-[0_6px_18px_-6px_rgba(253,110,21,0.6)]"
+                      : "bg-white/[0.06] border-white/25 text-white/90 hover:bg-white/[0.12] hover:border-white/40"
                   }`}
                 >
                   {c}
@@ -189,7 +195,7 @@ const OurBlogs = () => {
                 style={{ gap: GAP, transform: `translateX(calc(-${index} * (100% + ${GAP}px) / ${perView}))` }}
               >
                 {shown.length === 0 ? (
-                  <p className="w-full py-16 text-center text-[13.5px] text-[#46658C]">New articles in this category are coming soon.</p>
+                  <p className="w-full py-16 text-center text-[13.5px] text-white/70">New articles in this category are coming soon.</p>
                 ) : (
                   shown.map((blog, i) => (
                       // Cards rise and fade in one after another the first time the row scrolls into view
@@ -199,11 +205,17 @@ const OurBlogs = () => {
                         whileInView={{ opacity: 1, y: 0, scale: 1 }}
                         viewport={{ once: true, amount: 0.3 }}
                         transition={{ duration: 0.6, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
-                        className="group shrink-0 rounded-md bg-white overflow-hidden shadow-[rgba(0,0,0,0.1)_0px_1px_3px_0px,rgba(0,0,0,0.06)_0px_1px_2px_0px]"
+                        // Clean white glass: crisp white rim with a soft white glow, light frosted fill, bright top edge
+                        className="group relative shrink-0 rounded-xl overflow-hidden border border-white/50 bg-gradient-to-b from-white/[0.14] to-white/[0.05] backdrop-blur-lg shadow-[0_0_20px_rgba(255,255,255,0.08),0_18px_40px_-14px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.55),inset_0_0_24px_rgba(255,255,255,0.06)] hover:border-white/70 transition-colors"
                         style={{ width: cardWidth }}
                       >
-                        <Link href="/blogs" className="flex flex-col h-full">
-                          <div className="relative h-[130px] overflow-hidden">
+                        {/* Soft light from the top edge of the glass */}
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-0 rounded-xl bg-[linear-gradient(180deg,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0)_40%)]"
+                        />
+                        <Link href="/blogs" className="relative flex flex-col h-full p-2">
+                          <div className="relative h-[130px] overflow-hidden rounded-lg">
                             <Image
                               src={blog.image}
                               alt={blog.title}
@@ -216,15 +228,15 @@ const OurBlogs = () => {
                               {blog.category}
                             </span>
                           </div>
-                          <div className="flex flex-col flex-1 px-3.5 pt-3 pb-3.5">
-                            <p className="flex items-center gap-1.5 text-[11px] text-[#46658C] mb-1.5">
+                          <div className="flex flex-col flex-1 px-1.5 pt-3 pb-1.5">
+                            <p className="flex items-center gap-1.5 text-[11px] text-white/80 mb-1.5">
                               <CalendarDays className="w-3.5 h-3.5" />
                               {formatDate(blog.date)}
                             </p>
-                            <h3 className="font-serif font-semibold text-[15px] leading-snug text-[#0A2B5E] line-clamp-2 mb-1.5 group-hover:text-[#fd6e15] transition-colors">
+                            <h3 className="font-semibold text-[15px] leading-snug text-white line-clamp-2 mb-1.5 group-hover:text-[#fd6e15] transition-colors">
                               {blog.title}
                             </h3>
-                            <p className="text-[12px] text-[#5B6B82] leading-relaxed line-clamp-3 mb-2.5">{blog.excerpt}</p>
+                            <p className="text-[12px] text-white/70 leading-relaxed line-clamp-3 mb-2.5">{blog.excerpt}</p>
                             <span className="mt-auto inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#fd6e15]">
                               Read More
                               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -243,7 +255,7 @@ const OurBlogs = () => {
                   type="button"
                   onClick={prev}
                   aria-label="Previous articles"
-                  className="absolute top-1/2 -translate-y-1/2 -left-3 sm:-left-5 w-10 h-10 rounded-full bg-white text-[#0A2B5E] shadow-[0_4px_14px_rgba(10,43,94,0.18)] flex items-center justify-center hover:text-[#fd6e15] transition-colors"
+                  className="absolute top-1/2 -translate-y-1/2 -left-3 sm:-left-5 w-10 h-10 rounded-full border border-white/25 bg-white/10 backdrop-blur-md text-white shadow-[0_6px_18px_rgba(0,0,0,0.35)] flex items-center justify-center hover:bg-[#fd6e15] hover:border-[#fd6e15] transition-colors"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -251,7 +263,7 @@ const OurBlogs = () => {
                   type="button"
                   onClick={next}
                   aria-label="Next articles"
-                  className="absolute top-1/2 -translate-y-1/2 -right-3 sm:-right-5 w-10 h-10 rounded-full bg-white text-[#0A2B5E] shadow-[0_4px_14px_rgba(10,43,94,0.18)] flex items-center justify-center hover:text-[#fd6e15] transition-colors"
+                  className="absolute top-1/2 -translate-y-1/2 -right-3 sm:-right-5 w-10 h-10 rounded-full border border-white/25 bg-white/10 backdrop-blur-md text-white shadow-[0_6px_18px_rgba(0,0,0,0.35)] flex items-center justify-center hover:bg-[#fd6e15] hover:border-[#fd6e15] transition-colors"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -268,7 +280,7 @@ const OurBlogs = () => {
                   type="button"
                   onClick={() => setIndex(d)}
                   aria-label={`Go to slide ${d + 1}`}
-                  className={`w-6 h-6 p-[7px] bg-clip-content rounded-full transition-colors ${d === index ? "bg-[#fd6e15]" : "bg-[#D5DDEA] hover:bg-[#B9C8DD]"}`}
+                  className={`w-6 h-6 p-[7px] bg-clip-content rounded-full transition-colors ${d === index ? "bg-[#fd6e15]" : "bg-white/35 hover:bg-white/60"}`}
                 />
               ))}
             </div>

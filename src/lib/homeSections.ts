@@ -69,6 +69,8 @@ export interface StrengthsContent {
 
 export interface TestimonialsHeadingContent extends Heading {
   button: { label: string; href: string };
+  // Video beside the cards: a YouTube link or an .mp4 URL, with a cover photo
+  video?: { url: string; poster: string; posterAlt: string };
 }
 
 export interface FaqsContent extends Heading {

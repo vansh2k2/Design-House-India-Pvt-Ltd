@@ -157,9 +157,12 @@ export default function WhatWeDo({ data = DEFAULT_WHAT_WE_DO }: { data?: WhatWeD
             ════════════════════════════════════════════════════════════════ */}
         <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4 items-stretch">
           {SERVICES.map((item, idx) => (
+              // Each card opens its service page in a new tab
               <Link
                 key={`${item.title}-${idx}`}
                 href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`group bg-white rounded-lg overflow-hidden flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(0,0,0,0.1),0_0_0_1px_rgba(27,31,35,0.2)] transition-all duration-300 ${
                   cardsVisible ? "wwd-card-reveal" : "opacity-0 pointer-events-none"
                 }`}

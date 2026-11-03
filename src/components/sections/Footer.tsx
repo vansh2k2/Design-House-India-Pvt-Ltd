@@ -3,11 +3,10 @@
 import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRight, ArrowUp, ChevronRight, MapPin, Phone } from "lucide-react";
 
 import { useFooter } from "@/hooks/useFooter";
-import { useSocialProfiles } from "@/context/SocialLinksContext";
-import SocialIcon from "@/components/ui/SocialIcon";
 import iconMail from "@/assets/icon/c2.png";
 
 /* ─── Content ─── */
@@ -62,17 +61,18 @@ const Heading = ({ children }: { children: React.ReactNode }) => (
 // showCta: the "Let's Build Together" band above the footer (only the home page shows it)
 // Content: edited in the admin (Pages & CMS → Home → Footer & Social Links)
 const Footer = ({ showCta = false }: { showCta?: boolean }) => {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const shouldShowCta = showCta && isHome;
   const data = useFooter();
   const { cta, email } = data;
   // The arrow in the Call Us Today box dials the second number
   const arrowPhone = data.phones[1] || data.phones[0] || "";
-  // Advanced SEO → Social Media Links (only the ones that are set)
-  const socialProfiles = useSocialProfiles();
 
   return (
     <footer className="bg-[#01182a] text-white font-sans overflow-x-hidden">
       {/* ================= CTA BANNER ================= */}
-      {showCta && (
+      {shouldShowCta && (
         <section className="relative overflow-hidden bg-[#0B2E7A]">
           {/* Banner artwork: blue streaks with the office reception on the right */}
           {/* Phones show the plain blue side of the artwork (darkened) so the text stays readable */}
@@ -103,7 +103,7 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
             {cta.buttonLabel && (
             <Link
               href={cta.buttonHref || "/contact"}
-              className="self-start lg:self-center flex-shrink-0 inline-flex items-center gap-2 bg-white text-[#134698] hover:bg-[#DE802B] hover:text-white font-bold text-[11px] uppercase tracking-wide px-3.5 py-2 rounded-md shadow-lg transition-colors"
+              className="self-start lg:self-center flex-shrink-0 inline-flex items-center gap-2 bg-[#fd6e15] text-white hover:bg-[#e05d0e] font-bold text-[11px] uppercase tracking-wide px-3.5 py-2 rounded-md shadow-lg transition-colors"
             >
               {cta.buttonLabel}
               <ArrowRight className="w-3.5 h-3.5" />
@@ -188,9 +188,9 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
               </span>
               <div className="leading-tight">
                 <p className="text-[11px] font-medium text-[#F7B84B] mb-0.5">{data.callTitle}</p>
-                {data.phones.map(p => (
+                {data.phones.map((p, i) => (
                   <a
-                    key={p}
+                    key={`${p}-${i}`}
                     href={telHref(p)}
                     className="flex items-center min-h-6 whitespace-nowrap font-bold text-[13px] 2xl:text-[14px] tracking-tight hover:text-[#3B9BFF] transition-colors"
                   >
@@ -202,28 +202,6 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
                 <ArrowRight className="w-4 h-4 2xl:w-[18px] 2xl:h-[18px]" />
               </a>
             </div>
-            {socialProfiles.length > 0 && (
-              <div className="mt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 mb-2">Follow Us</p>
-                <ul className="flex items-center gap-2.5">
-                  {socialProfiles.map(p => (
-                    <li key={p.network}>
-                      <a
-                        href={p.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Design House on ${p.label}`}
-                        title={p.label}
-                        className="w-9 h-9 rounded-full border border-white/20 bg-white/5 flex items-center justify-center text-white transition-colors hover:border-transparent hover:bg-[var(--brand)]"
-                        style={{ "--brand": p.color === "#000000" ? "#1f2937" : p.color } as React.CSSProperties}
-                      >
-                        <SocialIcon network={p.network} size={16} />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
           {/* Quick links */}

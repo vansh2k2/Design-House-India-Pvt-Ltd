@@ -1,78 +1,102 @@
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { Building2, Layers, MapPin, Users, type LucideIcon } from "lucide-react";
 
-import heroImg from "@/assets/image/vision.webp";
+import heroImg from "@/assets/banner/about2.webp";
+import { HERO_ACCENT_SHADOW, HERO_BANNER_CSS, HERO_DESC_SHADOW, HERO_TITLE_SHADOW } from "@/components/common/heroBannerEffects";
 
-/* Photo on the right half cut on a diagonal (top-left corner further right than the bottom-left), with a
-   thin orange band along that edge. */
-const CUT_TOP = "14%";
-const BORDER = "6px";
+// Facts along the bottom of the banner
+const FACTS: { icon: LucideIcon; title: string; text: string }[] = [
+  { icon: Building2, title: "Established in 2004", text: "20+ years of design, build and delivery expertise" },
+  { icon: MapPin, title: "Headquartered in Delhi-NCR", text: "With strong operations in Mumbai" },
+  { icon: Layers, title: "Turnkey Solutions", text: "From design and manufacturing to on-site execution" },
+  { icon: Users, title: "Pan-India Execution", text: "Delivering projects for corporates, retail, hospitality and events" },
+];
 
+/* About Us banner: the team photo across the full width (its blue left side carries the heading),
+   with four key facts along a darkened band at the bottom. */
 const AboutHero = () => (
-  <section className="relative w-full overflow-hidden bg-white pt-[56px] sm:pt-[68px]">
-    {/* Soft warm glow behind the text */}
-    <div className="absolute -left-40 -top-40 w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(253,110,21,0.10)_0%,rgba(253,110,21,0)_65%)] pointer-events-none" />
-
-    {/* ── Photo (lg+) ── */}
-    <div className="hidden lg:block absolute top-[56px] sm:top-[68px] bottom-0 right-0 w-[52%]" aria-hidden="true">
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-[#fd6e15] to-[#F6B27A]"
-        style={{ clipPath: `polygon(${CUT_TOP} 0, 100% 0, 100% 100%, 0 100%)` }}
+  <section className="hero-banner relative w-full overflow-hidden bg-[#06245f] pt-[56px] sm:pt-[68px]">
+    <style>{HERO_BANNER_CSS}</style>
+    <div className="relative">
+      <Image
+        src={heroImg}
+        alt="Design House India team planning a project over drawings and material samples"
+        fill
+        priority
+        quality={85}
+        sizes="100vw"
+        className="object-cover object-[78%_bottom] lg:object-[right_bottom]"
       />
-      <div
-        className="absolute inset-0"
-        style={{ clipPath: `polygon(calc(${CUT_TOP} + ${BORDER}) 0, 100% 0, 100% 100%, ${BORDER} 100%)` }}
-      >
-        <Image src={heroImg} alt="" fill priority placeholder="blur" sizes="(min-width: 1024px) 80vw, 100vw" className="object-cover object-[60%_center]" />
-      </div>
-    </div>
 
-    <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 lg:pt-8 lg:pb-14">
-      <div className="lg:w-[46%]">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[12px] text-[#46658C] mb-4">
-          <Link href="/" className="hover:text-[#fd6e15]">Home</Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-[#0A2B5E] font-medium">About Us</span>
-        </nav>
-
-        <div className="flex items-center gap-2 mb-2">
-          <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-          <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">About Design House</span>
-        </div>
-        <h1 className="text-[34px] sm:text-[42px] lg:text-[48px] font-serif font-medium leading-[1.06] tracking-tight text-[#0A2B5E] mb-3">
-          Transforming
-          <br />
-          <span className="text-[#fd6e15]">Spaces Since 2004</span>
-        </h1>
-        <p className="text-[16px] sm:text-[18px] font-bold text-[#0A2B5E] mb-3">Design. Manufacturing. Execution.</p>
-        <p className="text-[13.5px] sm:text-[14.5px] text-[#333] leading-relaxed max-w-[540px] mb-6">
-          Design House India Pvt. Ltd. is a trusted partner for interior design, retail display, manufacturing and turnkey
-          solutions. We create functional, aesthetic and inspiring spaces that enhance brands, elevate experiences and
-          deliver long-term value.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href="#our-story"
-            className="group inline-flex items-center gap-2 rounded-md bg-[#fd6e15] hover:bg-[#e05d0e] px-6 py-3 text-white text-[13.5px] font-semibold shadow-[0_6px_16px_rgba(253,110,21,0.3)] transition-colors"
+      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-8 pb-4 lg:pb-4">
+        <div className="max-w-[460px] lg:max-w-[38%]">
+          <p
+            className="hb-blur-in text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.25em] text-white"
+            style={{ animationDelay: "0.15s" }}
           >
-            Our Journey
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </a>
-          <Link
-            href="/portfolio"
-            className="group inline-flex items-center gap-2 rounded-md border-[1.5px] border-[#134698] px-6 py-3 text-[#134698] text-[13.5px] font-semibold hover:bg-[#134698] hover:text-white transition-colors"
+            About Us
+          </p>
+          <span
+            className="hb-blur-in block w-[86px] h-[3px] bg-[#fd6e15] rounded-full mt-2.5 mb-5"
+            style={{ animationDelay: "0.2s" }}
+          />
+          <h1
+            className="text-[34px] sm:text-[44px] lg:text-[52px] font-serif font-medium leading-[1.05] tracking-tight text-white mb-4 [perspective:800px]"
+            style={{ textShadow: HERO_TITLE_SHADOW }}
           >
-            View Projects
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+            <span className="block overflow-hidden">
+              <span className="hb-title-line" style={{ animationDelay: "0.25s" }}>
+                Creating
+              </span>
+            </span>
+            <span className="block overflow-hidden">
+              <span
+                className="hb-title-line text-[#fd6e15]"
+                style={{ animationDelay: "0.4s", textShadow: HERO_ACCENT_SHADOW }}
+              >
+                Impactful Spaces
+              </span>
+            </span>
+            <span className="block overflow-hidden">
+              <span className="hb-title-line" style={{ animationDelay: "0.55s" }}>
+                Since 2004
+              </span>
+            </span>
+          </h1>
+          <p
+            className="hb-desc-in text-[13.5px] sm:text-[15px] text-white/90 leading-relaxed max-w-[430px]"
+            style={{ animationDelay: "0.6s", textShadow: HERO_DESC_SHADOW }}
+          >
+            Design House India Pvt. Ltd. brings design, manufacturing and project execution together to deliver turnkey
+            commercial interiors and exhibition solutions across India.
+          </p>
+          <span
+            className="hb-blur-in block w-[86px] h-[3px] bg-[#fd6e15] rounded-full mt-5"
+            style={{ animationDelay: "0.7s" }}
+          />
         </div>
       </div>
 
-      {/* Photo on phones/tablets */}
-      <div className="lg:hidden relative h-[240px] sm:h-[320px] mt-8 rounded-md overflow-hidden">
-        <Image src={heroImg} alt="Design House India reception" fill priority placeholder="blur" sizes="100vw" className="object-cover" />
+      {/* ── Key facts, on a blue band across the full width so they read over the photo ── */}
+      <div className="relative bg-gradient-to-b from-[#06245f]/75 to-[#041c4a]/90">
+        <ul className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-5">
+          {FACTS.map(({ icon: Icon, title, text }, i) => (
+            <li
+              key={title}
+              className={`flex items-start gap-3.5 lg:px-6 first:lg:pl-0 ${i > 0 ? "lg:border-l lg:border-white/25" : ""}`}
+            >
+              <Icon className="w-9 h-9 shrink-0 text-[#fd6e15]" strokeWidth={1.5} />
+              <div>
+                <p className="text-[14.5px] font-semibold text-white leading-tight mb-1">{title}</p>
+                <p className="text-[12.5px] text-white/80 leading-snug">{text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
+
+      {/* Space under the band, so the orange and blue curve along the bottom of the photo shows */}
+      <div className="h-8 sm:h-10 lg:h-12" />
     </div>
   </section>
 );
