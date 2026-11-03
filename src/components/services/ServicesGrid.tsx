@@ -11,8 +11,12 @@ import type { PublicServiceItem } from "@/lib/services";
 
 /* "Our Services": heading with a short intro, then numbered service cards (photo, number, title, text,
    "View Projects" and an arrow) linking to the projects page. */
+// For now the cards always come from the static list in ./data (the admin's services aren't used), so every
+// card shows its own photo. To use the admin's services again:
+// `const cards = initialServices && initialServices.length > 0 ? initialServices : SERVICES;`
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ServicesGrid = ({ initialServices }: { initialServices?: PublicServiceItem[] }) => {
-  const cards = initialServices && initialServices.length > 0 ? initialServices : SERVICES;
+  const cards = SERVICES;
 
   return (
     <section className="w-full bg-white">

@@ -133,6 +133,11 @@ export interface PublicServiceItem {
   number?: string;
 }
 
+// Files uploaded in the admin come back as "/uploads/..." paths on the backend; next/image would look for
+// them in this site's own public folder (and fail with a 400), so point them at the backend instead.
+const backendUrl = (path: string) =>
+  /^\/?uploads\//.test(path) ? `${API_URL}${path.startsWith("/") ? "" : "/"}${path}` : path;
+
 /**
  * Fetch all published services for the /services page grid.
  * Falls back to local SERVICES data if backend is unreachable.
@@ -152,8 +157,8 @@ export async function fetchPublicServices(): Promise<PublicServiceItem[]> {
             _id: c._id,
             title: c.title,
             desc: c.description || "",
-            image: isUploadedCustom ? c.image : (fallbackImg || c.image),
-            logo: c.logo || "",
+            image: isUploadedCustom ? backendUrl(c.image) : (fallbackImg || c.image),
+            logo: c.logo ? backendUrl(c.logo) : "",
             href: c.buttonUrl || "/portfolio",
             number: c.number || String(i + 1).padStart(2, "0"),
           };
