@@ -31,7 +31,7 @@ const ServicesPage = ({ initialServices }: { initialServices?: PublicServiceItem
       />
     </main>
 
-    <Footer showCta />
+    <Footer />
   </div>
 );
 

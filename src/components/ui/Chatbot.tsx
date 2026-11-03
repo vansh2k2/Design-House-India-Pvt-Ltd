@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { Bell, BellOff, Download, Mic, Minus, Send, Square, Volume2, VolumeX, X } from "lucide-react";
@@ -9,13 +8,7 @@ import { Bell, BellOff, Download, Mic, Minus, Send, Square, Volume2, VolumeX, X 
 import { api, API_URL } from "@/lib/api";
 import { isAbusive } from "@/lib/chatGuards";
 import { prepareVoices, speak, stopSpeaking, unlockVoice } from "@/lib/chatVoice";
-
-// Animated robot on the chat launcher. The Lottie player is large, so it loads in its own chunk,
-// after the page (the launcher itself only appears once the page is idle, see Providers).
-const DotLottieReact = dynamic(() => import("@lottiefiles/dotlottie-react").then((m) => m.DotLottieReact), {
-  ssr: false,
-});
-const ROBOT_ANIMATION = "https://lottie.host/8f0cd7c3-56f7-4c1e-af2c-677790d041f8/RaDToGLLNh.lottie";
+import RobotLoader from "@/components/ui/RobotLoader";
 
 /* The conversation itself lives on the backend (backend/src/modules/chatbot): it asks the name first,
    answers from the website's content, blocks abusive visitors and saves every chat with its IP. This
@@ -618,12 +611,8 @@ const EnhancedChatbot = () => {
             May I help you?
             <span className="absolute left-1/2 -bottom-[7px] h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-[#d5deee] bg-white" />
           </span>
-          <DotLottieReact
-            src={ROBOT_ANIMATION}
-            loop
-            autoplay
-            className="h-[110px] w-[110px] sm:h-[130px] sm:w-[130px] transition-transform duration-300 group-hover:scale-105"
-          />
+          {/* Animated CSS robot (16 × 21 of --rb-size) */}
+          <RobotLoader className="[--rb-size:5.4px] sm:[--rb-size:6.4px] transition-transform duration-300 group-hover:scale-105" />
         </button>
       )}
 

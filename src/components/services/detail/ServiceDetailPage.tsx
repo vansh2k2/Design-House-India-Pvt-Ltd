@@ -38,7 +38,7 @@ const ServiceDetailPage = ({ data }: { data: ServiceDetail }) => (
       />
     </main>
 
-    <Footer showCta />
+    <Footer />
   </div>
 );
 

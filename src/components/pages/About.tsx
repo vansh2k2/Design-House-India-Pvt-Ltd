@@ -4,14 +4,15 @@ import Footer from "@/components/sections/Footer";
 import AboutHero from "@/components/about/AboutHero";
 import WhoWeAre from "@/components/about/WhoWeAre";
 import OurStory from "@/components/about/OurStory";
-import AboutApproach from "@/components/about/AboutApproach";
-import OurValues from "@/components/about/OurValues";
-import BrandsAssociates from "@/components/about/BrandsAssociates";
-import AboutProjects from "@/components/about/AboutProjects";
+import OperationalStrength from "@/components/about/OperationalStrength";
+import ExpertTeam from "@/components/about/ExpertTeam";
+import TeamExpertise from "@/components/about/TeamExpertise";
+import PhilosophyValues from "@/components/about/PhilosophyValues";
+import BusinessNetwork from "@/components/about/BusinessNetwork";
 import ProjectCta from "@/components/common/ProjectCta";
 
-/* About Us page: hero, who we are, story, approach, values, brands, projects and an
-   enquiry band, between the site header and footer. */
+/* About Us page: hero, who we are, story, operational strength, expert team, team expertise,
+   philosophy & values, brands & associates and an enquiry band, between the site header and footer. */
 const AboutPage = () => (
   <div className="min-h-screen bg-white flex flex-col">
     <Topbar />
@@ -21,10 +22,11 @@ const AboutPage = () => (
       <AboutHero />
       <WhoWeAre />
       <OurStory />
-      <AboutApproach />
-      <OurValues />
-      <BrandsAssociates />
-      <AboutProjects />
+      <OperationalStrength />
+      <ExpertTeam />
+      <TeamExpertise />
+      <PhilosophyValues />
+      <BusinessNetwork />
       <ProjectCta />
     </main>
 

@@ -32,10 +32,10 @@ const STATS: { icon: LucideIcon; value: string; label: string }[] = [
    a row of key facts along the bottom. */
 const OurStory = () => (
   <section id="our-story" className="relative w-full overflow-hidden bg-white scroll-mt-24">
-    <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-0">
+    <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-3 sm:pb-4 lg:pb-5">
       <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2.5fr)] gap-8 lg:gap-0">
         {/* ── Left: heading + intro ── */}
-        <div className="lg:pr-8 lg:py-4">
+        <div className="lg:pr-8 lg:pt-2 lg:pb-0">
           <div className="flex items-center gap-3 mb-4">
             <span className="w-9 h-[3px] bg-[#fd6e15] rounded-full inline-block" />
             <span className="text-[14px] sm:text-[15px] font-semibold uppercase tracking-[0.06em] text-[#0A2B5E]">Our Journey</span>
@@ -100,7 +100,7 @@ const OurStory = () => (
       </div>
 
       {/* ── Key facts ── */}
-      <ul className="mt-4 lg:mt-5 pt-4 border-t border-[#DCE3EE] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-5">
+      <ul className="mt-1.5 lg:mt-2 pt-2.5 border-t border-[#DCE3EE] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-4">
         {STATS.map(({ icon: Icon, value, label }, i) => (
           <li key={value} className={`flex items-center gap-3.5 lg:justify-center lg:px-4 ${i > 0 ? "lg:border-l lg:border-[#C9D3E3]" : ""}`}>
             <Icon className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 text-[#fd6e15]" strokeWidth={1.4} />

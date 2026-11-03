@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRight, ArrowUp, ChevronRight, MapPin, Phone } from "lucide-react";
 
 import { useFooter } from "@/hooks/useFooter";
@@ -60,6 +61,9 @@ const Heading = ({ children }: { children: React.ReactNode }) => (
 // showCta: the "Let's Build Together" band above the footer (only the home page shows it)
 // Content: edited in the admin (Pages & CMS → Home → Footer & Social Links)
 const Footer = ({ showCta = false }: { showCta?: boolean }) => {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const shouldShowCta = showCta && isHome;
   const data = useFooter();
   const { cta, email } = data;
   // The arrow in the Call Us Today box dials the second number
@@ -68,7 +72,7 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
   return (
     <footer className="bg-[#01182a] text-white font-sans overflow-x-hidden">
       {/* ================= CTA BANNER ================= */}
-      {showCta && (
+      {shouldShowCta && (
         <section className="relative overflow-hidden bg-[#0B2E7A]">
           {/* Banner artwork: blue streaks with the office reception on the right */}
           {/* Phones show the plain blue side of the artwork (darkened) so the text stays readable */}
@@ -99,7 +103,7 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
             {cta.buttonLabel && (
             <Link
               href={cta.buttonHref || "/contact"}
-              className="self-start lg:self-center flex-shrink-0 inline-flex items-center gap-2 bg-white text-[#134698] hover:bg-[#DE802B] hover:text-white font-bold text-[11px] uppercase tracking-wide px-3.5 py-2 rounded-md shadow-lg transition-colors"
+              className="self-start lg:self-center flex-shrink-0 inline-flex items-center gap-2 bg-[#fd6e15] text-white hover:bg-[#e05d0e] font-bold text-[11px] uppercase tracking-wide px-3.5 py-2 rounded-md shadow-lg transition-colors"
             >
               {cta.buttonLabel}
               <ArrowRight className="w-3.5 h-3.5" />

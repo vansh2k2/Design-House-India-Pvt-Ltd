@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Building2, Layers, MapPin, Users, type LucideIcon } from "lucide-react";
 
 import heroImg from "@/assets/banner/about2.webp";
+import { HERO_ACCENT_SHADOW, HERO_BANNER_CSS, HERO_DESC_SHADOW, HERO_TITLE_SHADOW } from "@/components/common/heroBannerEffects";
 
 // Facts along the bottom of the banner
 const FACTS: { icon: LucideIcon; title: string; text: string }[] = [
@@ -14,7 +15,8 @@ const FACTS: { icon: LucideIcon; title: string; text: string }[] = [
 /* About Us banner: the team photo across the full width (its blue left side carries the heading),
    with four key facts along a darkened band at the bottom. */
 const AboutHero = () => (
-  <section className="relative w-full overflow-hidden bg-[#06245f] pt-[56px] sm:pt-[68px]">
+  <section className="hero-banner relative w-full overflow-hidden bg-[#06245f] pt-[56px] sm:pt-[68px]">
+    <style>{HERO_BANNER_CSS}</style>
     <div className="relative">
       <Image
         src={heroImg}
@@ -28,20 +30,50 @@ const AboutHero = () => (
 
       <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-8 pb-4 lg:pb-4">
         <div className="max-w-[460px] lg:max-w-[38%]">
-          <p className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.25em] text-white">About Us</p>
-          <span className="block w-[86px] h-[3px] bg-[#fd6e15] rounded-full mt-2.5 mb-5" />
-          <h1 className="text-[34px] sm:text-[44px] lg:text-[52px] font-serif font-medium leading-[1.05] tracking-tight text-white mb-4">
-            Creating
-            <br />
-            <span className="text-[#fd6e15]">Impactful Spaces</span>
-            <br />
-            Since 2004
+          <p
+            className="hb-blur-in text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.25em] text-white"
+            style={{ animationDelay: "0.15s" }}
+          >
+            About Us
+          </p>
+          <span
+            className="hb-blur-in block w-[86px] h-[3px] bg-[#fd6e15] rounded-full mt-2.5 mb-5"
+            style={{ animationDelay: "0.2s" }}
+          />
+          <h1
+            className="text-[34px] sm:text-[44px] lg:text-[52px] font-serif font-medium leading-[1.05] tracking-tight text-white mb-4 [perspective:800px]"
+            style={{ textShadow: HERO_TITLE_SHADOW }}
+          >
+            <span className="block overflow-hidden">
+              <span className="hb-title-line" style={{ animationDelay: "0.25s" }}>
+                Creating
+              </span>
+            </span>
+            <span className="block overflow-hidden">
+              <span
+                className="hb-title-line text-[#fd6e15]"
+                style={{ animationDelay: "0.4s", textShadow: HERO_ACCENT_SHADOW }}
+              >
+                Impactful Spaces
+              </span>
+            </span>
+            <span className="block overflow-hidden">
+              <span className="hb-title-line" style={{ animationDelay: "0.55s" }}>
+                Since 2004
+              </span>
+            </span>
           </h1>
-          <p className="text-[13.5px] sm:text-[15px] text-white/90 leading-relaxed max-w-[430px]">
+          <p
+            className="hb-desc-in text-[13.5px] sm:text-[15px] text-white/90 leading-relaxed max-w-[430px]"
+            style={{ animationDelay: "0.6s", textShadow: HERO_DESC_SHADOW }}
+          >
             Design House India Pvt. Ltd. brings design, manufacturing and project execution together to deliver turnkey
             commercial interiors and exhibition solutions across India.
           </p>
-          <span className="block w-[86px] h-[3px] bg-[#fd6e15] rounded-full mt-5" />
+          <span
+            className="hb-blur-in block w-[86px] h-[3px] bg-[#fd6e15] rounded-full mt-5"
+            style={{ animationDelay: "0.7s" }}
+          />
         </div>
       </div>
 
