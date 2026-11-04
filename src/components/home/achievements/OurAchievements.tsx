@@ -114,7 +114,7 @@ const OurAchievements = ({ data = DEFAULT_ACHIEVEMENTS }: { data?: AchievementsC
           {/* Eyebrow with Orange Corner Accent matching reference */}
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-3.5 h-2 border-l-2 border-t-2 border-[#fd6e15]" />
-            <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-white/90">
+            <span className="text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.2em] text-white/90">
               {data.eyebrow}
             </span>
           </div>

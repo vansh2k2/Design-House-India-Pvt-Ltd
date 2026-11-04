@@ -120,7 +120,7 @@ export default function WhatWeDo({ data = DEFAULT_WHAT_WE_DO }: { data?: WhatWeD
         <div className="mb-2">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-            <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#0A2B5E]">
+            <span className="text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.2em] text-[#0A2B5E]">
               {data.eyebrow}
             </span>
           </div>

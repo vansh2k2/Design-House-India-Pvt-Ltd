@@ -214,7 +214,7 @@ const GetInTouch = ({ data = HOME_SECTION_DEFAULTS["get-in-touch"] }: { data?: G
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-            <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#134698]">{data.eyebrow}</span>
+            <span className="text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.2em] text-[#134698]">{data.eyebrow}</span>
           </div>
           <h2 className="text-[30px] sm:text-[36px] lg:text-[42px] font-serif font-medium leading-[1.08] tracking-tight mb-3 text-[#0A2B5E]">
             {data.title}
@@ -435,6 +435,8 @@ const GetInTouch = ({ data = HOME_SECTION_DEFAULTS["get-in-touch"] }: { data?: G
           )}
         </div>
       </div>
+      {/* Orange rule along the bottom, to set this apart from the "Let's Build Together" band */}
+      <span aria-hidden="true" className="absolute bottom-0 inset-x-0 z-10 h-[4px] bg-gradient-to-r from-[#fd6e15]/50 via-[#fd6e15] to-[#fd6e15]/50" />
     </section>
   );
 };

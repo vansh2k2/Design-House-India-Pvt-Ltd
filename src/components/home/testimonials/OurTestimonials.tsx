@@ -269,13 +269,26 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
       const w = cards[0].offsetWidth;
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+      // Side-card offsets. Cards keep their size; on a narrower stage (smaller laptops) the side cards
+      // only move in as far as needed for the outer pair to stay inside the edge, still peeking out
+      // from behind the inner pair. On wide stages these work out to the usual 0.62w / 1.08w.
+      // (Outer edges after the 3D turn and perspective: inner ≈ 0.85x + 0.367w, outer ≈ 0.745x + 0.273w.)
+      const stage = cards[0].parentElement?.offsetWidth ?? 0;
+      let near = w * 0.62;
+      let far = w * 1.08;
+      if (stage >= 768) {
+        far = Math.min(far, (stage / 2 - 8 - 0.273 * w) / 0.745);
+        near = Math.min(near, (0.745 * far + 0.273 * w - 70 - 0.367 * w) / 0.85);
+        near = Math.max(near, (0.133 * w + 100) / 0.85); // the inner card still shows beside the centre one
+      }
+
       cards.forEach((card, i) => {
         const off = offsetOf(i);
         const a = Math.abs(off);
         // Two cards stand on each side of the centre one; anything further round waits hidden behind
         const target = {
           xPercent: -50,
-          x: Math.sign(off) * w * [0, 0.62, 1.08, 1.3][Math.min(a, 3)],
+          x: Math.sign(off) * [0, near, far, far + w * 0.22][Math.min(a, 3)],
           z: -a * 240,
           rotationY: -Math.sign(off) * [0, 34, 42, 46][Math.min(a, 3)],
           scale: [1, 0.86, 0.74, 0.66][Math.min(a, 3)],
@@ -391,7 +404,7 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
             <div className="max-w-[780px]">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-                <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#134698]">{data.eyebrow}</span>
+                <span className="text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.2em] text-[#134698]">{data.eyebrow}</span>
               </div>
               <h2 className="text-[28px] sm:text-[32px] lg:text-[36px] font-serif font-medium leading-[1.08] tracking-tight mb-2.5 text-[#0A2B5E]">
                 {data.title} <span className="text-[#fd6e15]">{data.highlight}</span>

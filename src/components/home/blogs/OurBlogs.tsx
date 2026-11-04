@@ -150,7 +150,7 @@ const OurBlogs = () => {
             <div className="max-w-[780px]">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-                <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">Blogs</span>
+                <span className="text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.2em] text-[#fd6e15]">Blogs</span>
               </div>
               <h2 className="text-[28px] sm:text-[32px] lg:text-[36px] font-serif font-medium leading-[1.08] tracking-tight mb-2.5 text-white">
                 Insights. Ideas. <span className="text-[#fd6e15]">Inspirations.</span>

@@ -40,7 +40,7 @@ export default function OurProjects({ data = DEFAULT_HOME_PROJECTS }: { data?: H
             {/* Eyebrow */}
             <div className="flex items-center gap-2 mb-2">
               <span className="w-5 h-[2.5px] bg-[#fd6e15] rounded-full inline-block" />
-              <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-[0.2em] text-[#134698]">
+              <span className="text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.2em] text-[#134698]">
                 {data.eyebrow}
               </span>
             </div>
