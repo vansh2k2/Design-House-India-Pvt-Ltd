@@ -35,6 +35,9 @@ const Point = ({ point }: { point: Why["points"][number] }) => {
   );
 };
 
+// Left padding that lines the photo up with the 1440px page container (px-4 / px-6 / px-8 inside it)
+const PHOTO_GUTTER = "pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pr-0 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]";
+
 /* "Why Choose Us" / "Overview".
    split (default): edge-to-edge photo on the left half, heading, text and four icon points on the right.
    overview: the same photo / text split, then the points in a row with dividers under it. */
@@ -46,15 +49,17 @@ const ServiceWhy = ({ data }: { data: ServiceDetail }) => {
       <section className="w-full bg-white">
         {/* Same photo / text split as the default layout */}
         <div className="grid lg:grid-cols-2">
-          <div className="relative h-[260px] sm:h-[340px] lg:h-auto lg:min-h-[340px]">
-            <Image
-              src={why.image}
-              alt=""
-              fill
-              placeholder={typeof why.image !== "string" ? "blur" : undefined}
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
+          <div className={PHOTO_GUTTER}>
+            <div className="relative h-[260px] sm:h-[340px] lg:h-full lg:min-h-[340px]">
+              <Image
+                src={why.image}
+                alt=""
+                fill
+                placeholder={typeof why.image !== "string" ? "blur" : undefined}
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover"
+              />
+            </div>
           </div>
           <div className="px-4 sm:px-8 lg:px-12 py-5 lg:py-6 max-w-[700px] self-center">
             <Heading why={why} />
@@ -76,15 +81,18 @@ const ServiceWhy = ({ data }: { data: ServiceDetail }) => {
   return (
     <section className="w-full bg-white mt-5 lg:mt-6">
       <div className="grid lg:grid-cols-2">
-        <div className="relative h-[260px] sm:h-[340px] lg:h-auto lg:min-h-[340px]">
-          <Image
-            src={why.image}
-            alt=""
-            fill
-            placeholder={typeof why.image !== "string" ? "blur" : undefined}
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className="object-cover"
-          />
+        {/* The photo starts at the page's left edge (as the About page's Who We Are text does), not at the screen's */}
+        <div className={PHOTO_GUTTER}>
+          <div className="relative h-[260px] sm:h-[340px] lg:h-full lg:min-h-[340px]">
+            <Image
+              src={why.image}
+              alt=""
+              fill
+              placeholder={typeof why.image !== "string" ? "blur" : undefined}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
+          </div>
         </div>
 
         <div className="px-4 sm:px-8 lg:px-12 py-5 lg:py-6 max-w-[700px] self-center">

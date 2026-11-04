@@ -27,6 +27,7 @@ const COPY = {
     offline: "Sorry, the chat isn't available right now. Please call +91 96549 00525 or email info@designhouse.co.in.",
     footer: "AI assistant • Chats and IP address are saved for follow-up",
     online: "Online",
+    typing: "typing…",
     soundOn: "Notification sound on",
     soundOff: "Notification sound off",
     voiceOn: "Voice replies on",
@@ -44,6 +45,7 @@ const COPY = {
     micNotFound: "No microphone was found on this device. You can type here.",
     micBusy: "Another app is using the microphone. Close it and try again, or type here.",
     callFailed: "Sorry, the voice call couldn't connect. You can type here.",
+    callUnavailable: "Voice calls aren't available right now. You can type here and I'll reply.",
     callDropped: "The call ended. Tap the mic to talk again.",
     callEnding: "This call is almost at its time limit. You can carry on by typing here in the chat.",
     goodbye: "Thank you for talking to Design House. Have a great day!",
@@ -52,13 +54,14 @@ const COPY = {
   },
   hi: {
     title: "DH Assist",
-    subtitle: "Design House असिस्टेंट",
+    subtitle: "Design House Assistant",
     placeholder: "यहाँ लिखें...",
     blockedPlaceholder: "यह चैट ब्लॉक है",
     abuseHint: "कृपया गलत शब्द इस्तेमाल न कीजिए। भेजने पर आपको चेतावनी मिलेगी।",
     offline: "माफ़ कीजिए, चैट अभी चल नहीं रही। +91 96549 00525 पर कॉल कीजिए या info@designhouse.co.in पर ईमेल कीजिए।",
     footer: "एआई असिस्टेंट • चैट और IP पता फ़ॉलो-अप के लिए सेव होते हैं",
     online: "ऑनलाइन",
+    typing: "लिख रही है…",
     soundOn: "नोटिफ़िकेशन साउंड चालू",
     soundOff: "नोटिफ़िकेशन साउंड बंद",
     voiceOn: "बोलकर जवाब चालू",
@@ -76,6 +79,7 @@ const COPY = {
     micNotFound: "इस डिवाइस पर माइक्रोफ़ोन नहीं मिला। आप यहाँ लिख सकते हैं।",
     micBusy: "कोई दूसरा ऐप माइक्रोफ़ोन इस्तेमाल कर रहा है। उसे बंद कीजिए, या यहाँ लिख दीजिए।",
     callFailed: "माफ़ कीजिए, कॉल जुड़ नहीं पाई। आप यहाँ लिख सकते हैं।",
+    callUnavailable: "अभी वॉइस कॉल उपलब्ध नहीं है। आप यहाँ लिखिए, मैं जवाब दूँगी।",
     callDropped: "कॉल बंद हो गई। बात करनी हो तो माइक दबाइए।",
     callEnding: "कॉल का टाइम अब पूरा होने वाला है। आगे की बात आप यहाँ चैट में लिखकर कर सकते हैं।",
     goodbye: "Design House से बात करने के लिए धन्यवाद! आपका दिन अच्छा रहे।",
@@ -93,9 +97,11 @@ interface Reply {
   files?: Array<{ href: string; label: string }>; // PDFs to download; href is a path on the API
   speakId?: number; // how to ask the backend for this message's audio
   spoken?: string; // the text written for reading aloud
+  greeting?: boolean; // the welcome: a new one replaces the one still showing instead of adding another
 }
 interface Message extends Reply {
   id: number;
+  at?: number; // when it appeared (shown under the bubble)
   from: "bot" | "user";
   key?: string; // in a call: the conversation item this bubble shows
   live?: boolean; // in a call: still being said
@@ -349,7 +355,11 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         await sleep(350 + Math.min(line.text.length * 4, 500));
         if (!aliveRef.current) return;
         setIsTyping(false);
-        setMessages((prev) => [...prev, { id: ++idRef.current, from: "bot", ...line }]);
+        const bubble: Message = { id: ++idRef.current, from: "bot", at: Date.now(), ...line };
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          return line.greeting && last?.from === "bot" && last.greeting ? [...prev.slice(0, -1), bubble] : [...prev, bubble];
+        });
         // A reply that arrives while the chat is closed just waits in the chat, silently
         if (activeRef.current) playIncoming();
         // Let the next message wait until this one has been spoken
@@ -363,7 +373,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const userSay = (text: string) => {
     const id = ++idRef.current;
     stopSpeaking(); // the visitor moved on: don't keep reading the old reply
-    setMessages((prev) => [...prev, { id, from: "user", text }]);
+    setMessages((prev) => [...prev, { id, from: "user", text, at: Date.now() }]);
     playSent();
     return id;
   };
@@ -649,7 +659,10 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       else if (name === "NotAllowedError" || name === "SecurityError") setVoiceNote(copy().micDenied);
       else if (name === "NotFoundError") setVoiceNote(copy().micNotFound);
       else if (name === "NotReadableError") setVoiceNote(copy().micBusy);
-      else setVoiceNote(copy().callFailed);
+      else {
+        if (name !== "Unavailable") console.warn("[chatbot] voice call failed:", error);
+        setVoiceNote(name === "Unavailable" ? copy().callUnavailable : copy().callFailed);
+      }
       // Typing still works: the chat carries on without a call
       if (activeRef.current) void startChat();
       return;
@@ -821,6 +834,22 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     if (!next) stopSpeaking();
   };
 
+  // Closing plays the shrink animation first
+  const [closing, setClosing] = useState(false);
+  const closeChat = () => {
+    if (closing) return;
+    setClosing(true);
+    setTimeout(() => {
+      setClosing(false);
+      setIsOpen(false);
+    }, 240);
+  };
+
+  // "11:30 AM" under a bubble
+  const timeOf = (at: number) => new Date(at).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
+  // The visitor's message has been read once the assistant has replied after it (blue ticks)
+  const seen = (index: number) => messages.slice(index + 1).some((m) => m.from === "bot");
+
   // Show the avatar only on the first of consecutive bot messages
   const showAvatar = (index: number) => messages[index].from === "bot" && messages[index - 1]?.from !== "bot";
 
@@ -831,11 +860,30 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   return (
     <>
       <style>{`
-        @keyframes dhChatIn { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
-        @keyframes dhMsgIn { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+        @keyframes dhChatIn {
+          0% { opacity: 0; transform: translate(18px, 36px) scale(.5); filter: blur(10px); border-radius: 48px; }
+          55% { opacity: 1; filter: blur(0); }
+          75% { transform: translate(0, -5px) scale(1.015); }
+          100% { opacity: 1; transform: none; }
+        }
+        @keyframes dhChatOut {
+          0% { opacity: 1; transform: none; }
+          100% { opacity: 0; transform: translate(18px, 30px) scale(.55); filter: blur(8px); border-radius: 48px; }
+        }
+        @keyframes dhHeadIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+        @keyframes dhBodyIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+        @keyframes dhMsgIn {
+          0% { opacity: 0; transform: translateY(10px) scale(.9); }
+          65% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+          100% { opacity: 1; transform: none; }
+        }
         @keyframes dhDot { 0%, 80%, 100% { transform: translateY(0); opacity: .45; } 40% { transform: translateY(-4px); opacity: 1; } }
-        .dh-chat-in { animation: dhChatIn .32s cubic-bezier(.2,.9,.3,1.2) both; transform-origin: bottom right; }
-        .dh-msg-in { animation: dhMsgIn .28s ease-out both; }
+        .dh-chat-in { animation: dhChatIn .55s cubic-bezier(.2,.9,.25,1) both; transform-origin: bottom right; }
+        .dh-chat-out { animation: dhChatOut .26s cubic-bezier(.5,0,.75,0) both; transform-origin: bottom right; }
+        .dh-head-in { animation: dhHeadIn .45s .12s cubic-bezier(.2,.9,.3,1) both; }
+        .dh-body-in { animation: dhBodyIn .45s .2s cubic-bezier(.2,.9,.3,1) both; }
+        .dh-msg-in { animation: dhMsgIn .36s cubic-bezier(.2,.9,.3,1.2) both; transform-origin: bottom left; }
+        .dh-msg-in.dh-mine { transform-origin: bottom right; }
         .dh-dot { animation: dhDot 1.1s infinite ease-in-out; }
       `}</style>
 
@@ -845,12 +893,12 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
           <section
             role="dialog"
             aria-label={`${t.title} chat`}
-            className={`dh-chat-in fixed z-[1000] flex flex-col overflow-hidden bg-white shadow-[0_18px_50px_rgba(10,30,74,0.28)] inset-x-2 bottom-2 rounded-[20px] sm:inset-x-auto sm:right-5 sm:bottom-[92px] sm:w-[392px] sm:rounded-[22px] ${
+            className={`${closing ? "dh-chat-out" : "dh-chat-in"} fixed z-[1000] flex flex-col overflow-hidden bg-white shadow-[0_24px_60px_-12px_rgba(10,30,74,0.38),0_0_0_1px_rgba(10,30,74,0.06)] inset-x-2 bottom-2 rounded-[20px] sm:inset-x-auto sm:right-5 sm:bottom-[92px] sm:w-[392px] sm:rounded-[22px] ${
               isMinimized ? "" : "h-[82vh] sm:h-[560px] sm:max-h-[calc(100vh-120px)]"
             }`}
           >
             {/* Header */}
-            <header className="relative flex shrink-0 items-center gap-2.5 bg-gradient-to-r from-[#0A2050] via-[#0F2F6B] to-[#134698] px-3.5 py-3 border-b-[3px] border-[#fd6e15]">
+            <header className="dh-head-in relative flex shrink-0 items-center gap-2.5 bg-gradient-to-r from-[#0A2050] via-[#0F2F6B] to-[#134698] px-3.5 py-3 border-b-[3px] border-[#fd6e15]">
               <div className="relative shrink-0">
                 <span className="flex h-[46px] w-[46px] items-center justify-center overflow-hidden rounded-full bg-white p-1.5 ring-2 ring-[#fd6e15]/70">
                   <Image src={LOGO} alt="Design House" width={44} height={30} className="h-auto w-full object-contain" />
@@ -862,7 +910,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[16px] font-bold leading-tight text-white">{t.title}</p>
-                <p className="truncate text-[11px] text-white/80">{t.subtitle}</p>
+                <p className={`truncate text-[11px] ${isTyping && !inCall ? "font-semibold text-[#86efac]" : "text-white/80"}`}>{isTyping && !inCall ? t.typing : t.subtitle}</p>
               </div>
 
               {/* Language */}
@@ -884,7 +932,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                 <button type="button" onClick={() => setIsMinimized((v) => !v)} aria-label="Minimise chat" className="hidden sm:flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25 cursor-pointer">
                   <Minus className="h-4 w-4" />
                 </button>
-                <button type="button" onClick={() => setIsOpen(false)} aria-label="Close chat" className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25 cursor-pointer">
+                <button type="button" onClick={closeChat} aria-label="Close chat" className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25 cursor-pointer">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -897,7 +945,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                 <div
                   ref={scrollRef}
                   data-lenis-prevent
-                  className="relative flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#f4f7fb] bg-cover bg-bottom bg-no-repeat px-3.5 py-4"
+                  className="dh-body-in relative flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#f4f7fb] bg-cover bg-bottom bg-no-repeat px-3.5 py-4"
                   style={{ backgroundImage: `url(${CHAT_BG})` }}
                 >
 
@@ -909,7 +957,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                             <Image src={LOGO} alt="" width={30} height={20} className="h-auto w-full object-contain" />
                           </span>
                           <div className="min-w-0 max-w-[82%]">
-                            <div className="rounded-[16px] rounded-tl-[6px] bg-white px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-[#1f2d44] shadow-[0_1px_3px_rgba(10,30,74,0.10)]">
+                            <div className={`relative rounded-[16px] bg-white px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-[#1f2d44] shadow-[0_1px_3px_rgba(10,30,74,0.10)] ${showAvatar(i) ? "rounded-tl-[4px]" : ""}`}>
                               {m.title && <p className="font-bold text-[#0A2B5E]">{m.title}</p>}
                               {m.text && <p className="whitespace-pre-line">{m.text}</p>}
                               {m.live && !m.text && <span className="flex items-center gap-1 py-1">{typingDots}</span>}
@@ -932,6 +980,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                                 </a>
                               ))}
                             </div>
+                            {m.at && <p className="mt-1 pl-1 text-[10px] text-[#8a97ad]">{timeOf(m.at)}</p>}
                           </div>
                         </div>
                       ) : m.live ? (
@@ -943,10 +992,18 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                           </p>
                         </div>
                       ) : (
-                        <div key={m.id} className="dh-msg-in flex justify-end">
-                          <p className="max-w-[80%] whitespace-pre-line rounded-[16px] rounded-tr-[6px] bg-gradient-to-br from-[#134698] to-[#0A2B5E] px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-white shadow-[0_2px_6px_rgba(10,43,94,0.25)]">
+                        <div key={m.id} className="dh-msg-in dh-mine flex flex-col items-end">
+                          <p className="max-w-[80%] whitespace-pre-line rounded-[16px] rounded-tr-[4px] bg-gradient-to-br from-[#134698] to-[#0A2B5E] px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-white shadow-[0_2px_6px_rgba(10,43,94,0.25)]">
                             {m.text}
                           </p>
+                          {m.at && (
+                            <span className="mt-1 flex items-center gap-1 pr-1 text-[10px] text-[#8a97ad]">
+                              {timeOf(m.at)}
+                              <svg viewBox="0 0 24 24" fill="none" stroke={seen(i) ? "#2f80ed" : "#9aa6b8"} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-label={seen(i) ? "Seen" : "Sent"}>
+                                <path d="M2 12.5l4.5 4.5L15 8.5M10 16l1 1 8.5-8.5" />
+                              </svg>
+                            </span>
+                          )}
                         </div>
                       )
                     )}
@@ -1078,7 +1135,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
           {/* Round close button where the robot was (desktop), like the reference */}
           <button
             type="button"
-            onClick={() => setIsOpen(false)}
+            onClick={closeChat}
             aria-label="Close chat"
             className="dh-chat-in fixed bottom-5 right-6 z-[1000] hidden h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#134698] to-[#0A2050] text-white shadow-[0_8px_20px_rgba(10,43,94,0.35)] transition hover:scale-105 sm:flex cursor-pointer"
           >

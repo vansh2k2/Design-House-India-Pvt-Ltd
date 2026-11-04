@@ -28,12 +28,12 @@ const CallFloat = () => {
       <style>{`
         @keyframes phonePulse {
           0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+          50% { transform: scale(1.02); }
         }
 
         @keyframes ringPulse {
-          0% { transform: scale(1); opacity: 0.8; }
-          100% { transform: scale(1.8); opacity: 0; }
+          0% { transform: scale(1); opacity: 0.45; }
+          100% { transform: scale(1.4); opacity: 0; }
         }
 
         .call-float-btn {
@@ -49,7 +49,7 @@ const CallFloat = () => {
           box-shadow: 0 4px 16px rgba(30, 58, 138, 0.4);
           cursor: pointer;
           transition: all 0.3s ease;
-          animation: phonePulse 2s ease-in-out infinite;
+          animation: phonePulse 2.6s ease-in-out infinite;
         }
 
         .call-float-btn:hover {
@@ -63,7 +63,7 @@ const CallFloat = () => {
           inset: -3px;
           border-radius: 50%;
           border: 2px solid #3b82f6;
-          animation: ringPulse 2s ease-out infinite;
+          animation: ringPulse 2.6s ease-out infinite;
         }
 
         .call-ring:nth-child(2) {
@@ -76,7 +76,7 @@ const CallFloat = () => {
 
         .call-icon {
           color: white;
-          animation: phonePulse 2s ease-in-out infinite;
+          animation: phonePulse 2.6s ease-in-out infinite;
         }
 
         @media (max-width: 1024px) {

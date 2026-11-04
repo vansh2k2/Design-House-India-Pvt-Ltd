@@ -114,9 +114,10 @@ const speakWithBrowser = (text: string) => {
 
   return new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(spoken);
-    const voice = pickVoice(lang);
+    // The Hindi voice for English too: its Indian accent is the one that sounds right
+    const voice = pickVoice("hi") ?? pickVoice(lang);
     if (voice) utterance.voice = voice;
-    utterance.lang = voice?.lang ?? (lang === "hi" ? "hi-IN" : "en-IN");
+    utterance.lang = voice?.lang ?? "hi-IN";
     utterance.rate = lang === "hi" ? 0.95 : 1;
     utterance.pitch = 1.05;
 
