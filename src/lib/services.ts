@@ -187,10 +187,6 @@ export async function fetchPublicServices(): Promise<PublicServiceItem[]> {
 // copy of the photo for those. Anything else (a photo uploaded in the admin) is used as it is.
 const uploadedImage = (image: any): any => (image && !/^\/?(services\/detail|assets\/image)\//.test(image) ? image : null);
 
-// The seed script saved fewer projects for some pages, with no photos of their own, which left holes in the row:
-// those pages keep their own list. Once a project photo has been uploaded in the admin, what's saved is used as it is.
-const isSeededShortList = (saved: any[], own: unknown[]) => saved.length < own.length && !saved.some((item) => uploadedImage(item.image));
-
 export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | null> {
   const fallback = getServiceDetail(slug);
 
@@ -215,7 +211,8 @@ export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | 
             });
             if (faqRes.ok) {
               const faqJson = await faqRes.json();
-              if (faqJson.success && Array.isArray(faqJson.data) && faqJson.data.length > 0) {
+              // Fewer than the page's own list means seeded data, not the team's own FAQs
+              if (faqJson.success && Array.isArray(faqJson.data) && faqJson.data.length >= fallback.faqs.length) {
                 serviceFaqs = faqJson.data.map((f: any) => ({ q: f.q, a: f.a }));
               }
             }
@@ -223,13 +220,34 @@ export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | 
             // fallback
           }
 
+          // A designed page (hero.showcase) shows what's in its own file. The seed script saved other text for these
+          // pages, shorter lists and other titles, and that can't be told apart from an edit in the admin. A photo
+          // uploaded in the admin can, so that is used, and so are the team's FAQs (above).
+          if (fallback.hero.showcase) {
+            const savedProjects = Array.isArray(detail.projects?.items) ? detail.projects.items : [];
+            const overviewPhoto = uploadedImage(detail.why?.image);
+            return {
+              ...fallback,
+              why: overviewPhoto ? { ...fallback.why, image: overviewPhoto } : fallback.why,
+              projects: savedProjects.some((item: any) => uploadedImage(item.image))
+                ? {
+                    ...fallback.projects,
+                    items: savedProjects.map((item: any, idx: number) => ({
+                      title: item.title || "",
+                      place: item.place || "",
+                      image: uploadedImage(item.image) ?? fallback.projects.items[idx]?.image ?? fallback.hero.image,
+                    })),
+                  }
+                : fallback.projects,
+              faqs: serviceFaqs,
+            };
+          }
+
           // Merge backend detail into local fallback, preserving images and icon functions where needed
           return {
             ...fallback,
             name: detail.name || backendCard.title || fallback.name,
-            // A designed banner (hero.showcase) keeps its own words and photos: its layout needs imported
-            // images, and the older hero in the database would replace them with other text and photos
-            hero: fallback.hero.showcase ? fallback.hero : {
+            hero: {
               ...fallback.hero,
               eyebrow: detail.hero?.eyebrow ?? fallback.hero.eyebrow,
               photoStyle: detail.hero?.photoStyle ?? fallback.hero.photoStyle,
@@ -286,7 +304,7 @@ export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | 
               title: detail.projects?.title ?? fallback.projects.title,
               text: detail.projects?.text ?? fallback.projects.text,
               linkStyle: detail.projects?.linkStyle ?? fallback.projects.linkStyle,
-              items: Array.isArray(detail.projects?.items) && detail.projects.items.length > 0 && !isSeededShortList(detail.projects.items, fallback.projects.items)
+              items: Array.isArray(detail.projects?.items) && detail.projects.items.length > 0
                 ? detail.projects.items.map((it: any, idx: number) => ({
                     title: it.title || "",
                     place: it.place || "",
