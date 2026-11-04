@@ -1,6 +1,6 @@
-/* Spoken replies for the website chat (components/ui/Chatbot.tsx). Replies are read by a natural voice
-   generated on the backend (OpenAI). If that can't play, the browser's own voice (Web Speech API) reads
-   them instead, so a reply is never silently skipped. */
+/* Typed chat replies read aloud (components/ui/Chatbot.tsx; in a spoken call the assistant has its own voice).
+   They are read by a natural voice generated on the backend (OpenAI). If that can't play, the browser's own voice
+   (Web Speech API) reads them instead, so a reply is never silently skipped. */
 
 type Lang = "en" | "hi";
 
@@ -14,8 +14,6 @@ const SILENCE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfA
 
 let player: HTMLAudioElement | null = null;
 let stopPlayer: (() => void) | null = null;
-let holdStartGuard: (() => void) | null = null;
-let restartStartGuard: (() => void) | null = null;
 
 /** Call inside a click, so replies that arrive later are allowed to play. */
 export function unlockVoice() {
@@ -37,7 +35,7 @@ const playClip = (url: string) =>
       clearTimeout(startGuard);
       clearTimeout(endGuard);
       audio.onplaying = audio.onended = audio.onerror = null;
-      stopPlayer = holdStartGuard = restartStartGuard = null;
+      stopPlayer = null;
       audio.pause();
       // Also ends the download, so the backend stops generating (and paying for) audio nobody will hear
       audio.removeAttribute("src");
@@ -45,15 +43,9 @@ const playClip = (url: string) =>
       resolve(how);
     };
 
-    let startGuard = setTimeout(() => finish("failed"), VOICE_START_TIMEOUT_MS);
+    const startGuard = setTimeout(() => finish("failed"), VOICE_START_TIMEOUT_MS);
     const endGuard = setTimeout(() => finish("finished"), VOICE_MAX_MS);
     stopPlayer = () => finish("finished");
-    // Held back on purpose is not "no sound": the browser's voice must not start reading over the visitor
-    holdStartGuard = () => clearTimeout(startGuard);
-    restartStartGuard = () => {
-      clearTimeout(startGuard);
-      if (!started) startGuard = setTimeout(() => finish("failed"), VOICE_START_TIMEOUT_MS);
-    };
 
     audio.onplaying = () => {
       started = true;
@@ -63,7 +55,7 @@ const playClip = (url: string) =>
     audio.onerror = () => finish(started ? "finished" : "failed");
 
     audio.src = url;
-    // AbortError: the visitor started talking and it was paused or stopped, which isn't a failure
+    // AbortError: it was stopped, which isn't a failure
     audio.play().catch((error: DOMException) => {
       if (error.name !== "AbortError") finish("failed");
     });
@@ -153,20 +145,6 @@ const speakWithBrowser = (text: string) => {
 export async function speak(text: string, audioUrl?: string): Promise<void> {
   if (audioUrl && (await playClip(audioUrl)) === "finished") return;
   await speakWithBrowser(text);
-}
-
-/** Holds the voice for a moment: the visitor may have started talking. */
-export function pauseSpeaking() {
-  if (stopPlayer) player?.pause();
-  holdStartGuard?.();
-  if (browserVoiceSupported()) window.speechSynthesis.pause();
-}
-
-/** Carries on after pauseSpeaking, if it turned out nobody was talking. */
-export function resumeSpeaking() {
-  restartStartGuard?.();
-  if (stopPlayer) void player?.play().catch(() => {});
-  if (browserVoiceSupported()) window.speechSynthesis.resume();
 }
 
 /** Stops anything being read out (closing the chat, the visitor sending a new message, muting). */

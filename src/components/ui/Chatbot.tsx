@@ -3,33 +3,25 @@
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, BellOff, Download, Mic, Minus, Send, Square, Volume2, VolumeX, X } from "lucide-react";
+import { Bell, BellOff, Download, Mic, MicOff, Minus, PhoneOff, Send, Volume2, VolumeX, X } from "lucide-react";
 
 import { api, API_URL } from "@/lib/api";
 import { isAbusive } from "@/lib/chatGuards";
-import { canOpenMic, openMic, STOP_AFTER_QUIET_MS, type Mic as OpenMic } from "@/lib/chatMic";
-import { pauseSpeaking, prepareVoices, resumeSpeaking, speak, stopSpeaking, unlockVoice } from "@/lib/chatVoice";
+import { canCall, openCall, type Call } from "@/lib/chatCall";
+import { prepareVoices, speak, stopSpeaking, unlockVoice } from "@/lib/chatVoice";
 
-/* The conversation itself lives on the backend (backend/src/modules/chatbot): it asks the name first,
-   answers from the website's content, blocks abusive visitors and saves every chat with its IP. This
-   component shows the replies and adds the voice, mic and sound effects. */
+/* The conversation itself lives on the backend (backend/src/modules/chatbot): it answers from the website's content,
+   blocks abusive visitors and saves every chat with its IP. Opening the chat starts a spoken call, like phoning
+   someone: the visitor just talks, and can talk over the assistant. Typing works too, during a call and without one
+   (no mic, or the call was ended), and then the replies can be read out. */
 
 type Lang = "en" | "hi";
-type Step = "name" | "chat" | "phone" | "email" | "service" | "requirement" | "done";
 
 const COPY = {
   en: {
     title: "DH Assist",
     subtitle: "Design House Assistant",
-    placeholder: {
-      name: "Type your name...",
-      chat: "Type your question...",
-      phone: "10-digit mobile number",
-      email: "you@example.com",
-      service: "Choose a service above, or type it",
-      requirement: "Describe your project...",
-      done: "Type your question...",
-    } as Record<Step, string>,
+    placeholder: "Type here...",
     blockedPlaceholder: "This chat is blocked",
     abuseHint: "Please avoid offensive words. Sending this counts as a warning.",
     offline: "Sorry, the chat isn't available right now. Please call +91 96549 00525 or email info@designhouse.co.in.",
@@ -39,76 +31,77 @@ const COPY = {
     soundOff: "Notification sound off",
     voiceOn: "Voice replies on",
     voiceOff: "Voice replies off",
-    micStart: "Start talking",
-    micStop: "Stop talking",
+    callStart: "Talk to me",
+    callEnd: "End the call",
+    callMute: "Mute your mic",
+    callUnmute: "Unmute your mic",
+    connecting: "Connecting...",
     listening: "I'm listening, just speak...",
     interruptHint: "Speak any time, I'll stop and listen",
-    understanding: "Understanding...",
-    micDenied: "Microphone access is blocked. Click the icon in the address bar and allow the microphone.",
+    muted: "Your mic is muted",
+    micDenied: "Microphone access is blocked. Click the icon in the address bar and allow the microphone, or just type here.",
     micNoSpeech: "I can't hear anything. Please check your microphone.",
-    micAutoOff: "I switched the mic off because it was quiet for a while. Tap it to talk again.",
-    micNotFound: "No microphone was found on this device.",
-    micBusy: "Another app is using the microphone. Close it and try again.",
-    micFailed: "Sorry, I couldn't understand that. Please try again or type your message.",
+    micNotFound: "No microphone was found on this device. You can type here.",
+    micBusy: "Another app is using the microphone. Close it and try again, or type here.",
+    callFailed: "Sorry, the voice call couldn't connect. You can type here.",
+    callDropped: "The call ended. Tap the mic to talk again.",
+    callEnding: "This call is almost at its time limit. You can carry on by typing here in the chat.",
+    goodbye: "Thank you for talking to Design House. Have a great day!",
+    switchedLanguage: "Sure, let's talk in English. How can I help you?",
+    callIdle: "I ended the call because it was quiet for a while. Tap the mic to talk again.",
   },
   hi: {
     title: "DH Assist",
     subtitle: "Design House असिस्टेंट",
-    placeholder: {
-      name: "अपना नाम लिखें...",
-      chat: "अपना सवाल लिखें...",
-      phone: "10 अंकों का मोबाइल नंबर",
-      email: "you@example.com",
-      service: "ऊपर से सेवा चुनें या लिखें",
-      requirement: "अपने प्रोजेक्ट के बारे में लिखें...",
-      done: "अपना सवाल लिखें...",
-    } as Record<Step, string>,
+    placeholder: "यहाँ लिखें...",
     blockedPlaceholder: "यह चैट ब्लॉक है",
     abuseHint: "कृपया गलत शब्द इस्तेमाल न कीजिए। भेजने पर आपको चेतावनी मिलेगी।",
-    offline: "माफ़ कीजिए, चैट अभी उपलब्ध नहीं है। कृपया +91 96549 00525 पर कॉल करें या info@designhouse.co.in पर ईमेल करें।",
+    offline: "माफ़ कीजिए, चैट अभी चल नहीं रही। +91 96549 00525 पर कॉल कीजिए या info@designhouse.co.in पर ईमेल कीजिए।",
     footer: "एआई असिस्टेंट • चैट और IP पता फ़ॉलो-अप के लिए सेव होते हैं",
     online: "ऑनलाइन",
     soundOn: "नोटिफ़िकेशन साउंड चालू",
     soundOff: "नोटिफ़िकेशन साउंड बंद",
     voiceOn: "बोलकर जवाब चालू",
     voiceOff: "बोलकर जवाब बंद",
-    micStart: "बात शुरू करें",
-    micStop: "बात बंद करें",
+    callStart: "मुझसे बात करें",
+    callEnd: "कॉल बंद करें",
+    callMute: "अपना माइक बंद करें",
+    callUnmute: "अपना माइक चालू करें",
+    connecting: "जोड़ रही हूँ...",
     listening: "सुन रही हूँ, बस बोलिए...",
     interruptHint: "कभी भी बोलिए, मैं रुककर सुनूँगी",
-    understanding: "समझ रही हूँ...",
-    micDenied: "माइक्रोफ़ोन की अनुमति नहीं है। एड्रेस बार के आइकन पर क्लिक करके माइक्रोफ़ोन की अनुमति दें।",
+    muted: "आपका माइक बंद है",
+    micDenied: "माइक्रोफ़ोन की अनुमति नहीं है। एड्रेस बार के आइकन पर क्लिक करके अनुमति दीजिए, या यहाँ लिख दीजिए।",
     micNoSpeech: "कुछ सुनाई नहीं दे रहा। अपना माइक्रोफ़ोन देख लीजिए।",
-    micAutoOff: "काफ़ी देर से कोई आवाज़ नहीं आई, इसलिए माइक बंद कर दिया। बात करनी हो तो माइक दबाइए।",
-    micNotFound: "इस डिवाइस पर माइक्रोफ़ोन नहीं मिला।",
-    micBusy: "कोई दूसरा ऐप माइक्रोफ़ोन इस्तेमाल कर रहा है। उसे बंद करके दोबारा कोशिश करें।",
-    micFailed: "माफ़ कीजिए, समझ नहीं पाई। दोबारा बोलिए या लिख दीजिए।",
+    micNotFound: "इस डिवाइस पर माइक्रोफ़ोन नहीं मिला। आप यहाँ लिख सकते हैं।",
+    micBusy: "कोई दूसरा ऐप माइक्रोफ़ोन इस्तेमाल कर रहा है। उसे बंद कीजिए, या यहाँ लिख दीजिए।",
+    callFailed: "माफ़ कीजिए, कॉल जुड़ नहीं पाई। आप यहाँ लिख सकते हैं।",
+    callDropped: "कॉल बंद हो गई। बात करनी हो तो माइक दबाइए।",
+    callEnding: "कॉल का टाइम अब पूरा होने वाला है। आगे की बात आप यहाँ चैट में लिखकर कर सकते हैं।",
+    goodbye: "Design House से बात करने के लिए धन्यवाद! आपका दिन अच्छा रहे।",
+    switchedLanguage: "ज़रूर, अब हिंदी में बात करते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?",
+    callIdle: "काफ़ी देर से कोई आवाज़ नहीं आई, इसलिए कॉल बंद कर दी। बात करनी हो तो माइक दबाइए।",
   },
 };
 
 /* ───────────────────────── Messages ───────────────────────── */
 
-interface Chip {
-  label: string;
-  action?: "consult" | "retry";
-  primary?: boolean;
-}
 interface Reply {
   title?: string;
   text: string;
   link?: { href: string; label: string };
   files?: Array<{ href: string; label: string }>; // PDFs to download; href is a path on the API
-  chips?: Chip[];
   speakId?: number; // how to ask the backend for this message's audio
   spoken?: string; // the text written for reading aloud
 }
 interface Message extends Reply {
   id: number;
   from: "bot" | "user";
+  key?: string; // in a call: the conversation item this bubble shows
+  live?: boolean; // in a call: still being said
 }
 interface ChatResponse {
   sessionId: string;
-  step: Step;
   lang?: Lang;
   replies: Reply[];
   blocked: boolean;
@@ -116,32 +109,47 @@ interface ChatResponse {
   history?: Array<Reply & { from: "bot" | "user" }>;
   repeatGreeting?: Reply; // the welcome already in the chat, to be said again
 }
+interface CallStart {
+  blocked?: boolean;
+  unavailable?: boolean;
+  sessionId: string;
+  lang: Lang;
+  sdp: string;
+  greeting: string;
+  history: Array<Reply & { from: "bot" | "user" }>;
+  maxSeconds: number;
+}
+interface CallEvent {
+  type: string;
+  item_id?: string;
+  delta?: string;
+  transcript?: string;
+  item?: { id: string; type: string; role?: string; content?: Array<{ type: string }> };
+  response?: { status?: string; output?: Array<{ type: string; name?: string; call_id?: string; arguments?: string }> };
+  error?: { code?: string; message?: string };
+}
+interface ToolDone {
+  output: unknown;
+  files?: Reply["files"];
+  link?: Reply["link"];
+  language?: Lang;
+  end?: boolean;
+  blocked?: boolean;
+  flagged?: boolean;
+}
 
 const SESSION_KEY = "dh_chat_session";
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const LOGO = "/logotransparent-sm.webp";
 const CHAT_BG = "/assets/chatbot/bg.webp";
 
-/* Voice input: the mic is listened to here (lib/chatMic) and what the visitor says is turned into text on the
-   backend (OpenAI). The browsers' own speech recognition heard speech but returned no text in Chrome or Edge,
-   with no error to go on. */
 const FAINT_LEVEL = 0.004; // below this the mic is hearing nothing at all
 const MIC_SILENT_NOTE_MS = 10000;
-const MIC_IDLE_MS = 120000; // the mic switches itself off after this long without anyone talking
-// The words so far are fetched again and again while the visitor speaks; long messages less often, since
-// each request sends the whole clip
-const LIVE_TEXT_EVERY_MS = 800;
-const LIVE_TEXT_SLOWER_MS = 3000;
-const LIVE_TEXT_SLOWER_AFTER_MS = 15000;
+const CALL_IDLE_MS = 120000; // the call ends itself after this long without anyone talking
+const CALL_ENDING_WARNING_S = 30; // the assistant says so this long before the call's time limit
+const END_AFTER_GOODBYE_MS = 15000; // if the "finished speaking" event never comes
 
-// Did the mic just hear the assistant's own voice? Speakers can get past the browser's echo removal.
-const isOwnVoice = (heard: string, spoken: string) => {
-  const words = (value: string) => value.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-  const heardWords = words(heard);
-  if (heardWords.length < 3) return false;
-  const said = new Set(words(spoken));
-  return heardWords.filter((word) => said.has(word)).length / heardWords.length >= 0.8;
-};
+const TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe"; // the same as the backend's call settings (chatbot.call.js)
 
 interface ChatbotProps {
   isOpen: boolean;
@@ -157,33 +165,32 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const [muted, setMuted] = useState(() => localStorage.getItem("dh_chat_muted") === "1");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [step, setStep] = useState<Step>("name");
   const [input, setInput] = useState("");
   const [blocked, setBlocked] = useState(false);
-  // Spoken replies (separate from the notification chime) and voice input
+  // Replies read out when there's no call (separate from the notification chime)
   const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("dh_chat_voice_on") !== "0");
   const [speaking, setSpeaking] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [transcribing, setTranscribing] = useState(false); // recording finished, final text on its way
-  const [liveText, setLiveText] = useState(""); // words recognised so far, shown in the chat while speaking
-  const [hearing, setHearing] = useState(false); // the visitor is talking right now
-  const [canListen] = useState(canOpenMic);
+  const [callState, setCallState] = useState<"off" | "connecting" | "on">("off");
+  const [micMuted, setMicMuted] = useState(false);
+  const [canTalk] = useState(canCall);
   const [voiceNote, setVoiceNote] = useState("");
   const voiceOnRef = useRef(voiceOn);
-  const micRef = useRef<OpenMic | null>(null); // the open mic of a spoken conversation
-  const micRingRef = useRef<HTMLSpanElement>(null); // grows with the sound level while the mic is on
-  const openingMicRef = useRef(false);
-  const conversationCleanupRef = useRef<(() => void) | null>(null);
+  const callRef = useRef<Call | null>(null);
+  const micRingRef = useRef<HTMLSpanElement>(null); // grows with the sound level during a call
+  const openingCallRef = useRef(false);
+  const callCleanupRef = useRef<(() => void) | null>(null);
+  const endedByHandRef = useRef(false); // the visitor ended the call: opening the chat again doesn't call them back
+  const greetingNextRef = useRef(false); // the next thing the assistant says in the call is the welcome
+  const endAfterSpeechRef = useRef(false);
+  const lastActivityRef = useRef(0);
   const speakingRef = useRef(false);
-  const userTalkingRef = useRef(false);
-  const interruptedRef = useRef(false); // the visitor has talked over the assistant's current reply
-  const lastSpokenRef = useRef("");
-  const sendChainRef = useRef<Promise<void>>(Promise.resolve());
-  // Always the latest function, for when the mic or a timer calls it
-  const endConversationRef = useRef<() => void>(() => {});
+  const callPostsRef = useRef<Promise<unknown>>(Promise.resolve());
+  // Always the latest function, for when a timer or an event calls it
+  const endCallRef = useRef<(note?: string) => void>(() => {});
 
   const t = COPY[lang];
   const inputIsAbusive = input.trim().length > 0 && isAbusive(input);
+  const inCall = callState === "on";
   const langRef = useRef<Lang>(lang);
   const mutedRef = useRef(muted);
   const idRef = useRef(0);
@@ -211,7 +218,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       aliveRef.current = false;
       forgetVoices();
       stopSpeaking();
-      endConversationRef.current();
+      endCallRef.current();
       void audioRef.current?.close();
     };
   }, []);
@@ -220,20 +227,15 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   useEffect(() => {
     if (!isOpen || isMinimized) {
       stopSpeaking();
-      endConversationRef.current();
+      endCallRef.current();
     }
   }, [isOpen, isMinimized]);
 
-  // The conversation also ends when the visitor is blocked or goes to another tab: the mic shouldn't stay on unseen
-  useEffect(() => {
-    if (blocked) endConversationRef.current();
-  }, [blocked]);
-
+  // The call also ends when the visitor goes to another tab: the mic shouldn't stay on unseen
   useEffect(() => {
     const onVisibility = () => {
-      if (!document.hidden || !micRef.current) return;
-      stopSpeaking();
-      endConversationRef.current();
+      if (!document.hidden || !callRef.current) return;
+      endCallRef.current();
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
@@ -249,7 +251,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   // Keep the newest message in view
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, isTyping, liveText, hearing, transcribing]);
+  }, [messages, isTyping]);
 
   // On phones the chat covers the page: stop the page scrolling underneath
   useEffect(() => {
@@ -261,13 +263,9 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     };
   }, [isOpen, isMinimized]);
 
-  useEffect(() => {
-    if (isOpen && !isMinimized) inputRef.current?.focus();
-  }, [isOpen, isMinimized, step]);
-
   /* ── Sound effects, generated in the browser (no audio files) ──
      Browsers only allow sound that starts from a click, so the audio is unlocked inside click
-     handlers (opening the chat, chips, send) and the bot's later replies can then play. */
+     handlers (opening the chat, send) and the bot's later replies can then play. */
   const audio = () => {
     try {
       const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -309,8 +307,6 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
   // New bot message: "ding-dong"
   const playIncoming = () => chime([[880, 0], [1318.5, 0.13]], 0.32, 0.55);
-  // Chat opens: short rising welcome
-  const playOpen = () => chime([[523.3, 0], [659.3, 0.07], [784, 0.14], [1046.5, 0.21]], 0.22, 0.4);
   // Your message sent: a soft "pop" (pitch drops quickly)
   const playSent = () => {
     if (mutedRef.current) return;
@@ -330,20 +326,17 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     osc.stop(now + 0.15);
   };
 
-  /* ── Bot replies: queued so they appear one after another, each after a short "typing..." ── */
-  // Reads a line aloud, unless voice replies are off, the chat is closed or the visitor is talking
+  /* ── Typed replies: queued so they appear one after another, each after a short "typing..." ── */
+  // Reads a line aloud, unless voice replies are off or the chat is closed. In a call the assistant speaks for itself.
   const readOut = async (line: Reply) => {
-    if (!voiceOnRef.current || !activeRef.current || interruptedRef.current) return;
-    if (!micRef.current) await sleep(150);
-    if (!activeRef.current || interruptedRef.current) return;
+    if (!voiceOnRef.current || !activeRef.current || callRef.current) return;
+    await sleep(150);
+    if (!activeRef.current || callRef.current) return;
     const spoken = line.spoken || [line.title, line.text].filter(Boolean).join(". ");
     const audioUrl = line.speakId === undefined ? undefined : `${API_URL}/api/chatbot/speak?session=${sessionIdRef.current}&message=${line.speakId}`;
-    lastSpokenRef.current = spoken;
     speakingRef.current = true;
     setSpeaking(true);
-    micRef.current?.setAssistantTalking(true);
     await speak(spoken, audioUrl);
-    micRef.current?.setAssistantTalking(false);
     speakingRef.current = false;
     setSpeaking(false);
   };
@@ -352,21 +345,16 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     queueRef.current = queueRef.current.then(async () => {
       for (const line of lines) {
         if (!aliveRef.current) return;
-        // The visitor has started talking: the rest of the reply just appears, without the wait or the voice
-        if (!interruptedRef.current && !micRef.current) {
-          setIsTyping(true);
-          await sleep(350 + Math.min(line.text.length * 4, 500));
-          if (!aliveRef.current) return;
-          setIsTyping(false);
-        }
-        // Only the newest message keeps its quick questions
-        setMessages((prev) => [...prev.map((m) => (m.chips ? { ...m, chips: undefined } : m)), { id: ++idRef.current, from: "bot", ...line }]);
-        // A reply that arrives while the chat is closed just waits in the chat, silently. In a spoken
-        // conversation the voice itself is the signal, and a chime would only get into the mic.
-        if (activeRef.current && !micRef.current) playIncoming();
+        setIsTyping(true);
+        await sleep(350 + Math.min(line.text.length * 4, 500));
+        if (!aliveRef.current) return;
+        setIsTyping(false);
+        setMessages((prev) => [...prev, { id: ++idRef.current, from: "bot", ...line }]);
+        // A reply that arrives while the chat is closed just waits in the chat, silently
+        if (activeRef.current) playIncoming();
         // Let the next message wait until this one has been spoken
         await readOut(line);
-        if (!interruptedRef.current) await sleep(280);
+        await sleep(280);
       }
     });
     return queueRef.current;
@@ -375,26 +363,34 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const userSay = (text: string) => {
     const id = ++idRef.current;
     stopSpeaking(); // the visitor moved on: don't keep reading the old reply
-    setMessages((prev) => [...prev.map((m) => (m.chips ? { ...m, chips: undefined } : m)), { id, from: "user", text }]);
-    if (!micRef.current) playSent();
+    setMessages((prev) => [...prev, { id, from: "user", text }]);
+    playSent();
     return id;
   };
 
-  const applyResponse = (data: ChatResponse) => {
-    if (data.sessionId) {
-      sessionIdRef.current = data.sessionId;
-      localStorage.setItem(SESSION_KEY, data.sessionId);
+  const showHistory = (history?: Array<Reply & { from: "bot" | "user" }>) => {
+    if (!chatLoadedRef.current && history?.length) setMessages(history.map((m) => ({ ...m, id: ++idRef.current })));
+    chatLoadedRef.current = true;
+  };
+
+  const rememberChat = (sessionId: string, chatLang?: Lang) => {
+    if (sessionId) {
+      sessionIdRef.current = sessionId;
+      localStorage.setItem(SESSION_KEY, sessionId);
     }
-    setStep(data.step);
-    setBlocked(Boolean(data.blocked));
-    if (data.lang) {
-      langRef.current = data.lang;
-      setLang(data.lang); // a whole sentence in the other language switches the chat to it
-      localStorage.setItem("dh_chat_lang", data.lang);
+    if (chatLang) {
+      langRef.current = chatLang;
+      setLang(chatLang); // a whole sentence in the other language switches the chat to it
+      localStorage.setItem("dh_chat_lang", chatLang);
     }
   };
 
-  /* ── Opening the chat: every time it opens it welcomes the visitor and asks how it can help ── */
+  const applyResponse = (data: ChatResponse) => {
+    rememberChat(data.sessionId, data.lang);
+    setBlocked(Boolean(data.blocked));
+  };
+
+  /* ── The typed chat: when opened it welcomes the visitor and asks how it can help ── */
   const startChat = async () => {
     if (openingChatRef.current) {
       greetAgainRef.current = true; // opened again, or the language changed, during the welcome
@@ -411,11 +407,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       const data: ChatResponse = res.data.data;
       applyResponse(data);
       setIsTyping(false);
-      if (!chatLoadedRef.current && data.history?.length) {
-        const lastBot = data.history.map((m) => m.from).lastIndexOf("bot");
-        setMessages(data.history.map((m, i) => ({ ...m, id: ++idRef.current, chips: i === lastBot ? m.chips : undefined })));
-      }
-      chatLoadedRef.current = true;
+      showHistory(data.history);
       if (data.repeatGreeting) {
         // Nothing has been said since the last welcome: say it again without adding it to the chat again
         const line = data.repeatGreeting;
@@ -436,23 +428,310 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     }
   };
 
-  // The welcome comes again in the chosen language, so that its quick questions are in that language too
+  /* ── The spoken call ── */
+
+  // Everything sent to the backend during a call goes one at a time, so the saved conversation stays in order
+  const callPost = <T,>(path: string, body: object) => {
+    const sent = callPostsRef.current.then(() => api.post(`/api/chatbot/call/${path}`, { sessionId: sessionIdRef.current, ...body }));
+    callPostsRef.current = sent.catch(() => {});
+    return sent.then((res) => res.data.data as T);
+  };
+
+  const dropBubble = (key: string) => setMessages((prev) => prev.filter((m) => m.key !== key));
+
+  const updateBubble = (key: string, from: Message["from"], change: (bubble: Message) => Partial<Message>) =>
+    setMessages((prev) => {
+      const bubble = prev.find((m) => m.key === key) ?? { id: ++idRef.current, key, from, text: "", live: true };
+      const updated = { ...bubble, ...change(bubble) };
+      return prev.some((m) => m.key === key) ? prev.map((m) => (m.key === key ? updated : m)) : [...prev, updated];
+    });
+
+  const assistantTalking = (on: boolean) => {
+    speakingRef.current = on;
+    setSpeaking(on);
+    callRef.current?.setAssistantTalking(on);
+    if (on) lastActivityRef.current = Date.now();
+  };
+
+  // Stops the assistant and has it say this instead
+  const sayInstead = (line: string) => {
+    const call = callRef.current;
+    if (!call) return;
+    if (speakingRef.current) {
+      call.send({ type: "response.cancel" });
+      call.send({ type: "output_audio_buffer.clear" });
+    }
+    call.send({ type: "response.create", response: { instructions: `Say exactly this and nothing else: "${line}"`, tool_choice: "none" } });
+  };
+
+  const onAbuse = ({ say, blocked: nowBlocked }: { say?: string; blocked?: boolean }, itemId?: string) => {
+    if (itemId) {
+      dropBubble(itemId);
+      callRef.current?.send({ type: "conversation.item.delete", item_id: itemId });
+    }
+    if (nowBlocked) {
+      setBlocked(true);
+      endAfterSpeechRef.current = true;
+    }
+    if (say) sayInstead(say);
+  };
+
+  // The visitor finished a sentence: it is saved, and checked for abuse by the word list
+  const visitorSaid = async (itemId: string, text: string) => {
+    updateBubble(itemId, "user", () => ({ text, live: false }));
+    try {
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean }>("turn", { role: "user", text, lang: langRef.current });
+      if (saved.flagged) onAbuse(saved, itemId);
+    } catch {
+      // the conversation carries on even if this line isn't saved
+    }
+  };
+
+  const setCallLanguage = (next: Lang) => {
+    rememberChat("", next);
+    callRef.current?.send({ type: "session.update", session: { type: "realtime", audio: { input: { transcription: { model: TRANSCRIBE_MODEL, language: next } } } } });
+  };
+
+  // The assistant decided to do these things: the backend does them, and the results go back to it
+  const runCallTools = async (requested: NonNullable<NonNullable<CallEvent["response"]>["output"]>, spoke: boolean) => {
+    let replyAfterwards = false;
+    for (const { name, call_id: callId, arguments: rawArgs } of requested) {
+      let done: ToolDone;
+      try {
+        done = await callPost<ToolDone>("tool", { name, args: JSON.parse(rawArgs || "{}") });
+      } catch {
+        done = { output: { problem: "That didn't work just now. Don't guess: say you'll have the team help them." } };
+      }
+      if (done.files?.length || done.link) setMessages((prev) => [...prev, { id: ++idRef.current, from: "bot", text: "", files: done.files, link: done.link }]);
+      if (done.language) setCallLanguage(done.language);
+      if (done.flagged) setMessages((prev) => prev.filter((m, i) => !(i === prev.length - 1 && m.from === "user")));
+      if (done.blocked) setBlocked(true);
+      if (done.end) endAfterSpeechRef.current = true;
+      callRef.current?.send({ type: "conversation.item.create", item: { type: "function_call_output", call_id: callId, output: JSON.stringify(done.output) } });
+      if (name !== "end_conversation") replyAfterwards = true;
+    }
+    if (replyAfterwards) callRef.current?.send({ type: "response.create" });
+    // A call never just goes dead: if the assistant hung up without saying goodbye, it says it now
+    else if (endAfterSpeechRef.current && !spoke) sayInstead(COPY[langRef.current].goodbye);
+    else if (endAfterSpeechRef.current && !speakingRef.current) endCallRef.current();
+  };
+
+  const onCallEvent = (event: CallEvent) => {
+    switch (event.type) {
+      case "conversation.item.added": {
+        // A bubble straight away, so the chat stays in the order things were said. Typed messages have one already.
+        const { item } = event;
+        if (item?.type !== "message" || item.content?.some((part) => part.type === "input_text")) break;
+        if (item.role === "user") updateBubble(item.id, "user", () => ({}));
+        else if (item.role === "assistant") updateBubble(item.id, "bot", () => ({}));
+        break;
+      }
+      case "input_audio_buffer.speech_started":
+        lastActivityRef.current = Date.now();
+        break;
+      case "conversation.item.input_audio_transcription.delta":
+        if (event.item_id) updateBubble(event.item_id, "user", (bubble) => ({ text: bubble.text + (event.delta || "") }));
+        break;
+      case "conversation.item.input_audio_transcription.completed": {
+        lastActivityRef.current = Date.now();
+        const text = (event.transcript || "").trim();
+        if (!event.item_id) break;
+        if (text) void visitorSaid(event.item_id, text);
+        else dropBubble(event.item_id);
+        break;
+      }
+      case "conversation.item.input_audio_transcription.failed":
+        if (event.item_id) dropBubble(event.item_id);
+        break;
+      case "response.output_audio_transcript.delta":
+        if (event.item_id) updateBubble(event.item_id, "bot", (bubble) => ({ text: bubble.text + (event.delta || "") }));
+        break;
+      case "response.output_audio_transcript.done": {
+        const text = (event.transcript || "").trim();
+        if (!event.item_id) break;
+        updateBubble(event.item_id, "bot", () => ({ text, live: false }));
+        const greeting = greetingNextRef.current;
+        greetingNextRef.current = false;
+        if (text) void callPost("turn", { role: "assistant", text, lang: langRef.current, greeting }).catch(() => {});
+        break;
+      }
+      case "response.done": {
+        // Nothing was said in this response: its empty bubble goes
+        setMessages((prev) => prev.filter((m) => !(m.from === "bot" && m.key && !m.text)));
+        const output = event.response?.output || [];
+        const requested = output.filter((item) => item.type === "function_call");
+        if (event.response?.status === "completed" && requested.length) void runCallTools(requested, output.some((item) => item.type === "message"));
+        break;
+      }
+      case "output_audio_buffer.started":
+        assistantTalking(true);
+        break;
+      case "output_audio_buffer.stopped":
+      case "output_audio_buffer.cleared":
+        assistantTalking(false);
+        if (endAfterSpeechRef.current) endCallRef.current();
+        break;
+      case "error":
+        console.warn("[chat] call:", event.error?.code, event.error?.message);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const endCall = (note?: string) => {
+    callCleanupRef.current?.();
+    callCleanupRef.current = null;
+    const call = callRef.current;
+    callRef.current = null;
+    if (call) {
+      call.stop();
+      void api.post("/api/chatbot/call/end", { sessionId: sessionIdRef.current }).catch(() => {});
+    }
+    endAfterSpeechRef.current = false;
+    speakingRef.current = false;
+    setSpeaking(false);
+    setMicMuted(false);
+    setCallState("off");
+    // Whatever was still being said stays only if some of it had been written down
+    setMessages((prev) => prev.filter((m) => m.text || m.files?.length || m.link).map((m) => (m.live ? { ...m, live: false } : m)));
+    if (note) setVoiceNote(note);
+  };
+  endCallRef.current = endCall;
+
+  const startCall = async () => {
+    if (callRef.current || openingCallRef.current) return;
+    const copy = () => COPY[langRef.current];
+    openingCallRef.current = true;
+    endedByHandRef.current = false;
+    stopSpeaking();
+    setVoiceNote("");
+    setCallState("connecting");
+
+    let start: CallStart | null = null;
+    let heardAnything = false;
+    let warnedSilent = false;
+    let warnedEnding = false;
+    const opened = Date.now();
+
+    let call: Call;
+    try {
+      call = await openCall({
+        connect: async (offer) => {
+          const res = await api.post("/api/chatbot/call", {
+            sdp: offer,
+            sessionId: sessionIdRef.current || undefined,
+            lang: langRef.current,
+            pageUrl: window.location.pathname,
+            mic: window.matchMedia("(pointer: coarse)").matches ? "near" : "far",
+          });
+          start = res.data.data as CallStart;
+          if (start.blocked) throw new DOMException("Blocked", "Blocked");
+          if (start.unavailable) throw new DOMException("No calls right now", "Unavailable");
+          rememberChat(start.sessionId, start.lang);
+          showHistory(start.history);
+          return start.sdp;
+        },
+        onEvent: (event) => onCallEvent(event as unknown as CallEvent),
+        onLevel: (level) => {
+          if (micRingRef.current) micRingRef.current.style.transform = `scale(${1 + Math.min(level * 7, 0.9)})`;
+          if (level > FAINT_LEVEL) heardAnything = true;
+        },
+        onClosed: () => {
+          if (callRef.current) endCallRef.current(copy().callDropped);
+        },
+      });
+    } catch (error) {
+      openingCallRef.current = false;
+      setCallState("off");
+      const name = (error as DOMException).name;
+      if (name === "Blocked") setBlocked(true);
+      else if (name === "NotAllowedError" || name === "SecurityError") setVoiceNote(copy().micDenied);
+      else if (name === "NotFoundError") setVoiceNote(copy().micNotFound);
+      else if (name === "NotReadableError") setVoiceNote(copy().micBusy);
+      else setVoiceNote(copy().callFailed);
+      // Typing still works: the chat carries on without a call
+      if (activeRef.current) void startChat();
+      return;
+    }
+    openingCallRef.current = false;
+
+    // The chat was closed while the browser was asking for permission: the mic must not stay on
+    if (!activeRef.current || !start) {
+      call.stop();
+      void api.post("/api/chatbot/call/end", { sessionId: sessionIdRef.current }).catch(() => {});
+      setCallState("off");
+      return;
+    }
+    const { greeting, maxSeconds } = start as CallStart;
+    callRef.current = call;
+    setCallState("on");
+    lastActivityRef.current = Date.now();
+
+    const tick = setInterval(() => {
+      const now = Date.now();
+      // No sound at all: the mic is probably muted or the wrong one
+      if (!heardAnything && !warnedSilent && now - opened > MIC_SILENT_NOTE_MS) {
+        warnedSilent = true;
+        setVoiceNote(copy().micNoSpeech);
+      }
+      // Nobody has said anything for a while: don't leave the mic open
+      if (!speakingRef.current && now - lastActivityRef.current > CALL_IDLE_MS) {
+        endCall(copy().callIdle);
+        return;
+      }
+      // The backend ends the call at its time limit: finish politely before that
+      if (!warnedEnding && now - opened > (maxSeconds - CALL_ENDING_WARNING_S) * 1000) {
+        warnedEnding = true;
+        sayInstead(copy().callEnding);
+      }
+    }, 1000);
+    const goodbyeGuard = setInterval(() => {
+      if (endAfterSpeechRef.current && !speakingRef.current && Date.now() - lastActivityRef.current > END_AFTER_GOODBYE_MS) endCall();
+    }, 2000);
+    callCleanupRef.current = () => {
+      clearInterval(tick);
+      clearInterval(goodbyeGuard);
+    };
+
+    greetingNextRef.current = true;
+    call.send({ type: "response.create", response: { instructions: `Greet the visitor now, warmly and naturally, by saying exactly this: "${greeting}"`, tool_choice: "none" } });
+  };
+
+  const endCallByHand = () => {
+    endedByHandRef.current = true;
+    endCall();
+  };
+
+  const toggleMic = () => {
+    const next = !micMuted;
+    setMicMuted(next);
+    callRef.current?.setMuted(next);
+  };
+
+  // The welcome comes again in the chosen language
   const switchLanguage = (next: Lang) => {
     if (next === langRef.current) return;
+    if (callRef.current) {
+      setCallLanguage(next);
+      const name = next === "en" ? "English" : "Hindi";
+      callRef.current.send({ type: "conversation.item.create", item: { type: "message", role: "system", content: [{ type: "input_text", text: `The visitor chose ${name}. From now on speak only ${name}.` }] } });
+      sayInstead(COPY[next].switchedLanguage);
+      return;
+    }
     stopSpeaking();
-    langRef.current = next;
-    setLang(next);
-    localStorage.setItem("dh_chat_lang", next);
+    rememberChat("", next);
     void startChat();
   };
 
   const open = () => {
-    playOpen(); // also unlocks audio for the replies that follow (this runs inside the click)
-    unlockVoice();
+    unlockVoice(); // this runs inside the click, so replies that arrive later can play
+    audio();
     setIsOpen(true);
     setIsMinimized(false);
     activeRef.current = true; // the welcome below is read out before the next render
-    void startChat();
+    if (canTalk && !endedByHandRef.current) void startCall();
+    else void startChat();
   };
 
   useEffect(() => {
@@ -467,8 +746,32 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openAtOnce]);
 
-  /* ── Sending a typed or spoken message, or a clicked chip, to the assistant ── */
-  const sendToAssistant = async (text: string, action?: Chip["action"]) => {
+  /* ── A typed message ── */
+
+  // During a call it goes into the same conversation, and the assistant answers aloud
+  const typeInCall = async (text: string) => {
+    const bubbleId = isAbusive(text) ? null : userSay(text);
+    try {
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean }>("turn", { role: "user", text, lang: langRef.current });
+      if (saved.flagged) {
+        if (bubbleId !== null) setMessages((prev) => prev.filter((m) => m.id !== bubbleId));
+        onAbuse(saved);
+        return;
+      }
+    } catch {
+      // the conversation carries on even if this line isn't saved
+    }
+    const call = callRef.current;
+    if (!call) return;
+    if (speakingRef.current) {
+      call.send({ type: "response.cancel" });
+      call.send({ type: "output_audio_buffer.clear" });
+    }
+    call.send({ type: "conversation.item.create", item: { type: "message", role: "user", content: [{ type: "input_text", text }] } });
+    call.send({ type: "response.create" });
+  };
+
+  const sendToAssistant = async (text: string) => {
     // An abusive message is never shown in the chat; the backend counts it as a strike
     const bubbleId = isAbusive(text) ? null : userSay(text);
     await queueRef.current; // let a reply still being read out finish its queue first
@@ -477,7 +780,6 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       const res = await api.post("/api/chatbot/message", {
         sessionId: sessionIdRef.current || undefined,
         text,
-        action,
         lang: langRef.current,
         pageUrl: window.location.pathname,
       });
@@ -494,191 +796,14 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     }
   };
 
-  const onChip = (chip: Chip) => {
-    if (isTyping || blocked) return;
-    unlockVoice();
-    void sendToAssistant(chip.label, chip.action);
-  };
-
-  const handleText = (raw: string) => {
-    const text = raw.trim();
-    if (!text || blocked) return;
-    // The assistant is still replying: keep it in the box (what was spoken mustn't be lost)
-    if (isTyping) return setInput(text);
-    setInput("");
-    void sendToAssistant(text);
-  };
-
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    handleText(input);
+    const text = input.trim();
+    if (!text || blocked || (isTyping && !callRef.current)) return;
+    setInput("");
+    if (callRef.current) void typeInCall(text);
+    else void sendToAssistant(text);
   };
-
-  /* ── Spoken conversation: one tap on the mic, then it goes back and forth like a phone call. The mic stays on
-     between turns, the visitor can talk over the assistant at any moment, and only what they say is uploaded. ── */
-  const transcribeClip = async (clip: Blob) => {
-    const form = new FormData();
-    form.append("audio", clip, "speech.wav");
-    const res = await api.post(`/api/chatbot/transcribe?lang=${langRef.current}`, form);
-    return res.data.data as { text: string; blocked?: boolean };
-  };
-
-  const endConversation = () => {
-    conversationCleanupRef.current?.();
-    conversationCleanupRef.current = null;
-    micRef.current?.stop();
-    micRef.current = null;
-    userTalkingRef.current = false;
-    interruptedRef.current = false;
-    setListening(false);
-    setHearing(false);
-    setLiveText("");
-  };
-
-  // Spoken turns go one at a time, in order, even if the visitor talks again before a reply has arrived
-  const sendSpoken = (text: string) => {
-    sendChainRef.current = sendChainRef.current.then(async () => {
-      await queueRef.current;
-      if (!userTalkingRef.current) interruptedRef.current = false;
-      await sendToAssistant(text);
-    });
-  };
-
-  const startConversation = async () => {
-    if (micRef.current || openingMicRef.current) return;
-    const copy = () => COPY[langRef.current];
-    openingMicRef.current = true;
-    audio(); // unlock audio while this is still part of the click
-    unlockVoice();
-    setVoiceNote("");
-    setListening(true);
-
-    let startedOverAssistant = false;
-    let lastActivity = Date.now();
-    let lastPreview = 0;
-    let previewBusy = false;
-    let preview: { startedAt: number; words: ReturnType<typeof transcribeClip> } | null = null;
-    let heardAnything = false;
-    let warned = false;
-    const opened = Date.now();
-
-    let mic: OpenMic;
-    try {
-      mic = await openMic({
-        onLevel: (level) => {
-          if (micRingRef.current) micRingRef.current.style.transform = `scale(${1 + Math.min(level * 7, 0.9)})`;
-          if (level > FAINT_LEVEL) heardAnything = true;
-        },
-        onInterruptSuspected: pauseSpeaking,
-        onFalseAlarm: resumeSpeaking,
-        onSpeechStart: () => {
-          startedOverAssistant = speakingRef.current;
-          // Only paused: the reply is dropped once real words have been heard, not for a cough or a door
-          if (startedOverAssistant) pauseSpeaking();
-          userTalkingRef.current = true;
-          interruptedRef.current = true;
-          lastActivity = Date.now();
-          lastPreview = lastActivity;
-          preview = null;
-          setLiveText("");
-          setHearing(true);
-        },
-        onSpeechEnd: async (clip) => {
-          userTalkingRef.current = false;
-          lastActivity = Date.now();
-          setHearing(false);
-          const carryOn = () => {
-            interruptedRef.current = false;
-            if (!startedOverAssistant) return;
-            micRef.current?.falseStart();
-            resumeSpeaking();
-          };
-          if (!clip) {
-            carryOn();
-            setLiveText("");
-            return;
-          }
-          setTranscribing(true);
-          try {
-            // A preview that started after the last word has the whole sentence: no need to ask again
-            const finished = preview && Date.now() - preview.startedAt < STOP_AFTER_QUIET_MS - 100 ? preview.words : null;
-            const { text, blocked: isBlocked } = await (finished ? finished.catch(() => transcribeClip(clip)) : transcribeClip(clip));
-            if (isBlocked) setBlocked(true);
-            // The chat was closed meanwhile: leave the words in the box instead of sending them
-            else if (text && !activeRef.current) setInput(text);
-            else if (text && !(startedOverAssistant && isOwnVoice(text, lastSpokenRef.current))) {
-              stopSpeaking();
-              sendSpoken(text);
-            } else carryOn();
-          } catch {
-            carryOn();
-            setVoiceNote(copy().micFailed);
-          } finally {
-            setTranscribing(false);
-            setLiveText("");
-            lastActivity = Date.now();
-          }
-        },
-      });
-    } catch (error) {
-      openingMicRef.current = false;
-      setListening(false);
-      const name = (error as DOMException).name;
-      if (name === "NotAllowedError" || name === "SecurityError") setVoiceNote(copy().micDenied);
-      else if (name === "NotFoundError") setVoiceNote(copy().micNotFound);
-      else if (name === "NotReadableError") setVoiceNote(copy().micBusy);
-      else setVoiceNote(copy().micFailed);
-      return;
-    }
-    openingMicRef.current = false;
-
-    // The chat was closed while the browser was asking for permission: the mic must not stay on
-    if (!activeRef.current) {
-      mic.stop();
-      setListening(false);
-      return;
-    }
-    micRef.current = mic;
-    mic.setAssistantTalking(speakingRef.current);
-
-    const tick = setInterval(() => {
-      const now = Date.now();
-      if (speakingRef.current) lastActivity = now;
-
-      // No sound at all: the mic is probably muted or the wrong one
-      if (!heardAnything && !warned && now - opened > MIC_SILENT_NOTE_MS) {
-        warned = true;
-        setVoiceNote(copy().micNoSpeech);
-      }
-      // Nobody has said anything for a while: don't leave the mic open
-      if (!userTalkingRef.current && now - lastActivity > MIC_IDLE_MS) {
-        endConversation();
-        setVoiceNote(copy().micAutoOff);
-        return;
-      }
-      // The words so far, so what's being said shows up in the chat while it is being said
-      const gap = now - lastActivity > LIVE_TEXT_SLOWER_AFTER_MS ? LIVE_TEXT_SLOWER_MS : LIVE_TEXT_EVERY_MS;
-      if (!userTalkingRef.current || previewBusy || now - lastPreview < gap) return;
-      const clip = mic.clip();
-      if (!clip) return;
-      previewBusy = true;
-      lastPreview = now;
-      const words = transcribeClip(clip);
-      preview = { startedAt: now, words };
-      words
-        .then(({ text, blocked: isBlocked }) => {
-          if (isBlocked) setBlocked(true);
-          if (userTalkingRef.current && text) setLiveText(text);
-        })
-        .catch(() => {}) // only a preview: the final text is what counts
-        .finally(() => {
-          previewBusy = false;
-        });
-    }, 200);
-    conversationCleanupRef.current = () => clearInterval(tick);
-  };
-
-  endConversationRef.current = endConversation;
 
   const toggleMute = () => {
     const next = !muted;
@@ -698,6 +823,10 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
   // Show the avatar only on the first of consecutive bot messages
   const showAvatar = (index: number) => messages[index].from === "bot" && messages[index - 1]?.from !== "bot";
+
+  const placeholder = blocked ? t.blockedPlaceholder : callState === "connecting" ? t.connecting : inCall ? (micMuted ? t.muted : speaking ? t.interruptHint : t.listening) : t.placeholder;
+
+  const typingDots = [0, 0.15, 0.3].map((d) => <span key={d} className="dh-dot h-2 w-2 rounded-full bg-[#134698]" style={{ animationDelay: `${d}s` }} />);
 
   return (
     <>
@@ -782,9 +911,10 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                           <div className="min-w-0 max-w-[82%]">
                             <div className="rounded-[16px] rounded-tl-[6px] bg-white px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-[#1f2d44] shadow-[0_1px_3px_rgba(10,30,74,0.10)]">
                               {m.title && <p className="font-bold text-[#0A2B5E]">{m.title}</p>}
-                              <p className="whitespace-pre-line">{m.text}</p>
+                              {m.text && <p className="whitespace-pre-line">{m.text}</p>}
+                              {m.live && !m.text && <span className="flex items-center gap-1 py-1">{typingDots}</span>}
                               {m.link && (
-                                <Link href={m.link.href} className="mt-2 inline-flex items-center gap-1 text-[12.5px] font-semibold text-[#fd6e15] hover:underline">
+                                <Link href={m.link.href} className={`${m.text ? "mt-2 " : ""}inline-flex items-center gap-1 text-[12.5px] font-semibold text-[#fd6e15] hover:underline`}>
                                   {m.link.label} →
                                 </Link>
                               )}
@@ -795,33 +925,22 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   download
-                                  className="mt-2 flex items-center gap-2 rounded-xl border border-[#fd6e15]/40 bg-[#fff6ef] px-3 py-2 text-[12.5px] font-semibold text-[#b84a08] transition hover:bg-[#ffecdf]"
+                                  className="mt-2 first:mt-0 flex items-center gap-2 rounded-xl border border-[#fd6e15]/40 bg-[#fff6ef] px-3 py-2 text-[12.5px] font-semibold text-[#b84a08] transition hover:bg-[#ffecdf]"
                                 >
                                   <Download className="h-4 w-4 shrink-0" />
                                   <span className="min-w-0">{file.label}</span>
                                 </a>
                               ))}
                             </div>
-                            {m.chips && m.chips.length > 0 && (
-                              <div className="mt-2 flex flex-wrap gap-1.5">
-                                {m.chips.map((chip) => (
-                                  <button
-                                    key={chip.label}
-                                    type="button"
-                                    onClick={() => onChip(chip)}
-                                    disabled={isTyping}
-                                    className={`rounded-full border px-3 py-1.5 text-left text-[12px] font-semibold transition hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer ${
-                                      chip.primary
-                                        ? "border-[#fd6e15] bg-[#fd6e15] text-white hover:bg-[#e05d0e]"
-                                        : "border-[#c9d5ea] bg-white text-[#134698] hover:border-[#134698] hover:bg-[#eef3fb]"
-                                    }`}
-                                  >
-                                    {chip.label}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
                           </div>
+                        </div>
+                      ) : m.live ? (
+                        // What the visitor is saying, live
+                        <div key={m.id} className="dh-msg-in flex justify-end" aria-live="polite">
+                          <p className="max-w-[80%] whitespace-pre-line rounded-[16px] rounded-tr-[6px] border border-dashed border-[#134698]/60 bg-white px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-[#0A2B5E] shadow-[0_2px_6px_rgba(10,43,94,0.12)]">
+                            <Mic className="-mt-0.5 mr-1.5 inline h-3.5 w-3.5 animate-pulse text-red-500" />
+                            {m.text || <span className="italic text-[#8a97ad]">{t.listening}</span>}
+                          </p>
                         </div>
                       ) : (
                         <div key={m.id} className="dh-msg-in flex justify-end">
@@ -832,26 +951,12 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                       )
                     )}
 
-                    {/* What you're saying, live, while the mic listens */}
-                    {(hearing || transcribing) && (
-                      <div className="dh-msg-in flex justify-end" aria-live="polite">
-                        <p className="max-w-[80%] whitespace-pre-line rounded-[16px] rounded-tr-[6px] border border-dashed border-[#134698]/60 bg-white px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-[#0A2B5E] shadow-[0_2px_6px_rgba(10,43,94,0.12)]">
-                          <Mic className="-mt-0.5 mr-1.5 inline h-3.5 w-3.5 animate-pulse text-red-500" />
-                          {liveText || <span className="italic text-[#8a97ad]">{transcribing ? t.understanding : t.listening}</span>}
-                        </p>
-                      </div>
-                    )}
-
-                    {isTyping && (
+                    {(isTyping || callState === "connecting") && (
                       <div className="dh-msg-in flex items-center gap-2" aria-live="polite" aria-label="DH Assist is typing">
                         <span className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1 ring-1 ring-[#fd6e15]/40 shadow-sm ${messages[messages.length - 1]?.from === "bot" ? "invisible" : ""}`}>
                           <Image src={LOGO} alt="" width={30} height={20} className="h-auto w-full object-contain" />
                         </span>
-                        <span className="flex items-center gap-1 rounded-[16px] rounded-tl-[6px] bg-white px-3.5 py-3 shadow-[0_1px_3px_rgba(10,30,74,0.10)]">
-                          {[0, 0.15, 0.3].map((d) => (
-                            <span key={d} className="dh-dot h-2 w-2 rounded-full bg-[#134698]" style={{ animationDelay: `${d}s` }} />
-                          ))}
-                        </span>
+                        <span className="flex items-center gap-1 rounded-[16px] rounded-tl-[6px] bg-white px-3.5 py-3 shadow-[0_1px_3px_rgba(10,30,74,0.10)]">{typingDots}</span>
                       </div>
                     )}
                   </div>
@@ -863,7 +968,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                     className={`flex items-center gap-1.5 rounded-full border bg-white py-1 pl-3.5 pr-1 shadow-[0_2px_8px_rgba(10,30,74,0.06)] ${
                       inputIsAbusive
                         ? "border-red-500 ring-2 ring-red-200"
-                        : listening
+                        : inCall && !micMuted
                           ? "border-red-400 ring-2 ring-red-100"
                           : "border-[#d5deee] focus-within:border-[#134698]"
                     } ${blocked ? "opacity-60" : ""}`}
@@ -872,50 +977,70 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                       ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder={blocked ? t.blockedPlaceholder : listening ? (speaking ? t.interruptHint : t.listening) : t.placeholder[step]}
+                      placeholder={placeholder}
                       disabled={blocked}
                       aria-invalid={inputIsAbusive}
-                      inputMode={step === "phone" ? "tel" : step === "email" ? "email" : "text"}
-                      maxLength={step === "requirement" ? 1500 : 500}
+                      maxLength={1000}
                       className="min-w-0 flex-1 bg-transparent text-[13.5px] text-[#1f2d44] outline-none placeholder:text-[#8a97ad]"
-                      aria-label={t.placeholder[step]}
+                      aria-label={t.placeholder}
                     />
-                    {/* Bot's voice on/off: always here; turning it off stops the reply being read out.
-                        Pulses while the bot is speaking. */}
-                    <button
-                      type="button"
-                      onClick={toggleVoice}
-                      title={voiceOn ? t.voiceOn : t.voiceOff}
-                      aria-label={voiceOn ? t.voiceOn : t.voiceOff}
-                      aria-pressed={voiceOn}
-                      className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition cursor-pointer ${
-                        voiceOn ? "bg-[#eef3fb] text-[#134698] hover:bg-[#dfe8f7]" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
-                      }`}
-                    >
-                      {voiceOn && speaking && <span className="absolute inset-0 animate-ping rounded-full bg-[#134698]/25" />}
-                      {voiceOn ? <Volume2 className="relative h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                    </button>
-                    {/* Ask by voice (hidden where the page can't record, e.g. a non-https address).
-                        While recording, the ring grows with the sound the mic is picking up. */}
-                    {canListen && (
-                      <button
-                        type="button"
-                        onClick={listening ? endConversation : () => void startConversation()}
-                        disabled={blocked}
-                        title={listening ? t.micStop : t.micStart}
-                        aria-label={listening ? t.micStop : t.micStart}
-                        aria-pressed={listening}
-                        className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition disabled:opacity-40 cursor-pointer ${
-                          listening ? "bg-red-500 text-white" : "text-[#134698] hover:bg-[#eef3fb]"
-                        }`}
-                      >
-                        {listening && <span ref={micRingRef} className="absolute inset-0 rounded-full bg-red-400/50 transition-transform duration-100" />}
-                        {listening ? <Square className="relative h-3 w-3" fill="currentColor" /> : <Mic className="h-4 w-4" />}
-                      </button>
+                    {inCall ? (
+                      <>
+                        {/* During a call: mute your mic (the ring grows with the sound it is picking up), or end the call */}
+                        <button
+                          type="button"
+                          onClick={toggleMic}
+                          title={micMuted ? t.callUnmute : t.callMute}
+                          aria-label={micMuted ? t.callUnmute : t.callMute}
+                          aria-pressed={micMuted}
+                          className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition cursor-pointer ${micMuted ? "bg-slate-100 text-slate-500 hover:bg-slate-200" : "bg-[#eef3fb] text-[#134698] hover:bg-[#dfe8f7]"}`}
+                        >
+                          {!micMuted && <span ref={micRingRef} className="absolute inset-0 rounded-full bg-[#134698]/20 transition-transform duration-100" />}
+                          {micMuted ? <MicOff className="h-4 w-4" /> : <Mic className="relative h-4 w-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={endCallByHand}
+                          title={t.callEnd}
+                          aria-label={t.callEnd}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500 text-white transition hover:bg-red-600 cursor-pointer"
+                        >
+                          <PhoneOff className="h-4 w-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {/* No call: the replies can be read out, and the mic starts a call (hidden where the page can't, e.g. a non-https address) */}
+                        <button
+                          type="button"
+                          onClick={toggleVoice}
+                          title={voiceOn ? t.voiceOn : t.voiceOff}
+                          aria-label={voiceOn ? t.voiceOn : t.voiceOff}
+                          aria-pressed={voiceOn}
+                          className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition cursor-pointer ${
+                            voiceOn ? "bg-[#eef3fb] text-[#134698] hover:bg-[#dfe8f7]" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                          }`}
+                        >
+                          {voiceOn && speaking && <span className="absolute inset-0 animate-ping rounded-full bg-[#134698]/25" />}
+                          {voiceOn ? <Volume2 className="relative h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                        </button>
+                        {canTalk && (
+                          <button
+                            type="button"
+                            onClick={() => void startCall()}
+                            disabled={blocked || callState === "connecting"}
+                            title={t.callStart}
+                            aria-label={t.callStart}
+                            className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#134698] transition hover:bg-[#eef3fb] disabled:opacity-40 cursor-pointer"
+                          >
+                            <Mic className="h-4 w-4" />
+                          </button>
+                        )}
+                      </>
                     )}
                     <button
                       type="submit"
-                      disabled={!input.trim() || isTyping || blocked}
+                      disabled={!input.trim() || (isTyping && !inCall) || blocked}
                       aria-label="Send"
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fd6e15] text-white transition hover:bg-[#e05d0e] hover:scale-105 disabled:bg-[#fdb98f] disabled:hover:scale-100 cursor-pointer"
                     >
