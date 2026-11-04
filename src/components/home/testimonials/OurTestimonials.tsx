@@ -230,6 +230,12 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
   const hasVideo = Boolean(video?.url);
 
   const n = testimonials.length;
+  // The ring needs at least five cards (the centre one plus two on each side). With fewer reviews
+  // the list goes round more than once, so both sides still show two cards.
+  const RING_MIN = 5;
+  const ring = n > 1 && n < RING_MIN ? Array.from({ length: Math.ceil(RING_MIN / n) * n }, (_, i) => testimonials[i % n]) : testimonials;
+  const ringLen = ring.length;
+  const current = n ? active % n : 0; // the review in the centre
 
   const sectionRef = useRef<HTMLElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -249,22 +255,22 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
 
   useEffect(() => {
     setActive(0);
-  }, [n]);
+  }, [ringLen]);
 
   // Signed distance of card i from the centre card, the short way round the ring
   const offsetOf = useCallback(
     (i: number) => {
-      let off = (((i - active) % n) + n) % n;
-      if (off > n / 2) off -= n;
+      let off = (((i - active) % ringLen) + ringLen) % ringLen;
+      if (off > ringLen / 2) off -= ringLen;
       return off;
     },
-    [active, n]
+    [active, ringLen]
   );
 
   /* ── Place every card on the ring: "set" jumps, "move" glides, "enter" fans out from a stack ── */
   const layout = useCallback(
     (mode: "set" | "move" | "enter") => {
-      const cards = cardRefs.current.slice(0, n).filter((c): c is HTMLDivElement => Boolean(c));
+      const cards = cardRefs.current.slice(0, ringLen).filter((c): c is HTMLDivElement => Boolean(c));
       if (!cards.length) return;
       const w = cards[0].offsetWidth;
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -325,7 +331,7 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
         { xPercent: 420, duration: 1.1, ease: "power2.inOut", delay: lead + 0.1, overwrite: "auto" }
       );
     },
-    [active, n, offsetOf]
+    [active, ringLen, offsetOf]
   );
 
   /* ── Section entrance: the cards fan out when the section scrolls into view ── */
@@ -359,7 +365,9 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
     return () => window.removeEventListener("resize", onResize);
   }, [inView, layout]);
 
-  const goTo = (i: number) => n > 1 && setActive(((i % n) + n) % n);
+  const goTo = (i: number) => n > 1 && setActive(((i % ringLen) + ringLen) % ringLen);
+  // A progress bar: review d, the copy of it nearest the centre
+  const goToReview = (d: number) => goTo(active - current + d);
   const prev = () => goTo(active - 1);
   const next = () => goTo(active + 1);
 
@@ -367,20 +375,20 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
   useEffect(() => {
     if (n < 2 || !inView) return;
     fillRefs.current.forEach((el, i) => {
-      if (el) gsap.set(el, { scaleX: i < active ? 1 : 0 });
+      if (el) gsap.set(el, { scaleX: i < current ? 1 : 0 });
     });
-    const bar = fillRefs.current[active];
+    const bar = fillRefs.current[current];
     if (!bar) return;
     const tween = gsap.fromTo(
       bar,
       { scaleX: 0 },
-      { scaleX: 1, duration: AUTOPLAY_S, ease: "none", onComplete: () => setActive((a) => (a + 1) % n) }
+      { scaleX: 1, duration: AUTOPLAY_S, ease: "none", onComplete: () => setActive((a) => (a + 1) % ringLen) }
     );
     autoplay.current = tween;
     return () => {
       tween.kill();
     };
-  }, [active, n, inView]);
+  }, [active, current, n, ringLen, inView]);
 
   useEffect(() => {
     const tween = autoplay.current;
@@ -454,11 +462,11 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
             {loading ? (
               <div className="absolute left-1/2 top-3 -translate-x-1/2 w-[86vw] max-w-[480px] h-[244px] rounded-md bg-white animate-pulse shadow-[rgba(0,0,0,0.1)_0px_1px_3px_0px,rgba(0,0,0,0.06)_0px_1px_2px_0px]" />
             ) : (
-              testimonials.map((t, i) => {
+              ring.map((t, i) => {
                 const off = offsetOf(i);
                 return (
                   <div
-                    key={t._id}
+                    key={`${t._id}-${i}`}
                     ref={(el) => {
                       cardRefs.current[i] = el;
                     }}
@@ -466,7 +474,7 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
                     className={`absolute left-1/2 top-3 w-[86vw] max-w-[480px] h-[244px] will-change-transform ${off !== 0 ? "cursor-pointer" : ""}`}
                     style={inView ? undefined : { opacity: 0 }}
                   >
-                    <TestimonialCard t={t} photoIndex={i} isFront={off === 0} />
+                    <TestimonialCard t={t} photoIndex={i % n} isFront={off === 0} />
                   </div>
                 );
               })
@@ -480,12 +488,12 @@ const OurTestimonials = ({ data = HOME_SECTION_DEFAULTS.testimonials }: { data?:
                 <button
                   key={t._id}
                   type="button"
-                  onClick={() => goTo(d)}
+                  onClick={() => d !== current && goToReview(d)}
                   aria-label={`Show testimonial ${d + 1}`}
-                  aria-current={d === active}
+                  aria-current={d === current}
                   className="py-2"
                 >
-                  <span className={`block h-[4px] rounded-full bg-[#D5DDEA] overflow-hidden transition-[width] duration-300 ${d === active ? "w-12" : "w-6"}`}>
+                  <span className={`block h-[4px] rounded-full bg-[#D5DDEA] overflow-hidden transition-[width] duration-300 ${d === current ? "w-12" : "w-6"}`}>
                     <span
                       ref={(el) => {
                         fillRefs.current[d] = el;
