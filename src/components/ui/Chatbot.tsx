@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, BellOff, Download, Mic, MicOff, Minus, PhoneOff, Send, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Bell, BellOff, Download, Mic, MicOff, Minus, PhoneOff, Send, Volume2, VolumeX, X } from "lucide-react";
 
 import { api, API_URL } from "@/lib/api";
 import { isAbusive } from "@/lib/chatGuards";
@@ -49,42 +49,47 @@ const COPY = {
     callDropped: "The call ended. Tap the mic to talk again.",
     callEnding: "This call is almost at its time limit. You can carry on by typing here in the chat.",
     goodbye: "Thank you for talking to Design House. Have a great day!",
-    switchedLanguage: "Sure, let's talk in English. How can I help you?",
     callIdle: "I ended the call because it was quiet for a while. Tap the mic to talk again.",
+    noise: "Noise cancellation",
+    noiseOnHint: "On: background noise and voices further away are filtered out",
+    noiseOffHint: "Off: your mic is heard as it is",
   },
+  // Hindi as people type it in chats (Roman letters), like the assistant's own Hindi
   hi: {
     title: "DH Assist",
     subtitle: "Design House Assistant",
-    placeholder: "यहाँ लिखें...",
-    blockedPlaceholder: "यह चैट ब्लॉक है",
-    abuseHint: "कृपया गलत शब्द इस्तेमाल न कीजिए। भेजने पर आपको चेतावनी मिलेगी।",
-    offline: "माफ़ कीजिए, चैट अभी चल नहीं रही। +91 96549 00525 पर कॉल कीजिए या info@designhouse.co.in पर ईमेल कीजिए।",
-    footer: "एआई असिस्टेंट • चैट और IP पता फ़ॉलो-अप के लिए सेव होते हैं",
-    online: "ऑनलाइन",
-    typing: "लिख रही है…",
-    soundOn: "नोटिफ़िकेशन साउंड चालू",
-    soundOff: "नोटिफ़िकेशन साउंड बंद",
-    voiceOn: "बोलकर जवाब चालू",
-    voiceOff: "बोलकर जवाब बंद",
-    callStart: "मुझसे बात करें",
-    callEnd: "कॉल बंद करें",
-    callMute: "अपना माइक बंद करें",
-    callUnmute: "अपना माइक चालू करें",
-    connecting: "जोड़ रही हूँ...",
-    listening: "सुन रही हूँ, बस बोलिए...",
-    interruptHint: "कभी भी बोलिए, मैं रुककर सुनूँगी",
-    muted: "आपका माइक बंद है",
-    micDenied: "माइक्रोफ़ोन की अनुमति नहीं है। एड्रेस बार के आइकन पर क्लिक करके अनुमति दीजिए, या यहाँ लिख दीजिए।",
-    micNoSpeech: "कुछ सुनाई नहीं दे रहा। अपना माइक्रोफ़ोन देख लीजिए।",
-    micNotFound: "इस डिवाइस पर माइक्रोफ़ोन नहीं मिला। आप यहाँ लिख सकते हैं।",
-    micBusy: "कोई दूसरा ऐप माइक्रोफ़ोन इस्तेमाल कर रहा है। उसे बंद कीजिए, या यहाँ लिख दीजिए।",
-    callFailed: "माफ़ कीजिए, कॉल जुड़ नहीं पाई। आप यहाँ लिख सकते हैं।",
-    callUnavailable: "अभी वॉइस कॉल उपलब्ध नहीं है। आप यहाँ लिखिए, मैं जवाब दूँगी।",
-    callDropped: "कॉल बंद हो गई। बात करनी हो तो माइक दबाइए।",
-    callEnding: "कॉल का टाइम अब पूरा होने वाला है। आगे की बात आप यहाँ चैट में लिखकर कर सकते हैं।",
-    goodbye: "Design House से बात करने के लिए धन्यवाद! आपका दिन अच्छा रहे।",
-    switchedLanguage: "ज़रूर, अब हिंदी में बात करते हैं। बताइए, मैं आपकी क्या मदद कर सकती हूँ?",
-    callIdle: "काफ़ी देर से कोई आवाज़ नहीं आई, इसलिए कॉल बंद कर दी। बात करनी हो तो माइक दबाइए।",
+    placeholder: "Yahan likhiye...",
+    blockedPlaceholder: "Ye chat block hai",
+    abuseHint: "Please galat shabd use na kijiye. Bhejne par aapko warning milegi.",
+    offline: "Maaf kijiye, chat abhi chal nahi rahi. +91 96549 00525 par call kijiye ya info@designhouse.co.in par email kijiye.",
+    footer: "AI assistant • Chat aur IP address follow-up ke liye save hote hain",
+    online: "Online",
+    typing: "likh rahi hai…",
+    soundOn: "Notification sound on",
+    soundOff: "Notification sound off",
+    voiceOn: "Bolkar jawab on",
+    voiceOff: "Bolkar jawab off",
+    callStart: "Mujhse baat kijiye",
+    callEnd: "Call band kijiye",
+    callMute: "Apna mic band kijiye",
+    callUnmute: "Apna mic chalu kijiye",
+    connecting: "Jod rahi hoon...",
+    listening: "Sun rahi hoon, bas boliye...",
+    interruptHint: "Kabhi bhi boliye, main rukkar sunungi",
+    muted: "Aapka mic band hai",
+    micDenied: "Microphone ki permission nahi hai. Address bar ke icon par click karke allow kijiye, ya yahan likh dijiye.",
+    micNoSpeech: "Kuch sunai nahi de raha. Apna microphone check kar lijiye.",
+    micNotFound: "Is device par microphone nahi mila. Aap yahan likh sakte hain.",
+    micBusy: "Koi doosra app microphone use kar raha hai. Use band kijiye, ya yahan likh dijiye.",
+    callFailed: "Maaf kijiye, call jud nahi payi. Aap yahan likh sakte hain.",
+    callUnavailable: "Abhi voice call available nahi hai. Aap yahan likhiye, main jawab dungi.",
+    callDropped: "Call band ho gayi. Baat karni ho toh mic dabaiye.",
+    callEnding: "Call ka time ab poora hone wala hai. Aage ki baat aap yahan chat mein likhkar kar sakte hain.",
+    goodbye: "Design House se baat karne ke liye dhanyavaad! Aapka din accha rahe.",
+    callIdle: "Kaafi der se koi awaaz nahi aayi, isliye call band kar di. Baat karni ho toh mic dabaiye.",
+    noise: "Noise cancellation",
+    noiseOnHint: "On: aas-paas ka shor aur door ki awaazein filter hoti hain",
+    noiseOffHint: "Off: aapka mic jaisa hai waisa suna jata hai",
   },
 };
 
@@ -124,6 +129,8 @@ interface CallStart {
   greeting: string;
   history: Array<Reply & { from: "bot" | "user" }>;
   maxSeconds: number;
+  knowsName?: boolean; // the visitor's name is already known (from earlier in this chat)
+  voiceStyle?: string; // how the assistant sounds: a reply with its own instructions replaces the call's, so it goes along
 }
 interface CallEvent {
   type: string;
@@ -131,20 +138,27 @@ interface CallEvent {
   delta?: string;
   transcript?: string;
   item?: { id: string; type: string; role?: string; content?: Array<{ type: string }> };
-  response?: { status?: string; output?: Array<{ type: string; name?: string; call_id?: string; arguments?: string }> };
+  response?: { status?: string; output?: Array<{ type: string; id?: string; name?: string; call_id?: string; arguments?: string }> };
   error?: { code?: string; message?: string };
 }
 interface ToolDone {
   output: unknown;
   files?: Reply["files"];
   link?: Reply["link"];
-  language?: Lang;
   end?: boolean;
   blocked?: boolean;
   flagged?: boolean;
 }
 
 const SESSION_KEY = "dh_chat_session";
+// The name comes first. Until it is known, the call doesn't reply by itself (backend: create_response off) and each
+// reply is asked for with only this to do. After a few tries the call goes on without it.
+const MAX_NAME_ASKS = 3;
+const NAME_STEP = `You are DH Assist, a warm young woman answering a call for Design House India Private Limited. You are a woman, so use feminine verbs for yourself (बताती हूँ, बताऊँगी). You don't know the visitor's name yet, and you must learn it before answering anything.
+- If what the visitor just said is their name (like "Rahul", "mera naam Rahul hai", "I'm Priya"), call update_visitor with it and say nothing.
+- Otherwise, whatever they said, even a question or "tell me first": do NOT answer it. In the language they are speaking (Hindi in Devanagari), say one short warm line that you'll help right away, and ask their name. For example: "जी, मैं अभी बताती हूँ, बस पहले अपना नाम बता दीजिए?" or "Sure, I'll tell you right away. May I know your name first?"
+- If they clearly refuse to give a name, call update_visitor with name "Visitor" and say nothing.
+- Insults or harassment: call report_abuse. Talk not meant for you (people around them talking to each other): call not_for_me and say nothing.`;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const LOGO = "/logotransparent-sm.webp";
 const CHAT_BG = "/assets/chatbot/bg.webp";
@@ -155,7 +169,10 @@ const CALL_IDLE_MS = 120000; // the call ends itself after this long without any
 const CALL_ENDING_WARNING_S = 30; // the assistant says so this long before the call's time limit
 const END_AFTER_GOODBYE_MS = 15000; // if the "finished speaking" event never comes
 
-const TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe"; // the same as the backend's call settings (chatbot.call.js)
+// Spoken Hindi comes in Devanagari or Urdu letters; the chat shows it in Roman letters (Hinglish), as the backend
+// rewrites it. Until then the bubble shows "listening" or "typing". (Marathi and others come back as they are.)
+const REWRITTEN_SCRIPTS = /[\u0900-\u097F\u0600-\u06FF]/;
+const NOISE_KEY = "dh_chat_noise";
 
 interface ChatbotProps {
   isOpen: boolean;
@@ -167,7 +184,12 @@ interface ChatbotProps {
 const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProps) => {
   const [isMinimized, setIsMinimized] = useState(false);
   // Browser-only component (loaded with ssr: false), so localStorage is available here
-  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("dh_chat_lang") === "en" ? "en" : "hi"));
+  // Every chat starts in English; what the visitor writes or says switches it (the backend decides)
+  const [lang, setLang] = useState<Lang>("en");
+  // Noise cancellation in calls: on unless the visitor turned it off (remembered in this browser)
+  const [noiseOn, setNoiseOn] = useState(() => localStorage.getItem(NOISE_KEY) !== "0");
+  const noiseOnRef = useRef(noiseOn);
+  noiseOnRef.current = noiseOn;
   const [muted, setMuted] = useState(() => localStorage.getItem("dh_chat_muted") === "1");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -391,7 +413,6 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     if (chatLang) {
       langRef.current = chatLang;
       setLang(chatLang); // a whole sentence in the other language switches the chat to it
-      localStorage.setItem("dh_chat_lang", chatLang);
     }
   };
 
@@ -447,10 +468,40 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     return sent.then((res) => res.data.data as T);
   };
 
-  const dropBubble = (key: string) => setMessages((prev) => prev.filter((m) => m.key !== key));
+  const dropBubble = (key: string) => {
+    droppedRef.current.add(key);
+    setMessages((prev) => prev.filter((m) => m.key !== key));
+  };
+
+  // In a call, text arrives word by word. The visitor's own words show as they come (unless in Urdu letters); the
+  // assistant's are kept here and appear whole, like a sent message, after a "typing" bubble.
+  const heardRef = useRef(new Map<string, string>());
+  const botTextRef = useRef(new Map<string, string>());
+  // Replies whose words are on their way back from the backend (Hindi into Roman letters): their bubbles stay
+  const rewritingRef = useRef(new Set<string>());
+  // What the visitor has said since the assistant last spoke: all of it goes if it turns out to be overheard talk
+  const unansweredRef = useRef<string[]>([]);
+  // Bubbles taken out of the chat: words still arriving for them (rewritten in Roman letters) don't bring them back
+  const droppedRef = useRef(new Set<string>());
+  // The name comes first: until the visitor gives it, each time they start speaking the assistant is reminded, so the
+  // reminder is there before it replies (the prompt alone wasn't followed reliably). A few times at most.
+  const nameKnownRef = useRef(false);
+  const nameAsksRef = useRef(0);
+  const voiceStyleRef = useRef("");
+  const lastVisitorWordsRef = useRef("");
+  // Instructions for one reply replace the call's own, so how the assistant sounds has to go along with them
+  const withVoiceStyle = (instructions: string) => [voiceStyleRef.current, instructions].filter(Boolean).join("\n\n");
+
+  // The name is known (or given up on): replies are automatic again
+  const nameDone = () => {
+    if (nameKnownRef.current) return;
+    nameKnownRef.current = true;
+    callRef.current?.send({ type: "session.update", session: { type: "realtime", audio: { input: { turn_detection: { type: "semantic_vad", eagerness: "medium", create_response: true, interrupt_response: true } } } } });
+  };
 
   const updateBubble = (key: string, from: Message["from"], change: (bubble: Message) => Partial<Message>) =>
     setMessages((prev) => {
+      if (droppedRef.current.has(key)) return prev;
       const bubble = prev.find((m) => m.key === key) ?? { id: ++idRef.current, key, from, text: "", live: true };
       const updated = { ...bubble, ...change(bubble) };
       return prev.some((m) => m.key === key) ? prev.map((m) => (m.key === key ? updated : m)) : [...prev, updated];
@@ -471,7 +522,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       call.send({ type: "response.cancel" });
       call.send({ type: "output_audio_buffer.clear" });
     }
-    call.send({ type: "response.create", response: { instructions: `Say exactly this and nothing else: "${line}"`, tool_choice: "none" } });
+    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`Say exactly this and nothing else: "${line}"`), tool_choice: "none" } });
   };
 
   const onAbuse = ({ say, blocked: nowBlocked }: { say?: string; blocked?: boolean }, itemId?: string) => {
@@ -488,24 +539,61 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
   // The visitor finished a sentence: it is saved, and checked for abuse by the word list
   const visitorSaid = async (itemId: string, text: string) => {
-    updateBubble(itemId, "user", () => ({ text, live: false }));
+    heardRef.current.delete(itemId);
+    const waits = REWRITTEN_SCRIPTS.test(text);
+    // Hindi waits (as "listening") until the backend has written it in Roman letters
+    if (!waits) updateBubble(itemId, "user", () => ({ text, live: false }));
     try {
-      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean }>("turn", { role: "user", text, lang: langRef.current });
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; text?: string; lang?: Lang }>("turn", { role: "user", text });
+      if (saved.lang) rememberChat("", saved.lang);
       if (saved.flagged) onAbuse(saved, itemId);
+      else if (waits) updateBubble(itemId, "user", () => ({ text: saved.text || text, live: false }));
     } catch {
       // the conversation carries on even if this line isn't saved
+      if (waits) updateBubble(itemId, "user", () => ({ text, live: false }));
     }
   };
 
-  const setCallLanguage = (next: Lang) => {
-    rememberChat("", next);
-    callRef.current?.send({ type: "session.update", session: { type: "realtime", audio: { input: { transcription: { model: TRANSCRIBE_MODEL, language: next } } } } });
+  // The assistant's words: saved, and shown once they are in the chat's script (Hindi in Roman letters)
+  const assistantSaid = async (itemId: string, text: string, greeting: boolean) => {
+    const waits = REWRITTEN_SCRIPTS.test(text);
+    if (!waits) updateBubble(itemId, "bot", () => ({ text, live: false }));
+    else rewritingRef.current.add(itemId);
+    let shown = text;
+    try {
+      const saved = await callPost<{ text?: string }>("turn", { role: "assistant", text, greeting });
+      shown = saved.text || text;
+    } catch {
+      // shown as it was said
+    }
+    if (waits) {
+      rewritingRef.current.delete(itemId);
+      updateBubble(itemId, "bot", () => ({ text: shown, live: false }));
+    }
   };
 
   // The assistant decided to do these things: the backend does them, and the results go back to it
   const runCallTools = async (requested: NonNullable<NonNullable<CallEvent["response"]>["output"]>, spoke: boolean) => {
+    // Overheard talk (people near the visitor): no reply, and it is taken out of the chat and of the conversation
+    const overheard = requested.filter((item) => item.name === "not_for_me");
+    if (overheard.length) {
+      unansweredRef.current.forEach((itemId) => {
+        dropBubble(itemId);
+        callRef.current?.send({ type: "conversation.item.delete", item_id: itemId });
+      });
+      unansweredRef.current = [];
+      overheard.forEach((item) => item.id && callRef.current?.send({ type: "conversation.item.delete", item_id: item.id }));
+    }
+    requested = requested.filter((item) => item.name !== "not_for_me");
+    if (!requested.length) return;
     let replyAfterwards = false;
     for (const { name, call_id: callId, arguments: rawArgs } of requested) {
+      const gaveName = (name === "update_visitor" || name === "submit_enquiry") && /"name"\s*:\s*"[^"]+"/.test(rawArgs || "");
+      if (gaveName) {
+        nameDone();
+        // The reply that follows thanks them by name and answers their earlier question, in their language
+        callRef.current?.send({ type: "conversation.item.create", item: { type: "message", role: "system", content: [{ type: "input_text", text: `The visitor just gave their name (if it was "Visitor", they didn't want to). Thank them by name, then answer what they had asked before. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the language of those words, never in English unless they are in English. Hindi written in Urdu letters is spoken Hindi: reply in Hindi, in Devanagari.` }] } });
+      }
       let done: ToolDone;
       try {
         done = await callPost<ToolDone>("tool", { name, args: JSON.parse(rawArgs || "{}") });
@@ -513,7 +601,6 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         done = { output: { problem: "That didn't work just now. Don't guess: say you'll have the team help them." } };
       }
       if (done.files?.length || done.link) setMessages((prev) => [...prev, { id: ++idRef.current, from: "bot", text: "", files: done.files, link: done.link }]);
-      if (done.language) setCallLanguage(done.language);
       if (done.flagged) setMessages((prev) => prev.filter((m, i) => !(i === prev.length - 1 && m.from === "user")));
       if (done.blocked) setBlocked(true);
       if (done.end) endAfterSpeechRef.current = true;
@@ -532,42 +619,78 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         // A bubble straight away, so the chat stays in the order things were said. Typed messages have one already.
         const { item } = event;
         if (item?.type !== "message" || item.content?.some((part) => part.type === "input_text")) break;
-        if (item.role === "user") updateBubble(item.id, "user", () => ({}));
-        else if (item.role === "assistant") updateBubble(item.id, "bot", () => ({}));
+        if (item.role === "user") {
+          unansweredRef.current.push(item.id);
+          updateBubble(item.id, "user", () => ({}));
+        } else if (item.role === "assistant") {
+          unansweredRef.current = [];
+          updateBubble(item.id, "bot", () => ({}));
+        }
         break;
       }
+      case "input_audio_buffer.committed":
+        // Something was said and the name isn't known: ask for the reply that asks for it (the call won't reply by itself)
+        if (!nameKnownRef.current) {
+          nameAsksRef.current += 1;
+          if (nameAsksRef.current > MAX_NAME_ASKS) {
+            nameDone();
+            callRef.current?.send({ type: "response.create" });
+          } else callRef.current?.send({ type: "response.create", response: { instructions: withVoiceStyle(NAME_STEP) } });
+        }
+        break;
       case "input_audio_buffer.speech_started":
         lastActivityRef.current = Date.now();
         break;
-      case "conversation.item.input_audio_transcription.delta":
-        if (event.item_id) updateBubble(event.item_id, "user", (bubble) => ({ text: bubble.text + (event.delta || "") }));
+      case "conversation.item.input_audio_transcription.delta": {
+        if (!event.item_id) break;
+        const heard = (heardRef.current.get(event.item_id) || "") + (event.delta || "");
+        heardRef.current.set(event.item_id, heard);
+        if (!REWRITTEN_SCRIPTS.test(heard)) updateBubble(event.item_id, "user", () => ({ text: heard }));
         break;
+      }
       case "conversation.item.input_audio_transcription.completed": {
         lastActivityRef.current = Date.now();
         const text = (event.transcript || "").trim();
         if (!event.item_id) break;
-        if (text) void visitorSaid(event.item_id, text);
-        else dropBubble(event.item_id);
+        if (text) {
+          lastVisitorWordsRef.current = text;
+          void visitorSaid(event.item_id, text);
+        } else dropBubble(event.item_id);
         break;
       }
       case "conversation.item.input_audio_transcription.failed":
-        if (event.item_id) dropBubble(event.item_id);
+        if (event.item_id) {
+          heardRef.current.delete(event.item_id);
+          dropBubble(event.item_id);
+        }
         break;
       case "response.output_audio_transcript.delta":
-        if (event.item_id) updateBubble(event.item_id, "bot", (bubble) => ({ text: bubble.text + (event.delta || "") }));
+        // Kept back: the bubble shows "typing" until the whole reply is there
+        if (event.item_id) {
+          botTextRef.current.set(event.item_id, (botTextRef.current.get(event.item_id) || "") + (event.delta || ""));
+          updateBubble(event.item_id, "bot", () => ({}));
+        }
         break;
       case "response.output_audio_transcript.done": {
-        const text = (event.transcript || "").trim();
+        // Told to "say exactly" a line, the model sometimes writes its quotes too
+        const text = (event.transcript || "").trim().replace(/^["“”']+|["“”']+$/g, "").trim();
         if (!event.item_id) break;
-        updateBubble(event.item_id, "bot", () => ({ text, live: false }));
+        botTextRef.current.delete(event.item_id);
         const greeting = greetingNextRef.current;
         greetingNextRef.current = false;
-        if (text) void callPost("turn", { role: "assistant", text, lang: langRef.current, greeting }).catch(() => {});
+        if (text) void assistantSaid(event.item_id, text, greeting);
+        else updateBubble(event.item_id, "bot", () => ({ live: false }));
         break;
       }
       case "response.done": {
-        // Nothing was said in this response: its empty bubble goes
-        setMessages((prev) => prev.filter((m) => !(m.from === "bot" && m.key && !m.text)));
+        // A reply cut short (the visitor spoke over it) shows what was said of it; one with nothing said goes
+        const unfinished = new Map(botTextRef.current);
+        botTextRef.current.clear();
+        unfinished.forEach((said, key) => {
+          if (said.trim()) void assistantSaid(key, said.trim(), false);
+        });
+        // A bubble still waiting for its words stays; one with nothing said goes
+        setMessages((prev) => prev.filter((m) => !(m.from === "bot" && m.key && !m.text && !unfinished.get(m.key)?.trim() && !rewritingRef.current.has(m.key))));
         const output = event.response?.output || [];
         const requested = output.filter((item) => item.type === "function_call");
         if (event.response?.status === "completed" && requested.length) void runCallTools(requested, output.some((item) => item.type === "message"));
@@ -631,9 +754,9 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
           const res = await api.post("/api/chatbot/call", {
             sdp: offer,
             sessionId: sessionIdRef.current || undefined,
-            lang: langRef.current,
+            lang: "en",
             pageUrl: window.location.pathname,
-            mic: window.matchMedia("(pointer: coarse)").matches ? "near" : "far",
+            noise: noiseOnRef.current,
           });
           start = res.data.data as CallStart;
           if (start.blocked) throw new DOMException("Blocked", "Blocked");
@@ -650,7 +773,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         onClosed: () => {
           if (callRef.current) endCallRef.current(copy().callDropped);
         },
-      });
+      }, { noiseCancel: noiseOnRef.current });
     } catch (error) {
       openingCallRef.current = false;
       setCallState("off");
@@ -676,7 +799,10 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       setCallState("off");
       return;
     }
-    const { greeting, maxSeconds } = start as CallStart;
+    const { greeting, maxSeconds, knowsName, voiceStyle } = start as CallStart;
+    voiceStyleRef.current = voiceStyle || "";
+    nameKnownRef.current = Boolean(knowsName);
+    nameAsksRef.current = 0;
     callRef.current = call;
     setCallState("on");
     lastActivityRef.current = Date.now();
@@ -708,7 +834,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     };
 
     greetingNextRef.current = true;
-    call.send({ type: "response.create", response: { instructions: `Greet the visitor now, warmly and naturally, by saying exactly this: "${greeting}"`, tool_choice: "none" } });
+    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`Greet the visitor now, warmly and naturally, in your natural Indian English accent, by saying exactly this: "${greeting}"`), tool_choice: "none" } });
   };
 
   const endCallByHand = () => {
@@ -722,19 +848,17 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     callRef.current?.setMuted(next);
   };
 
-  // The welcome comes again in the chosen language
-  const switchLanguage = (next: Lang) => {
-    if (next === langRef.current) return;
-    if (callRef.current) {
-      setCallLanguage(next);
-      const name = next === "en" ? "English" : "Hindi";
-      callRef.current.send({ type: "conversation.item.create", item: { type: "message", role: "system", content: [{ type: "input_text", text: `The visitor chose ${name}. From now on speak only ${name}.` }] } });
-      sayInstead(COPY[next].switchedLanguage);
-      return;
-    }
-    stopSpeaking();
-    rememberChat("", next);
-    void startChat();
+  // Noise cancellation: the browser's noise filter and a stricter gate (chatCall.ts), and OpenAI's own filter set to
+  // keep only the voice close to the mic. Works during a call too.
+  const toggleNoise = () => {
+    const next = !noiseOnRef.current;
+    noiseOnRef.current = next;
+    setNoiseOn(next);
+    localStorage.setItem(NOISE_KEY, next ? "1" : "0");
+    const call = callRef.current;
+    if (!call) return;
+    call.setNoiseCancel(next);
+    call.send({ type: "session.update", session: { type: "realtime", audio: { input: { noise_reduction: { type: next ? "near_field" : "far_field" } } } } });
   };
 
   const open = () => {
@@ -765,7 +889,8 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const typeInCall = async (text: string) => {
     const bubbleId = isAbusive(text) ? null : userSay(text);
     try {
-      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean }>("turn", { role: "user", text, lang: langRef.current });
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; lang?: Lang }>("turn", { role: "user", text });
+      if (saved.lang) rememberChat("", saved.lang);
       if (saved.flagged) {
         if (bubbleId !== null) setMessages((prev) => prev.filter((m) => m.id !== bubbleId));
         onAbuse(saved);
@@ -781,7 +906,14 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       call.send({ type: "output_audio_buffer.clear" });
     }
     call.send({ type: "conversation.item.create", item: { type: "message", role: "user", content: [{ type: "input_text", text }] } });
-    call.send({ type: "response.create" });
+    // Typed during a call, the name still comes first
+    if (!nameKnownRef.current && nameAsksRef.current < MAX_NAME_ASKS) {
+      nameAsksRef.current += 1;
+      call.send({ type: "response.create", response: { instructions: withVoiceStyle(NAME_STEP) } });
+    } else {
+      nameDone();
+      call.send({ type: "response.create" });
+    }
   };
 
   const sendToAssistant = async (text: string) => {
@@ -913,21 +1045,6 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                 <p className={`truncate text-[11px] ${isTyping && !inCall ? "font-semibold text-[#86efac]" : "text-white/80"}`}>{isTyping && !inCall ? t.typing : t.subtitle}</p>
               </div>
 
-              {/* Language */}
-              <div className="flex shrink-0 items-center rounded-full bg-white/15 p-0.5 text-[11px] font-bold">
-                {(["hi", "en"] as Lang[]).map((l) => (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => switchLanguage(l)}
-                    aria-pressed={lang === l}
-                    className={`rounded-full px-2 py-1 transition cursor-pointer ${lang === l ? "bg-white text-[#0A2B5E] shadow" : "text-white/85 hover:text-white"}`}
-                  >
-                    {l === "en" ? "EN" : "हिं"}
-                  </button>
-                ))}
-              </div>
-
               <div className="flex shrink-0 items-center gap-1">
                 <button type="button" onClick={() => setIsMinimized((v) => !v)} aria-label="Minimise chat" className="hidden sm:flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25 cursor-pointer">
                   <Minus className="h-4 w-4" />
@@ -1021,6 +1138,27 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
                 {/* Input */}
                 <form onSubmit={onSubmit} className="relative shrink-0 border-t border-[#e3e9f3] bg-white px-3.5 pt-2 pb-1.5">
+                  {/* Noise cancellation for calls: on by default */}
+                  {canTalk && (
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <span className="flex min-w-0 items-center gap-1.5 text-[11.5px] font-semibold text-[#0A2B5E]" title={noiseOn ? t.noiseOnHint : t.noiseOffHint}>
+                        <AudioLines className={`h-3.5 w-3.5 shrink-0 ${noiseOn ? "text-[#fd6e15]" : "text-[#8a97ad]"}`} />
+                        <span className="truncate">{t.noise}</span>
+                      </span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={noiseOn}
+                        aria-label={t.noise}
+                        title={noiseOn ? t.noiseOnHint : t.noiseOffHint}
+                        onClick={toggleNoise}
+                        className={`relative flex h-[22px] w-[52px] shrink-0 items-center rounded-full px-1 text-[9px] font-bold transition cursor-pointer ${noiseOn ? "bg-[#fd6e15] text-white" : "bg-slate-200 text-slate-500"}`}
+                      >
+                        <span className={`absolute top-[3px] h-4 w-4 rounded-full bg-white shadow transition-all ${noiseOn ? "left-[33px]" : "left-[3px]"}`} />
+                        <span className={noiseOn ? "pl-0.5" : "ml-auto pr-0.5"}>{noiseOn ? "ON" : "OFF"}</span>
+                      </button>
+                    </div>
+                  )}
                   <div
                     className={`flex items-center gap-1.5 rounded-full border bg-white py-1 pl-3.5 pr-1 shadow-[0_2px_8px_rgba(10,30,74,0.06)] ${
                       inputIsAbusive

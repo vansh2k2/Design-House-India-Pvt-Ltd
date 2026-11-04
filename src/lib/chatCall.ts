@@ -4,16 +4,21 @@
 
    Before the mic's sound goes out it passes a gate, so the assistant hears the person at the microphone and not the
    room. Whoever is talking to the chat is the loudest voice at the mic: the gate learns how loud they are and stays
-   shut for anything much quieter (a fan, a TV, people further away). */
+   shut for anything much quieter (a fan, a TV, people further away).
+
+   Noise cancellation (the chat's switch, on by default) adds a neural noise filter in front of the gate (GTCRN, from
+   @sapphi-red/web-noise-suppressor; its files are in public/assets/chatbot/noise), and a stricter gate. If the filter
+   can't load, the call goes on without it. */
 
 // Sound levels (RMS, 0 to 1). Laptop mics can be quiet.
 const SPEECH_LEVEL = 0.008;
 const QUIETEST_ROOM = 0.002;
 const NOISE_MARGIN = 3; // speech is this many times louder than the room's background noise
 const MAIN_VOICE_SHARE = 0.35; // anything quieter than this part of the visitor's own voice isn't them...
+const MAIN_VOICE_SHARE_STRICT = 0.45; // ...with noise cancellation on
 const MAIN_VOICE_BAR_LIMIT = 0.08; // ...up to this level, so one loud moment can't shut a normal voice out
-const OVER_THE_ASSISTANT = 0.025; // while the assistant talks, sound must be at least this loud...
-const OVER_ECHO_MARGIN = 2.5; // ...and this many times louder than its voice coming back through the speakers...
+const OVER_THE_ASSISTANT = 0.012; // while the assistant talks, sound must be at least this loud...
+const OVER_ECHO_MARGIN = 2; // ...and this many times louder than its voice coming back through the speakers...
 const ECHO_BAR_LIMIT = 0.06; // ...up to this level, so a wrong guess about the echo can't lock the visitor out
 const GOOD_VOICE_LEVEL = 0.12; // a quiet mic is turned up towards this before the sound goes out...
 const MOST_TURNED_UP = 5; // ...by at most this much
@@ -40,10 +45,16 @@ export const createVoiceGate = () => {
   let assistantTalking = false;
   let learnEcho = 0;
   let afterAssistant = 0;
+  let mainVoiceShare = MAIN_VOICE_SHARE;
 
   const room = () => Math.max(QUIETEST_ROOM, Math.min(...recentLevels));
 
   return {
+    /** Noise cancellation on: voices much quieter than the visitor's are shut out more firmly */
+    setStrict(on: boolean) {
+      mainVoiceShare = on ? MAIN_VOICE_SHARE_STRICT : MAIN_VOICE_SHARE;
+    },
+
     setAssistantTalking(on: boolean) {
       if (on && !assistantTalking) learnEcho = LEARN_ECHO_MS;
       if (!on && assistantTalking) afterAssistant = AFTER_ASSISTANT_MS;
@@ -62,10 +73,11 @@ export const createVoiceGate = () => {
       const assistantHeard = assistantTalking || afterAssistant > 0;
       if (afterAssistant > 0) afterAssistant -= ms;
       // How loud its voice comes back. Anything louder than the limit is a person, not the speakers.
-      if (assistantTalking && level < ECHO_BAR_LIMIT) echo += (level - echo) * (level > echo ? 0.1 : 0.002);
+      // Not while the gate is open: that is the visitor talking over it, and learning their voice as "echo" shut them out
+      if (assistantTalking && !open && level < ECHO_BAR_LIMIT) echo += (level - echo) * (level > echo ? 0.1 : 0.002);
 
       const echoBar = assistantHeard ? Math.min(ECHO_BAR_LIMIT, Math.max(OVER_THE_ASSISTANT, echo * OVER_ECHO_MARGIN)) : 0;
-      const bar = Math.max(SPEECH_LEVEL, room() * NOISE_MARGIN, Math.min(MAIN_VOICE_BAR_LIMIT, mainVoice * MAIN_VOICE_SHARE), echoBar);
+      const bar = Math.max(SPEECH_LEVEL, room() * NOISE_MARGIN, Math.min(MAIN_VOICE_BAR_LIMIT, mainVoice * mainVoiceShare), echoBar);
 
       if (learnEcho > 0) {
         learnEcho -= ms;
@@ -127,7 +139,27 @@ export interface Call {
   send: (event: object) => void;
   setAssistantTalking: (on: boolean) => void;
   setMuted: (on: boolean) => void;
+  /** Turns noise cancellation on or off during the call. Returns whether the noise filter itself is running. */
+  setNoiseCancel: (on: boolean) => boolean;
   stop: () => void;
+}
+
+const NOISE_WORKLET = "/assets/chatbot/noise/gtcrn-worklet.js";
+const NOISE_WASM = "/assets/chatbot/noise/gtcrn.wasm";
+// The filter works on sound at these rates; elsewhere the call goes on with the gate alone
+const NOISE_RATES = [16000, 48000];
+
+/** The noise filter, ready to use in this audio context, or null if it can't run here */
+async function loadNoiseFilter(ctx: AudioContext): Promise<AudioNode | null> {
+  if (!NOISE_RATES.includes(ctx.sampleRate)) return null;
+  try {
+    const { GtcrnWorkletNode, loadGtcrn } = await import("@sapphi-red/web-noise-suppressor");
+    const [wasmBinary] = await Promise.all([loadGtcrn({ url: NOISE_WASM }), ctx.audioWorklet.addModule(NOISE_WORKLET)]);
+    return new GtcrnWorkletNode(ctx, { wasmBinary, maxChannels: 1 });
+  } catch (error) {
+    console.warn("[chat] noise filter unavailable:", (error as Error).message);
+    return null;
+  }
 }
 
 /** True where the page can make a call (not on a plain http address, for one) */
@@ -140,7 +172,7 @@ export const canCall = () =>
 const CONNECT_TIMEOUT_MS = 15000;
 
 /** Asks for the mic and connects. Call it from a click. Rejects if the mic can't be opened or the call can't connect. */
-export async function openCall(events: CallEvents): Promise<Call> {
+export async function openCall(events: CallEvents, options: { noiseCancel: boolean } = { noiseCancel: true }): Promise<Call> {
   // Made before anything is awaited: browsers only allow sound to start during a click
   const ctx = new AudioContext();
   const speaker = new Audio();
@@ -150,6 +182,8 @@ export async function openCall(events: CallEvents): Promise<Call> {
   let pc: RTCPeerConnection | null = null;
   let closed = false;
   let muted = false;
+  // Starts loading at once, alongside the mic permission
+  const noiseFilter = loadNoiseFilter(ctx);
 
   const shutDown = () => {
     closed = true;
@@ -169,17 +203,34 @@ export async function openCall(events: CallEvents): Promise<Call> {
     URL.revokeObjectURL(script);
 
     const source = ctx.createMediaStreamSource(stream);
+    // The mic's sound, filtered or not: both paths run, and the switch fades one in and the other out
+    const mixed = ctx.createGain();
+    const dry = ctx.createGain();
+    const wet = ctx.createGain();
+    source.connect(dry).connect(mixed);
+    const filter = await noiseFilter;
+    if (filter) source.connect(filter).connect(wet).connect(mixed);
     const tap = new AudioWorkletNode(ctx, "dh-mic-tap");
-    source.connect(tap).connect(ctx.destination); // it outputs silence: the connection only keeps it running
+    mixed.connect(tap).connect(ctx.destination); // it outputs silence: the connection only keeps it running
 
     const delay = ctx.createDelay(1);
     delay.delayTime.value = LOOK_AHEAD_S;
     const gain = ctx.createGain();
     gain.gain.value = 0;
     const toCall = ctx.createMediaStreamDestination();
-    source.connect(delay).connect(gain).connect(toCall);
+    mixed.connect(delay).connect(gain).connect(toCall);
 
     const gate = createVoiceGate();
+    const setNoiseCancel = (on: boolean) => {
+      const filtering = on && Boolean(filter);
+      dry.gain.setTargetAtTime(filtering ? 0 : 1, ctx.currentTime, 0.02);
+      wet.gain.setTargetAtTime(filtering ? 1 : 0, ctx.currentTime, 0.02);
+      gate.setStrict(on);
+      return filtering;
+    };
+    dry.gain.value = 1;
+    wet.gain.value = 0;
+    setNoiseCancel(options.noiseCancel);
     tap.port.onmessage = ({ data }: MessageEvent<{ level: number; ms: number }>) => {
       events.onLevel(muted ? 0 : data.level);
       const open = gate.frame(data.level, data.ms);
@@ -231,6 +282,7 @@ export async function openCall(events: CallEvents): Promise<Call> {
         if (channel.readyState === "open") channel.send(JSON.stringify(event));
       },
       setAssistantTalking: gate.setAssistantTalking,
+      setNoiseCancel,
       setMuted: (on) => {
         muted = on;
         if (on) gain.gain.setTargetAtTime(0, ctx.currentTime, 0.015);
