@@ -6,9 +6,9 @@
    room. Whoever is talking to the chat is the loudest voice at the mic: the gate learns how loud they are and stays
    shut for anything much quieter (a fan, a TV, people further away).
 
-   Noise cancellation (the chat's switch, on by default) adds a neural noise filter in front of the gate (GTCRN, from
-   @sapphi-red/web-noise-suppressor; its files are in public/assets/chatbot/noise), and a stricter gate. If the filter
-   can't load, the call goes on without it. */
+   Noise cancellation (the chat's switch, on by default) makes the gate stricter, and OpenAI's filter keep only the voice
+   close to the mic. There is deliberately no third filter here: a neural one (GTCRN) on top of the browser's and
+   OpenAI's mangled speech into words of other languages, and kept out no more of the room than the gate does. */
 
 // Sound levels (RMS, 0 to 1). Laptop mics can be quiet.
 const SPEECH_LEVEL = 0.008;
@@ -139,27 +139,9 @@ export interface Call {
   send: (event: object) => void;
   setAssistantTalking: (on: boolean) => void;
   setMuted: (on: boolean) => void;
-  /** Turns noise cancellation on or off during the call. Returns whether the noise filter itself is running. */
-  setNoiseCancel: (on: boolean) => boolean;
+  /** Turns noise cancellation on or off during the call */
+  setNoiseCancel: (on: boolean) => void;
   stop: () => void;
-}
-
-const NOISE_WORKLET = "/assets/chatbot/noise/gtcrn-worklet.js";
-const NOISE_WASM = "/assets/chatbot/noise/gtcrn.wasm";
-// The filter works on sound at these rates; elsewhere the call goes on with the gate alone
-const NOISE_RATES = [16000, 48000];
-
-/** The noise filter, ready to use in this audio context, or null if it can't run here */
-async function loadNoiseFilter(ctx: AudioContext): Promise<AudioNode | null> {
-  if (!NOISE_RATES.includes(ctx.sampleRate)) return null;
-  try {
-    const { GtcrnWorkletNode, loadGtcrn } = await import("@sapphi-red/web-noise-suppressor");
-    const [wasmBinary] = await Promise.all([loadGtcrn({ url: NOISE_WASM }), ctx.audioWorklet.addModule(NOISE_WORKLET)]);
-    return new GtcrnWorkletNode(ctx, { wasmBinary, maxChannels: 1 });
-  } catch (error) {
-    console.warn("[chat] noise filter unavailable:", (error as Error).message);
-    return null;
-  }
 }
 
 /** True where the page can make a call (not on a plain http address, for one) */
@@ -182,8 +164,6 @@ export async function openCall(events: CallEvents, options: { noiseCancel: boole
   let pc: RTCPeerConnection | null = null;
   let closed = false;
   let muted = false;
-  // Starts loading at once, alongside the mic permission
-  const noiseFilter = loadNoiseFilter(ctx);
 
   const shutDown = () => {
     closed = true;
@@ -203,34 +183,18 @@ export async function openCall(events: CallEvents, options: { noiseCancel: boole
     URL.revokeObjectURL(script);
 
     const source = ctx.createMediaStreamSource(stream);
-    // The mic's sound, filtered or not: both paths run, and the switch fades one in and the other out
-    const mixed = ctx.createGain();
-    const dry = ctx.createGain();
-    const wet = ctx.createGain();
-    source.connect(dry).connect(mixed);
-    const filter = await noiseFilter;
-    if (filter) source.connect(filter).connect(wet).connect(mixed);
     const tap = new AudioWorkletNode(ctx, "dh-mic-tap");
-    mixed.connect(tap).connect(ctx.destination); // it outputs silence: the connection only keeps it running
+    source.connect(tap).connect(ctx.destination); // it outputs silence: the connection only keeps it running
 
     const delay = ctx.createDelay(1);
     delay.delayTime.value = LOOK_AHEAD_S;
     const gain = ctx.createGain();
     gain.gain.value = 0;
     const toCall = ctx.createMediaStreamDestination();
-    mixed.connect(delay).connect(gain).connect(toCall);
+    source.connect(delay).connect(gain).connect(toCall);
 
     const gate = createVoiceGate();
-    const setNoiseCancel = (on: boolean) => {
-      const filtering = on && Boolean(filter);
-      dry.gain.setTargetAtTime(filtering ? 0 : 1, ctx.currentTime, 0.02);
-      wet.gain.setTargetAtTime(filtering ? 1 : 0, ctx.currentTime, 0.02);
-      gate.setStrict(on);
-      return filtering;
-    };
-    dry.gain.value = 1;
-    wet.gain.value = 0;
-    setNoiseCancel(options.noiseCancel);
+    gate.setStrict(options.noiseCancel);
     tap.port.onmessage = ({ data }: MessageEvent<{ level: number; ms: number }>) => {
       events.onLevel(muted ? 0 : data.level);
       const open = gate.frame(data.level, data.ms);
@@ -282,7 +246,7 @@ export async function openCall(events: CallEvents, options: { noiseCancel: boole
         if (channel.readyState === "open") channel.send(JSON.stringify(event));
       },
       setAssistantTalking: gate.setAssistantTalking,
-      setNoiseCancel,
+      setNoiseCancel: gate.setStrict,
       setMuted: (on) => {
         muted = on;
         if (on) gain.gain.setTargetAtTime(0, ctx.currentTime, 0.015);

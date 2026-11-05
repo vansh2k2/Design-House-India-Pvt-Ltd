@@ -34,6 +34,8 @@ const COPY = {
     voiceOff: "Voice replies off",
     callStart: "Talk to me",
     callEnd: "End the call",
+    chatEnded: "This chat has ended.",
+    resume: "Resume chat",
     callMute: "Mute your mic",
     callUnmute: "Unmute your mic",
     connecting: "Connecting...",
@@ -50,6 +52,7 @@ const COPY = {
     callEnding: "This call is almost at its time limit. You can carry on by typing here in the chat.",
     goodbye: "Thank you for talking to Design House. Have a great day!",
     callIdle: "I ended the call because it was quiet for a while. Tap the mic to talk again.",
+    didntCatch: "Sorry, I didn't catch that. Could you say it again?",
     noise: "Noise cancellation",
     noiseOnHint: "On: background noise and voices further away are filtered out",
     noiseOffHint: "Off: your mic is heard as it is",
@@ -71,6 +74,8 @@ const COPY = {
     voiceOff: "Bolkar jawab off",
     callStart: "Mujhse baat kijiye",
     callEnd: "Call band kijiye",
+    chatEnded: "Ye chat band ho gayi hai.",
+    resume: "Chat phir shuru kijiye",
     callMute: "Apna mic band kijiye",
     callUnmute: "Apna mic chalu kijiye",
     connecting: "Jod rahi hoon...",
@@ -87,6 +92,7 @@ const COPY = {
     callEnding: "Call ka time ab poora hone wala hai. Aage ki baat aap yahan chat mein likhkar kar sakte hain.",
     goodbye: "Design House se baat karne ke liye dhanyavaad! Aapka din accha rahe.",
     callIdle: "Kaafi der se koi awaaz nahi aayi, isliye call band kar di. Baat karni ho toh mic dabaiye.",
+    didntCatch: "Maaf kijiye, main theek se samajh nahi paayi. Kya aap dobara bata sakte hain?",
     noise: "Noise cancellation",
     noiseOnHint: "On: aas-paas ka shor aur door ki awaazein filter hoti hain",
     noiseOffHint: "Off: aapka mic jaisa hai waisa suna jata hai",
@@ -117,6 +123,7 @@ interface ChatResponse {
   replies: Reply[];
   blocked: boolean;
   flagged?: boolean;
+  end?: boolean; // the visitor said goodbye: the chat ends shortly
   history?: Array<Reply & { from: "bot" | "user" }>;
   repeatGreeting?: Reply; // the welcome already in the chat, to be said again
 }
@@ -127,6 +134,7 @@ interface CallStart {
   lang: Lang;
   sdp: string;
   greeting: string;
+  choiceGreeting?: string; // the same welcome, asking whether they'd rather talk or type
   history: Array<Reply & { from: "bot" | "user" }>;
   maxSeconds: number;
   knowsName?: boolean; // the visitor's name is already known (from earlier in this chat)
@@ -137,6 +145,8 @@ interface CallEvent {
   item_id?: string;
   delta?: string;
   transcript?: string;
+  logprobs?: Array<{ logprob: number }>; // how sure the transcriber was of each word
+  text?: string;
   item?: { id: string; type: string; role?: string; content?: Array<{ type: string }> };
   response?: { status?: string; output?: Array<{ type: string; id?: string; name?: string; call_id?: string; arguments?: string }> };
   error?: { code?: string; message?: string };
@@ -156,9 +166,15 @@ const SESSION_KEY = "dh_chat_session";
 const MAX_NAME_ASKS = 3;
 const NAME_STEP = `You are DH Assist, a warm young woman answering a call for Design House India Private Limited. You are a woman, so use feminine verbs for yourself (बताती हूँ, बताऊँगी). You don't know the visitor's name yet, and you must learn it before answering anything.
 - If what the visitor just said is their name (like "Rahul", "mera naam Rahul hai", "I'm Priya"), call update_visitor with it and say nothing.
+- If they would rather type than talk (like "typing", "type karunga", "likhkar", "I'll type"), call continue_typing and say nothing.
+- If they just chose to talk (like "bolkar", "baat karni hai", "talk"), say one short warm line asking their name, in their language: "जी ज़रूर! आपका नाम क्या है?" or "Sure! May I know your name?"
+- If the talk is over and they want nothing more, call end_conversation and say nothing.
 - Otherwise, whatever they said, even a question or "tell me first": do NOT answer it. In the language they are speaking (Hindi in Devanagari), say one short warm line that you'll help right away, and ask their name. For example: "जी, मैं अभी बताती हूँ, बस पहले अपना नाम बता दीजिए?" or "Sure, I'll tell you right away. May I know your name first?"
 - If they clearly refuse to give a name, call update_visitor with name "Visitor" and say nothing.
 - Insults or harassment: call report_abuse. Talk not meant for you (people around them talking to each other): call not_for_me and say nothing.`;
+// Typed in answer to "talk or type?": this means talking, anything else means they are typing
+const WANTS_TO_TALK = /\b(talk|speak|voice|call|bol\w*|baat)\b|बोल|बात/i;
+const botSaysGoodbye = (text: string) => /have a (great|good|nice|lovely) day|good\s?bye|take care|din (accha|acha|achha|shubh)|दिन अच्छा|दिन शुभ|alvida|अलविदा/i.test(text) && !/[?؟]\s*$/.test(text);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const LOGO = "/logotransparent-sm.webp";
 const CHAT_BG = "/assets/chatbot/bg.webp";
@@ -167,11 +183,20 @@ const FAINT_LEVEL = 0.004; // below this the mic is hearing nothing at all
 const MIC_SILENT_NOTE_MS = 10000;
 const CALL_IDLE_MS = 120000; // the call ends itself after this long without anyone talking
 const CALL_ENDING_WARNING_S = 30; // the assistant says so this long before the call's time limit
+const CHAT_END_AFTER_GOODBYE_MS = 10000; // the chat ends this long after the goodbye, unless the visitor carries on
 const END_AFTER_GOODBYE_MS = 15000; // if the "finished speaking" event never comes
 
 // Spoken Hindi comes in Devanagari or Urdu letters; the chat shows it in Roman letters (Hinglish), as the backend
 // rewrites it. Until then the bubble shows "listening" or "typing". (Marathi and others come back as they are.)
-const REWRITTEN_SCRIPTS = /[\u0900-\u097F\u0600-\u06FF]/;
+const REWRITTEN_SCRIPTS = /[\u0900-\u097F\u0600-\u06FF\u0A00-\u0A7F]/;
+
+// A cough, a click or chopped sound comes back from the transcriber as words of any language (Japanese, Korean, Welsh…).
+// Those are never shown or answered. Letters of languages spoken by this site's visitors are allowed; the rest aren't.
+const FOREIGN_LETTERS = new RegExp("(?![\\p{Script=Latin}\\p{Script=Devanagari}\\p{Script=Arabic}\\p{Script=Gurmukhi}\\p{Script=Gujarati}\\p{Script=Bengali}\\p{Script=Tamil}\\p{Script=Telugu}\\p{Script=Kannada}\\p{Script=Malayalam}\\p{Script=Oriya}])\\p{L}", "u");
+const LEAST_CONFIDENCE = -0.7; // the transcriber's average log-probability: in tests real speech stayed above this, and noise below
+const misheard = (text: string, logprobs?: Array<{ logprob: number }>) =>
+  FOREIGN_LETTERS.test(text) || Boolean(logprobs?.length && logprobs.reduce((sum, word) => sum + word.logprob, 0) / logprobs.length < LEAST_CONFIDENCE);
+const SHORTEST_SPEECH_MS = 1200; // misheard and shorter than this is a noise: ignored. Longer is someone talking: asked again.
 const NOISE_KEY = "dh_chat_noise";
 
 interface ChatbotProps {
@@ -196,7 +221,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const [input, setInput] = useState("");
   const [blocked, setBlocked] = useState(false);
   // Replies read out when there's no call (separate from the notification chime)
-  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("dh_chat_voice_on") !== "0");
+  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("dh_chat_voice_on") === "1");
   const [speaking, setSpeaking] = useState(false);
   const [callState, setCallState] = useState<"off" | "connecting" | "on">("off");
   const [micMuted, setMicMuted] = useState(false);
@@ -488,6 +513,31 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const nameKnownRef = useRef(false);
   const nameAsksRef = useRef(0);
   const voiceStyleRef = useRef("");
+  // The welcome asked "talk or type?" and the visitor hasn't said anything yet
+  const choosingRef = useRef(false);
+  const goingToTypingRef = useRef(false); // the visitor chose typing: the call ends once the assistant has said so
+  const awaitingWordsRef = useRef(false); // the visitor has just spoken and the words aren't written down yet
+  const typingAckRef = useRef(false); // the written reply that hands over to typing is on its way: the call ends after it
+  // The visitor's last turn in the call was typed: the reply to it is written, not spoken
+  const typedTurnRef = useRef(false);
+  const replyHow = () => (typedTurnRef.current ? { output_modalities: ["text"] } : {});
+  // The goodbye: once it has been said, the chat ends a little later unless the visitor carries on
+  const closeAfterSpeechRef = useRef(false);
+  const closingAtRef = useRef<number | null>(null);
+  // Once the goodbye has been said it stays that way: whatever else is said, 10 seconds of quiet ends the chat
+  const closingModeRef = useRef(false);
+  const goodbyeSaidRef = useRef(false);
+  const visitorSpeakingRef = useRef(false);
+  const speechStartedAtRef = useRef(0);
+  const lastSpeechMsRef = useRef(0);
+  const resumeByVoiceRef = useRef(false); // the chat that ended was a call
+  const finishChatRef = useRef<() => void>(() => {});
+  const [chatEnded, setChatEnded] = useState(false);
+  const startClosing = () => {
+    closingModeRef.current = true;
+    closeAfterSpeechRef.current = false;
+    closingAtRef.current = Date.now() + CHAT_END_AFTER_GOODBYE_MS;
+  };
   const lastVisitorWordsRef = useRef("");
   // Instructions for one reply replace the call's own, so how the assistant sounds has to go along with them
   const withVoiceStyle = (instructions: string) => [voiceStyleRef.current, instructions].filter(Boolean).join("\n\n");
@@ -522,7 +572,32 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       call.send({ type: "response.cancel" });
       call.send({ type: "output_audio_buffer.clear" });
     }
-    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`Say exactly this and nothing else: "${line}"`), tool_choice: "none" } });
+    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`Say exactly this and nothing else: "${line}"`), tool_choice: "none", ...replyHow() } });
+  };
+
+  // The talk is over: the goodbye, in place of whatever was being said, and then the chat ends a little later
+  const sayGoodbye = () => {
+    closeAfterSpeechRef.current = true;
+    if (goodbyeSaidRef.current) return;
+    goodbyeSaidRef.current = true;
+    const call = callRef.current;
+    if (!call) return;
+    call.send({ type: "response.cancel" });
+    call.send({ type: "output_audio_buffer.clear" });
+    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`You are DH Assist, a warm young woman answering for Design House India Private Limited, so use feminine verbs for yourself. The visitor has finished. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the same language as those words, and say only a short warm goodbye. In English: "Thank you for talking to Design House. Have a great day!" In Hindi, in Devanagari: "डिज़ाइन हाउस से बात करने के लिए धन्यवाद! आपका दिन अच्छा रहे।" Don't ask anything. Say nothing else.`), tool_choice: "none", ...replyHow() } });
+  };
+
+  // What was heard can't be trusted: it isn't shown or answered. Someone talking is asked again; a noise is just ignored.
+  const ignoreMisheard = (itemId: string) => {
+    dropBubble(itemId);
+    heardRef.current.delete(itemId);
+    unansweredRef.current = unansweredRef.current.filter((id) => id !== itemId);
+    const call = callRef.current;
+    if (!call) return;
+    call.send({ type: "conversation.item.delete", item_id: itemId });
+    call.send({ type: "response.cancel" });
+    call.send({ type: "output_audio_buffer.clear" });
+    if (lastSpeechMsRef.current >= SHORTEST_SPEECH_MS) sayInstead(COPY[langRef.current].didntCatch);
   };
 
   const onAbuse = ({ say, blocked: nowBlocked }: { say?: string; blocked?: boolean }, itemId?: string) => {
@@ -539,13 +614,15 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
   // The visitor finished a sentence: it is saved, and checked for abuse by the word list
   const visitorSaid = async (itemId: string, text: string) => {
+    choosingRef.current = false;
     heardRef.current.delete(itemId);
     const waits = REWRITTEN_SCRIPTS.test(text);
     // Hindi waits (as "listening") until the backend has written it in Roman letters
     if (!waits) updateBubble(itemId, "user", () => ({ text, live: false }));
     try {
-      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; text?: string; lang?: Lang }>("turn", { role: "user", text });
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; text?: string; lang?: Lang; finished?: boolean }>("turn", { role: "user", text });
       if (saved.lang) rememberChat("", saved.lang);
+      if (saved.finished) sayGoodbye();
       if (saved.flagged) onAbuse(saved, itemId);
       else if (waits) updateBubble(itemId, "user", () => ({ text: saved.text || text, live: false }));
     } catch {
@@ -572,6 +649,33 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     }
   };
 
+  // The visitor would rather type: the assistant writes so in their language, then the call ends and the chat carries on
+  const goToTyping = async (callId: string | undefined, alreadySpoke: boolean) => {
+    const call = callRef.current;
+    if (!call) return;
+    const output = { type: "conversation.item.create", item: { type: "function_call_output", call_id: callId, output: "{\"ok\":true}" } };
+    // A sentence heard in two parts can ask twice: one reply is enough
+    if (goingToTypingRef.current) {
+      call.send(output);
+      return;
+    }
+    goingToTypingRef.current = true;
+    endedByHandRef.current = true; // opening the chat again doesn't call them back
+    lastActivityRef.current = Date.now();
+    // It has stopped listening
+    call.setMuted(true);
+    call.send({ type: "session.update", session: { type: "realtime", audio: { input: { turn_detection: null } } } });
+    void callPost("tool", { name: "continue_typing", args: {} }).catch(() => {});
+    call.send(output);
+    // Their words decide the language of the reply, and can still be on their way
+    for (let waited = 0; awaitingWordsRef.current && waited < 15; waited++) await sleep(100);
+    if (callRef.current !== call) return;
+    typingAckRef.current = true;
+    const next = nameKnownRef.current ? "asking how you can help" : "asking their name";
+    const line = alreadySpoke ? `You have already told them they can type. Now write only one short warm sentence ${next}.` : `Write one short warm sentence telling them to type here in the chat and ${next}.`;
+    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`You are DH Assist, a warm young woman answering a call for Design House India Private Limited, so use feminine verbs for yourself. The visitor wants to type instead of talk. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the same language as those words. Hindi written in Urdu letters is spoken Hindi: reply in Hindi. Write Hindi in Devanagari. ${line} Write nothing else.`), tool_choice: "none", output_modalities: ["text"] } });
+  };
+
   // The assistant decided to do these things: the backend does them, and the results go back to it
   const runCallTools = async (requested: NonNullable<NonNullable<CallEvent["response"]>["output"]>, spoke: boolean) => {
     // Overheard talk (people near the visitor): no reply, and it is taken out of the chat and of the conversation
@@ -586,13 +690,18 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     }
     requested = requested.filter((item) => item.name !== "not_for_me");
     if (!requested.length) return;
+    const toTyping = requested.find((item) => item.name === "continue_typing");
+    if (toTyping) {
+      void goToTyping(toTyping.call_id, spoke);
+      return;
+    }
     let replyAfterwards = false;
     for (const { name, call_id: callId, arguments: rawArgs } of requested) {
       const gaveName = (name === "update_visitor" || name === "submit_enquiry") && /"name"\s*:\s*"[^"]+"/.test(rawArgs || "");
       if (gaveName) {
         nameDone();
         // The reply that follows thanks them by name and answers their earlier question, in their language
-        callRef.current?.send({ type: "conversation.item.create", item: { type: "message", role: "system", content: [{ type: "input_text", text: `The visitor just gave their name (if it was "Visitor", they didn't want to). Thank them by name, then answer what they had asked before. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the language of those words, never in English unless they are in English. Hindi written in Urdu letters is spoken Hindi: reply in Hindi, in Devanagari.` }] } });
+        callRef.current?.send({ type: "conversation.item.create", item: { type: "message", role: "system", content: [{ type: "input_text", text: `The visitor just gave their name (if it was "Visitor", they didn't want to). Thank them by name, then answer what they had asked before. If they only chose to talk and asked nothing, simply ask how you can help, without remarking on it. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the language of those words, never in English unless they are in English.${/^[\x00-\x7F]*$/.test(lastVisitorWordsRef.current) && !/\b(mera|naam|hai|hoon|aap|main|ji)\b/i.test(lastVisitorWordsRef.current) ? " Those words are in English: reply in English, even if the name is Indian." : ""} Hindi written in Urdu letters is spoken Hindi: reply in Hindi, in Devanagari.` }] } });
       }
       let done: ToolDone;
       try {
@@ -603,14 +712,20 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       if (done.files?.length || done.link) setMessages((prev) => [...prev, { id: ++idRef.current, from: "bot", text: "", files: done.files, link: done.link }]);
       if (done.flagged) setMessages((prev) => prev.filter((m, i) => !(i === prev.length - 1 && m.from === "user")));
       if (done.blocked) setBlocked(true);
-      if (done.end) endAfterSpeechRef.current = true;
+      // Blocked: the call ends as soon as that's said. A goodbye: the chat ends a little later.
+      if (done.end) {
+        if (done.blocked) endAfterSpeechRef.current = true;
+        else closeAfterSpeechRef.current = true;
+      }
       callRef.current?.send({ type: "conversation.item.create", item: { type: "function_call_output", call_id: callId, output: JSON.stringify(done.output) } });
       if (name !== "end_conversation") replyAfterwards = true;
     }
-    if (replyAfterwards) callRef.current?.send({ type: "response.create" });
+    if (replyAfterwards) callRef.current?.send({ type: "response.create", response: replyHow() });
     // A call never just goes dead: if the assistant hung up without saying goodbye, it says it now
     else if (endAfterSpeechRef.current && !spoke) sayInstead(COPY[langRef.current].goodbye);
+    else if (closeAfterSpeechRef.current && !spoke) sayGoodbye();
     else if (endAfterSpeechRef.current && !speakingRef.current) endCallRef.current();
+    else if (closeAfterSpeechRef.current && !speakingRef.current) startClosing();
   };
 
   const onCallEvent = (event: CallEvent) => {
@@ -629,9 +744,12 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         break;
       }
       case "input_audio_buffer.committed":
+        awaitingWordsRef.current = true;
+        typedTurnRef.current = false;
+        if (goingToTypingRef.current) break;
         // Something was said and the name isn't known: ask for the reply that asks for it (the call won't reply by itself)
         if (!nameKnownRef.current) {
-          nameAsksRef.current += 1;
+          if (!choosingRef.current) nameAsksRef.current += 1; // answering "talk or type?" isn't a try at the name
           if (nameAsksRef.current > MAX_NAME_ASKS) {
             nameDone();
             callRef.current?.send({ type: "response.create" });
@@ -640,18 +758,30 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         break;
       case "input_audio_buffer.speech_started":
         lastActivityRef.current = Date.now();
+        visitorSpeakingRef.current = true;
+        speechStartedAtRef.current = Date.now();
+        break;
+      case "input_audio_buffer.speech_stopped":
+        visitorSpeakingRef.current = false;
+        lastSpeechMsRef.current = Date.now() - speechStartedAtRef.current;
+        if (closingModeRef.current) startClosing();
         break;
       case "conversation.item.input_audio_transcription.delta": {
         if (!event.item_id) break;
         const heard = (heardRef.current.get(event.item_id) || "") + (event.delta || "");
         heardRef.current.set(event.item_id, heard);
-        if (!REWRITTEN_SCRIPTS.test(heard)) updateBubble(event.item_id, "user", () => ({ text: heard }));
+        if (!REWRITTEN_SCRIPTS.test(heard) && !FOREIGN_LETTERS.test(heard)) updateBubble(event.item_id, "user", () => ({ text: heard }));
         break;
       }
       case "conversation.item.input_audio_transcription.completed": {
         lastActivityRef.current = Date.now();
+        awaitingWordsRef.current = false;
         const text = (event.transcript || "").trim();
         if (!event.item_id) break;
+        if (text && misheard(text, event.logprobs)) {
+          ignoreMisheard(event.item_id);
+          break;
+        }
         if (text) {
           lastVisitorWordsRef.current = text;
           void visitorSaid(event.item_id, text);
@@ -659,6 +789,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         break;
       }
       case "conversation.item.input_audio_transcription.failed":
+        awaitingWordsRef.current = false;
         if (event.item_id) {
           heardRef.current.delete(event.item_id);
           dropBubble(event.item_id);
@@ -678,11 +809,26 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         botTextRef.current.delete(event.item_id);
         const greeting = greetingNextRef.current;
         greetingNextRef.current = false;
+        if (text && !greeting && botSaysGoodbye(text)) {
+          goodbyeSaidRef.current = true;
+          closeAfterSpeechRef.current = true;
+        }
         if (text) void assistantSaid(event.item_id, text, greeting);
         else updateBubble(event.item_id, "bot", () => ({ live: false }));
         break;
       }
+      // A written reply: the visitor typed
+      case "response.output_text.done": {
+        const text = (event.text || "").trim();
+        if (botSaysGoodbye(text)) {
+          goodbyeSaidRef.current = true;
+          closeAfterSpeechRef.current = true;
+        }
+        if (event.item_id && text) void assistantSaid(event.item_id, text, false);
+        break;
+      }
       case "response.done": {
+        const handedOver = typingAckRef.current;
         // A reply cut short (the visitor spoke over it) shows what was said of it; one with nothing said goes
         const unfinished = new Map(botTextRef.current);
         botTextRef.current.clear();
@@ -694,6 +840,8 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         const output = event.response?.output || [];
         const requested = output.filter((item) => item.type === "function_call");
         if (event.response?.status === "completed" && requested.length) void runCallTools(requested, output.some((item) => item.type === "message"));
+        if (handedOver) endCallRef.current();
+        else if ((closeAfterSpeechRef.current || closingModeRef.current) && !speakingRef.current) startClosing(); // nothing being spoken: a written reply
         break;
       }
       case "output_audio_buffer.started":
@@ -703,9 +851,11 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       case "output_audio_buffer.cleared":
         assistantTalking(false);
         if (endAfterSpeechRef.current) endCallRef.current();
+        if (closeAfterSpeechRef.current || closingModeRef.current) startClosing();
         break;
       case "error":
         console.warn("[chat] call:", event.error?.code, event.error?.message);
+        if (typingAckRef.current) endCallRef.current();
         break;
       default:
         break;
@@ -715,6 +865,16 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const endCall = (note?: string) => {
     callCleanupRef.current?.();
     callCleanupRef.current = null;
+    choosingRef.current = false;
+    goingToTypingRef.current = false;
+    awaitingWordsRef.current = false;
+    typingAckRef.current = false;
+    typedTurnRef.current = false;
+    closeAfterSpeechRef.current = false;
+    closingAtRef.current = null;
+    closingModeRef.current = false;
+    goodbyeSaidRef.current = false;
+    visitorSpeakingRef.current = false;
     const call = callRef.current;
     callRef.current = null;
     if (call) {
@@ -732,11 +892,15 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   };
   endCallRef.current = endCall;
 
-  const startCall = async () => {
+  // Opened from the robot, the welcome asks "talk or type?"; from the mic button they have already chosen to talk
+  const startCall = async (askTalkOrType = false) => {
     if (callRef.current || openingCallRef.current) return;
     const copy = () => COPY[langRef.current];
     openingCallRef.current = true;
     endedByHandRef.current = false;
+    closingAtRef.current = null;
+    closingModeRef.current = false;
+    setChatEnded(false);
     stopSpeaking();
     setVoiceNote("");
     setCallState("connecting");
@@ -799,7 +963,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       setCallState("off");
       return;
     }
-    const { greeting, maxSeconds, knowsName, voiceStyle } = start as CallStart;
+    const { greeting, choiceGreeting, maxSeconds, knowsName, voiceStyle } = start as CallStart;
     voiceStyleRef.current = voiceStyle || "";
     nameKnownRef.current = Boolean(knowsName);
     nameAsksRef.current = 0;
@@ -827,6 +991,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     }, 1000);
     const goodbyeGuard = setInterval(() => {
       if (endAfterSpeechRef.current && !speakingRef.current && Date.now() - lastActivityRef.current > END_AFTER_GOODBYE_MS) endCall();
+      if (closeAfterSpeechRef.current && !speakingRef.current && Date.now() - lastActivityRef.current > END_AFTER_GOODBYE_MS) startClosing();
     }, 2000);
     callCleanupRef.current = () => {
       clearInterval(tick);
@@ -834,7 +999,8 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     };
 
     greetingNextRef.current = true;
-    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`Greet the visitor now, warmly and naturally, in your natural Indian English accent, by saying exactly this: "${greeting}"`), tool_choice: "none" } });
+    choosingRef.current = askTalkOrType && Boolean(choiceGreeting);
+    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`Greet the visitor now, warmly and naturally, in your natural Indian English accent, by saying exactly this: "${choosingRef.current ? choiceGreeting : greeting}"`), tool_choice: "none" } });
   };
 
   const endCallByHand = () => {
@@ -861,19 +1027,50 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     call.send({ type: "session.update", session: { type: "realtime", audio: { input: { noise_reduction: { type: next ? "near_field" : "far_field" } } } } });
   };
 
+  // The goodbye was a little while ago: the chat ends, and can be resumed the same way it was going
+  const finishChat = () => {
+    resumeByVoiceRef.current = Boolean(callRef.current);
+    endedByHandRef.current = true;
+    stopSpeaking();
+    endCall();
+    closingAtRef.current = null;
+    setChatEnded(true);
+  };
+
+  const resumeChat = () => {
+    unlockVoice(); // this runs inside the click, so replies that arrive later can play
+    audio();
+    setChatEnded(false);
+    if (resumeByVoiceRef.current && canTalk) void startCall();
+    else void startChat();
+  };
+
   const open = () => {
     unlockVoice(); // this runs inside the click, so replies that arrive later can play
     audio();
     setIsOpen(true);
     setIsMinimized(false);
     activeRef.current = true; // the welcome below is read out before the next render
-    if (canTalk && !endedByHandRef.current) void startCall();
+    if (chatEnded) return; // it stays ended until the visitor resumes it
+    if (canTalk && !endedByHandRef.current) void startCall(true);
     else void startChat();
   };
 
   useEffect(() => {
     openRef.current = open;
+    finishChatRef.current = finishChat;
   });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const at = closingAtRef.current;
+      if (!at || Date.now() < at) return;
+      // Still writing, or someone is still speaking: not yet
+      if (inputRef.current?.value.trim() || speakingRef.current || visitorSpeakingRef.current) closingAtRef.current = Date.now() + 500;
+      else finishChatRef.current();
+    }, 500);
+    return () => clearInterval(timer);
+  }, []);
 
   const openedAtOnceRef = useRef(false);
   useEffect(() => {
@@ -885,11 +1082,15 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
   /* ── A typed message ── */
 
-  // During a call it goes into the same conversation, and the assistant answers aloud
+  // During a call it goes into the same conversation, and the assistant answers in writing; the mic stays open
   const typeInCall = async (text: string) => {
+    choosingRef.current = false;
+    typedTurnRef.current = true;
+    let finished = false;
     const bubbleId = isAbusive(text) ? null : userSay(text);
     try {
-      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; lang?: Lang }>("turn", { role: "user", text });
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; lang?: Lang; finished?: boolean }>("turn", { role: "user", text });
+      finished = Boolean(saved.finished);
       if (saved.lang) rememberChat("", saved.lang);
       if (saved.flagged) {
         if (bubbleId !== null) setMessages((prev) => prev.filter((m) => m.id !== bubbleId));
@@ -906,13 +1107,19 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       call.send({ type: "output_audio_buffer.clear" });
     }
     call.send({ type: "conversation.item.create", item: { type: "message", role: "user", content: [{ type: "input_text", text }] } });
+    if (finished) {
+      lastVisitorWordsRef.current = text;
+      goodbyeSaidRef.current = false;
+      sayGoodbye();
+      return;
+    }
     // Typed during a call, the name still comes first
     if (!nameKnownRef.current && nameAsksRef.current < MAX_NAME_ASKS) {
       nameAsksRef.current += 1;
-      call.send({ type: "response.create", response: { instructions: withVoiceStyle(NAME_STEP) } });
+      call.send({ type: "response.create", response: { instructions: withVoiceStyle(NAME_STEP), ...replyHow() } });
     } else {
       nameDone();
-      call.send({ type: "response.create" });
+      call.send({ type: "response.create", response: replyHow() });
     }
   };
 
@@ -934,11 +1141,13 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       // The assistant found it abusive: take the visitor's message back out of the chat
       if (data.flagged && bubbleId !== null) setMessages((prev) => prev.filter((m) => m.id !== bubbleId));
       await botSay(data.replies);
+      if (data.end || data.replies.some((line) => botSaysGoodbye(line.text))) closingModeRef.current = true;
     } catch (error) {
       setIsTyping(false);
       const tooMany = (error as { response?: { status?: number } })?.response?.status === 429;
       await botSay([{ text: tooMany ? (error as Error).message : COPY[langRef.current].offline }]);
     }
+    if (closingModeRef.current) startClosing();
   };
 
   const onSubmit = (e: FormEvent) => {
@@ -946,6 +1155,15 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     const text = input.trim();
     if (!text || blocked || (isTyping && !callRef.current)) return;
     setInput("");
+    closingAtRef.current = null; // the count restarts after the reply to this
+    // Typing in answer to "talk or type?" is the answer: the call ends and this goes to the typed chat
+    // So is typing while the call is already handing over to typing
+    if (callRef.current && (goingToTypingRef.current || (choosingRef.current && !WANTS_TO_TALK.test(text)))) {
+      endedByHandRef.current = true;
+      endCall();
+      void callPostsRef.current.then(() => sendToAssistant(text)); // after what the call is still saving
+      return;
+    }
     if (callRef.current) void typeInCall(text);
     else void sendToAssistant(text);
   };
@@ -1137,7 +1355,15 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                 </div>
 
                 {/* Input */}
-                <form onSubmit={onSubmit} className="relative shrink-0 border-t border-[#e3e9f3] bg-white px-3.5 pt-2 pb-1.5">
+                {chatEnded && (
+                  <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[#e3e9f3] bg-white px-4 py-3">
+                    <span className="text-[13px] font-semibold text-[#0A2B5E]">{t.chatEnded}</span>
+                    <button type="button" onClick={resumeChat} className="shrink-0 cursor-pointer rounded-full bg-[#134698] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#0f3a80]">
+                      {t.resume}
+                    </button>
+                  </div>
+                )}
+                <form onSubmit={onSubmit} className={`relative shrink-0 border-t border-[#e3e9f3] bg-white px-3.5 pt-2 pb-1.5 ${chatEnded ? "hidden" : ""}`}>
                   {/* Noise cancellation for calls: on by default */}
                   {canTalk && (
                     <div className="mb-1.5 flex items-center justify-between gap-2">
