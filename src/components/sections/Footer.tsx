@@ -138,7 +138,7 @@ const Footer = ({ showCta = false }: { showCta?: boolean }) => {
               />
               <span
                 aria-hidden="true"
-                className="absolute left-[25%] top-[8%] w-[55%] h-[45%] rounded-full bg-white/[0.025] blur-2xl pointer-events-none"
+                className="absolute left-[20%] top-[4%] w-[45%] h-[52%] rounded-full bg-white/[0.26] blur-xl pointer-events-none"
               />
               {/* Twinkling white sparkles around the logo */}
               {LOGO_SPARKLES.map((s, i) => (

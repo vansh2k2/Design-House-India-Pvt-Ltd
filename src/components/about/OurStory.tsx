@@ -104,7 +104,7 @@ const OurStory = () => {
     <div ref={pin} className="relative lg:h-[200vh]">
       <div className="lg:sticky" style={{ top: NAVBAR_PX }}>
         <section id="our-story" className="relative w-full overflow-hidden bg-white scroll-mt-24">
-          <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-3 sm:pb-4 lg:pb-5">
+          <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-3 sm:pb-4 lg:pb-5">
             <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,2.5fr)] gap-8 lg:gap-0">
               {/* ── Left: heading + intro ── */}
               <div className="lg:pr-8 lg:pt-2 lg:pb-0">

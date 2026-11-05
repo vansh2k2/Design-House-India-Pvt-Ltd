@@ -179,6 +179,7 @@ const Hero = ({ isHomePage = true, initialSlides = [] }: { isHomePage?: boolean;
   const [textKey, setTextKey] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstSlideRef = useRef<string | undefined>(undefined);
 
   // Fetch hero slides from API
   useEffect(() => {
@@ -209,6 +210,10 @@ const Hero = ({ isHomePage = true, initialSlides = [] }: { isHomePage?: boolean;
           });
 
           setHeroSlides(activeSlides);
+          // A scheduled banner that has just started comes first: show it straight away
+          const first = activeSlides[0];
+          if (first?.schedule?.startDate && first._id !== firstSlideRef.current) setCurrent(0);
+          firstSlideRef.current = first?._id;
 
           try {
             localStorage.setItem(HERO_CACHE_KEY, JSON.stringify({ data: activeSlides, timestamp: Date.now() }));
@@ -223,8 +228,16 @@ const Hero = ({ isHomePage = true, initialSlides = [] }: { isHomePage?: boolean;
     };
 
     fetchHeroSlides();
-    const interval = setInterval(fetchHeroSlides, 600000);
-    return () => clearInterval(interval);
+    // Every 30 seconds, and when the visitor comes back to the tab, so scheduled banners start and end on time
+    const interval = setInterval(fetchHeroSlides, 30000);
+    const onVisible = () => {
+      if (!document.hidden) fetchHeroSlides();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   const goTo = useCallback(

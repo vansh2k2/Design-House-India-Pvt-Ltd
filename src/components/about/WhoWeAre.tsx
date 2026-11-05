@@ -41,7 +41,7 @@ const Strong = ({ children }: { children: React.ReactNode }) => <strong classNam
    photo (AB3: the photo already carries its rounded, slanted left edge and orange curve); below, a strip of the services and a navy band of key strengths. */
 const WhoWeAre = () => (
   <section className="relative w-full overflow-hidden bg-white">
-    <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-0">
+    <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10 pb-0">
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8 lg:gap-10 items-center">
         {/* ── Text ── */}
         <div>

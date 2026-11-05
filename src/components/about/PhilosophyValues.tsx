@@ -130,14 +130,14 @@ const PhilosophyValues = () => (
       className="pointer-events-none absolute -top-32 left-1/3 h-[420px] w-[420px] rounded-full bg-[#1B4C93]/25 blur-[120px]"
     />
 
-    <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-7 pb-12 sm:pb-14 lg:pb-16 grid gap-8 lg:grid-cols-2 xl:grid-cols-[minmax(380px,1.1fr)_auto_minmax(0,2.2fr)] xl:gap-0">
+    <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 lg:pt-7 pb-12 sm:pb-14 lg:pb-16 grid gap-8 lg:grid-cols-2 xl:grid-cols-[minmax(360px,1fr)_auto_minmax(0,2.4fr)] xl:gap-0">
       {/* ── Left: heading + intro ── */}
       <m.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.7, ease: EASE }}
-        className="xl:pr-6 xl:pt-6"
+        className="xl:pr-5 xl:pt-6"
       >
         <span className="block w-24 h-[6px] bg-[#fd6e15] rounded-full mb-3" />
         <h2 className="text-[30px] sm:text-[36px] lg:text-[40px] font-serif font-medium leading-[1.08] tracking-tight mb-4">
@@ -156,7 +156,7 @@ const PhilosophyValues = () => (
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.3 }}
-        className="xl:border-l xl:border-r xl:border-white/15 xl:px-5 divide-y divide-white/15"
+        className="xl:-ml-5 xl:border-l xl:border-r xl:border-white/15 xl:px-4 divide-y divide-white/15"
       >
         {PILLARS.map(({ icon: Icon, title, lines }) => (
           <m.li key={title} variants={pillarVariants} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
@@ -172,7 +172,7 @@ const PhilosophyValues = () => (
       </m.ul>
 
       {/* ── Right: core values ── */}
-      <div className="lg:col-span-2 xl:col-span-1 xl:pl-6">
+      <div className="lg:col-span-2 xl:col-span-1 xl:pl-4">
         <m.div
           initial={{ opacity: 0, scale: 0.85 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -192,7 +192,7 @@ const PhilosophyValues = () => (
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.3 }}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 xl:gap-2"
         >
           {VALUES.map(({ icon, title, lines }) => (
             <m.li

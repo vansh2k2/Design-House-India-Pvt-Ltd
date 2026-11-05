@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AudioLines, Bell, BellOff, Download, Mic, MicOff, Minus, PhoneOff, Send, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Bell, BellOff, Download, Headset, Mic, MicOff, Minus, PhoneOff, Send, Volume2, VolumeX, X } from "lucide-react";
 
 import { api, API_URL } from "@/lib/api";
 import { isAbusive } from "@/lib/chatGuards";
@@ -56,6 +56,13 @@ const COPY = {
     noise: "Noise cancellation",
     noiseOnHint: "On: background noise and voices further away are filtered out",
     noiseOffHint: "Off: your mic is heard as it is",
+    teamTitle: "Design House Team",
+    teamSubtitle: "You're chatting with our team",
+    teamName: "Design House Team",
+    teamJoined: "Someone from the Design House team has joined the chat",
+    teamLeft: "The team has left the chat. DH Assist will reply from here.",
+    teamPlaceholder: "Message our team...",
+    teamFooter: "You're chatting with a person from Design House",
   },
   // Hindi as people type it in chats (Roman letters), like the assistant's own Hindi
   hi: {
@@ -96,6 +103,13 @@ const COPY = {
     noise: "Noise cancellation",
     noiseOnHint: "On: aas-paas ka shor aur door ki awaazein filter hoti hain",
     noiseOffHint: "Off: aapka mic jaisa hai waisa suna jata hai",
+    teamTitle: "Design House Team",
+    teamSubtitle: "Aap hamari team se baat kar rahe hain",
+    teamName: "Design House Team",
+    teamJoined: "Design House team se koi chat mein jud gaye hain",
+    teamLeft: "Team chat se chali gayi. Ab DH Assist jawab degi.",
+    teamPlaceholder: "Hamari team ko likhiye...",
+    teamFooter: "Aap Design House ki team se baat kar rahe hain",
   },
 };
 
@@ -105,15 +119,23 @@ interface Reply {
   title?: string;
   text: string;
   link?: { href: string; label: string };
-  files?: Array<{ href: string; label: string }>; // PDFs to download; href is a path on the API
+  files?: Array<{ href: string; label: string; type?: string; size?: number }>; // PDFs to download; href is a path on the API, or a full URL for files the team sent
   speakId?: number; // how to ask the backend for this message's audio
   spoken?: string; // the text written for reading aloud
   greeting?: boolean; // the welcome: a new one replaces the one still showing instead of adding another
 }
+// "agent": someone from the team who took the chat over in the admin; event: they joined or left (a note, not a bubble)
+type From = "bot" | "user" | "agent";
+interface HistoryItem extends Reply {
+  from: From;
+  event?: "joined" | "left";
+  at?: number;
+}
 interface Message extends Reply {
   id: number;
   at?: number; // when it appeared (shown under the bubble)
-  from: "bot" | "user";
+  from: From;
+  event?: "joined" | "left";
   key?: string; // in a call: the conversation item this bubble shows
   live?: boolean; // in a call: still being said
 }
@@ -124,18 +146,27 @@ interface ChatResponse {
   blocked: boolean;
   flagged?: boolean;
   end?: boolean; // the visitor said goodbye: the chat ends shortly
-  history?: Array<Reply & { from: "bot" | "user" }>;
+  history?: HistoryItem[];
   repeatGreeting?: Reply; // the welcome already in the chat, to be said again
+  agent?: boolean; // someone from the team has the chat: the assistant isn't replying
+  serverTime?: number;
+}
+interface TeamUpdates {
+  agent: boolean;
+  messages: Array<{ text: string; event?: "joined" | "left"; files?: Reply["files"]; at: number }>;
+  serverTime: number;
 }
 interface CallStart {
   blocked?: boolean;
   unavailable?: boolean;
+  agent?: boolean; // someone from the team has the chat: no call with the assistant
+  serverTime?: number;
   sessionId: string;
   lang: Lang;
   sdp: string;
   greeting: string;
   choiceGreeting?: string; // the same welcome, asking whether they'd rather talk or type
-  history: Array<Reply & { from: "bot" | "user" }>;
+  history: HistoryItem[];
   maxSeconds: number;
   knowsName?: boolean; // the visitor's name is already known (from earlier in this chat)
   voiceStyle?: string; // how the assistant sounds: a reply with its own instructions replaces the call's, so it goes along
@@ -178,6 +209,9 @@ const botSaysGoodbye = (text: string) => /have a (great|good|nice|lovely) day|go
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const LOGO = "/logotransparent-sm.webp";
 const CHAT_BG = "/assets/chatbot/bg.webp";
+// The assistant's files are paths on the API; the team's are full URLs
+const fileUrl = (href: string) => (/^https?:\/\//.test(href) ? href : `${API_URL}${href}`);
+const isPhoto = (file: { href: string; type?: string; label?: string }) => (file.type || "").startsWith("image/") || /\.(jpe?g|png|webp|gif)$/i.test(file.label || file.href);
 
 const FAINT_LEVEL = 0.004; // below this the mic is hearing nothing at all
 const MIC_SILENT_NOTE_MS = 10000;
@@ -185,6 +219,7 @@ const CALL_IDLE_MS = 120000; // the call ends itself after this long without any
 const CALL_ENDING_WARNING_S = 30; // the assistant says so this long before the call's time limit
 const CHAT_END_AFTER_GOODBYE_MS = 10000; // the chat ends this long after the goodbye, unless the visitor carries on
 const END_AFTER_GOODBYE_MS = 15000; // if the "finished speaking" event never comes
+const TEAM_CHECK_MS = 4000; // while the chat is open, how often it checks for messages from the team
 
 // Spoken Hindi comes in Devanagari or Urdu letters; the chat shows it in Roman letters (Hinglish), as the backend
 // rewrites it. Until then the bubble shows "listening" or "typing". (Marathi and others come back as they are.)
@@ -227,6 +262,11 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const [micMuted, setMicMuted] = useState(false);
   const [canTalk] = useState(canCall);
   const [voiceNote, setVoiceNote] = useState("");
+  // Someone from the team has taken the chat over in the admin: the assistant is quiet and their messages appear here
+  const [teamLive, setTeamLive] = useState(false);
+  const teamLiveRef = useRef(false);
+  const teamSinceRef = useRef(0); // the team's messages written after this (server time) are fetched
+  const teamSeenRef = useRef(new Set<number>());
   const voiceOnRef = useRef(voiceOn);
   const callRef = useRef<Call | null>(null);
   const micRingRef = useRef<HTMLSpanElement>(null); // grows with the sound level during a call
@@ -425,9 +465,28 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     return id;
   };
 
-  const showHistory = (history?: Array<Reply & { from: "bot" | "user" }>) => {
+  const showHistory = (history?: HistoryItem[]) => {
+    history?.forEach((m) => m.from === "agent" && m.at && teamSeenRef.current.add(m.at));
     if (!chatLoadedRef.current && history?.length) setMessages(history.map((m) => ({ ...m, id: ++idRef.current })));
     chatLoadedRef.current = true;
+  };
+
+  // The team took the chat over (or handed it back): during a call the assistant would keep talking, so the call ends
+  const setTeam = (on: boolean) => {
+    if (teamLiveRef.current === on) return;
+    teamLiveRef.current = on;
+    setTeamLive(on);
+    if (on) {
+      stopSpeaking();
+      setIsTyping(false);
+      if (callRef.current) endCallRef.current();
+    }
+  };
+
+  const syncTeam = (data: { agent?: boolean; serverTime?: number }) => {
+    if (data.agent !== undefined) setTeam(data.agent);
+    // A little before the server's time, in case a message was being saved just then (seen ones aren't shown twice)
+    if (data.serverTime && !teamSinceRef.current) teamSinceRef.current = data.serverTime - 10000;
   };
 
   const rememberChat = (sessionId: string, chatLang?: Lang) => {
@@ -444,7 +503,37 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const applyResponse = (data: ChatResponse) => {
     rememberChat(data.sessionId, data.lang);
     setBlocked(Boolean(data.blocked));
+    syncTeam(data);
   };
+
+  // While the chat is open it checks every few seconds whether the team has written or taken the chat over
+  useEffect(() => {
+    if (!isOpen) return;
+    let busy = false;
+    const check = async () => {
+      if (busy || document.hidden || !sessionIdRef.current || !teamSinceRef.current) return;
+      busy = true;
+      try {
+        const res = await api.get(`/api/chatbot/updates?session=${encodeURIComponent(sessionIdRef.current)}&since=${teamSinceRef.current}`);
+        const data: TeamUpdates = res.data.data;
+        const fresh = data.messages.filter((m) => !teamSeenRef.current.has(m.at));
+        if (fresh.length) {
+          fresh.forEach((m) => teamSeenRef.current.add(m.at));
+          teamSinceRef.current = Math.max(teamSinceRef.current, ...fresh.map((m) => m.at));
+          setMessages((prev) => [...prev, ...fresh.map((m): Message => ({ id: ++idRef.current, from: "agent", text: m.text, event: m.event, files: m.files, at: m.at }))]);
+          if (activeRef.current) playIncoming();
+        }
+        setTeam(data.agent);
+      } catch {
+        // tried again on the next tick
+      } finally {
+        busy = false;
+      }
+    };
+    const timer = setInterval(() => void check(), TEAM_CHECK_MS);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   /* ── The typed chat: when opened it welcomes the visitor and asks how it can help ── */
   const startChat = async () => {
@@ -926,8 +1015,10 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
           });
           start = res.data.data as CallStart;
           if (start.blocked) throw new DOMException("Blocked", "Blocked");
+          if (start.agent) throw new DOMException("The team has this chat", "Team");
           if (start.unavailable) throw new DOMException("No calls right now", "Unavailable");
           rememberChat(start.sessionId, start.lang);
+          syncTeam(start);
           showHistory(start.history);
           return start.sdp;
         },
@@ -945,6 +1036,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       setCallState("off");
       const name = (error as DOMException).name;
       if (name === "Blocked") setBlocked(true);
+      else if (name === "Team") setTeam(true); // no note: the visitor just carries on typing to the team
       else if (name === "NotAllowedError" || name === "SecurityError") setVoiceNote(copy().micDenied);
       else if (name === "NotFoundError") setVoiceNote(copy().micNotFound);
       else if (name === "NotReadableError") setVoiceNote(copy().micBusy);
@@ -1054,7 +1146,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     setIsMinimized(false);
     activeRef.current = true; // the welcome below is read out before the next render
     if (chatEnded) return; // it stays ended until the visitor resumes it
-    if (canTalk && !endedByHandRef.current) void startCall(true);
+    if (canTalk && !endedByHandRef.current && !teamLiveRef.current) void startCall(true);
     else void startChat();
   };
 
@@ -1129,7 +1221,8 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     // An abusive message is never shown in the chat; the backend counts it as a strike
     const bubbleId = isAbusive(text) ? null : userSay(text);
     await queueRef.current; // let a reply still being read out finish its queue first
-    setIsTyping(true);
+    // With the team on the chat a person replies, whenever they do: no "typing..." from the assistant
+    if (!teamLiveRef.current) setIsTyping(true);
     try {
       const res = await api.post("/api/chatbot/message", {
         sessionId: sessionIdRef.current || undefined,
@@ -1200,12 +1293,12 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   // "11:30 AM" under a bubble
   const timeOf = (at: number) => new Date(at).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
   // The visitor's message has been read once the assistant has replied after it (blue ticks)
-  const seen = (index: number) => messages.slice(index + 1).some((m) => m.from === "bot");
+  const seen = (index: number) => messages.slice(index + 1).some((m) => m.from !== "user");
 
   // Show the avatar only on the first of consecutive bot messages
-  const showAvatar = (index: number) => messages[index].from === "bot" && messages[index - 1]?.from !== "bot";
+  const showAvatar = (index: number) => messages[index].from !== "user" && (messages[index - 1]?.from !== messages[index].from || !!messages[index - 1]?.event);
 
-  const placeholder = blocked ? t.blockedPlaceholder : callState === "connecting" ? t.connecting : inCall ? (micMuted ? t.muted : speaking ? t.interruptHint : t.listening) : t.placeholder;
+  const placeholder = blocked ? t.blockedPlaceholder : teamLive ? t.teamPlaceholder : callState === "connecting" ? t.connecting : inCall ? (micMuted ? t.muted : speaking ? t.interruptHint : t.listening) : t.placeholder;
 
   const typingDots = [0, 0.15, 0.3].map((d) => <span key={d} className="dh-dot h-2 w-2 rounded-full bg-[#134698]" style={{ animationDelay: `${d}s` }} />);
 
@@ -1261,8 +1354,10 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                 </span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[16px] font-bold leading-tight text-white">{t.title}</p>
-                <p className={`truncate text-[11px] ${isTyping && !inCall ? "font-semibold text-[#86efac]" : "text-white/80"}`}>{isTyping && !inCall ? t.typing : t.subtitle}</p>
+                <p className="truncate text-[16px] font-bold leading-tight text-white">{teamLive ? t.teamTitle : t.title}</p>
+                <p className={`truncate text-[11px] ${(isTyping && !inCall) || teamLive ? "font-semibold text-[#86efac]" : "text-white/80"}`}>
+                  {teamLive ? t.teamSubtitle : isTyping && !inCall ? t.typing : t.subtitle}
+                </p>
               </div>
 
               <div className="flex shrink-0 items-center gap-1">
@@ -1288,7 +1383,49 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
                   <div className="relative space-y-2.5">
                     {messages.map((m, i) =>
-                      m.from === "bot" ? (
+                      m.event ? (
+                        // The team joined or left the chat
+                        <div key={m.id} className="dh-msg-in flex justify-center py-1">
+                          <span className="flex items-center gap-1.5 rounded-full bg-[#fff1e6] px-3 py-1 text-center text-[11.5px] font-semibold text-[#b84a08] shadow-[0_1px_3px_rgba(10,30,74,0.08)] ring-1 ring-[#fd6e15]/25">
+                            <Headset className="h-3.5 w-3.5 shrink-0" />
+                            {m.event === "joined" ? t.teamJoined : t.teamLeft}
+                          </span>
+                        </div>
+                      ) : m.from === "agent" ? (
+                        // A message from someone on the team
+                        <div key={m.id} className="dh-msg-in flex items-start gap-2">
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#fd7a26] to-[#e85a05] text-white shadow-sm ${showAvatar(i) ? "" : "invisible"}`}>
+                            <Headset className="h-[18px] w-[18px]" />
+                          </span>
+                          <div className="min-w-0 max-w-[82%]">
+                            {showAvatar(i) && <p className="mb-0.5 pl-1 text-[10.5px] font-bold text-[#e85a05]">{t.teamName}</p>}
+                            <div className={`rounded-[16px] border border-[#fd6e15]/25 bg-[#fff6ef] px-3.5 py-2.5 text-[13.5px] leading-[1.5] text-[#1f2d44] shadow-[0_1px_3px_rgba(10,30,74,0.10)] ${showAvatar(i) ? "rounded-tl-[4px]" : ""}`}>
+                              {m.files?.map((file) =>
+                                isPhoto(file) ? (
+                                  <a key={file.href} href={fileUrl(file.href)} target="_blank" rel="noopener noreferrer" className="mb-2 block overflow-hidden rounded-xl last:mb-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={fileUrl(file.href)} alt={file.label} className="max-h-[220px] w-full object-cover" />
+                                  </a>
+                                ) : (
+                                  <a
+                                    key={file.href}
+                                    href={fileUrl(file.href)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                    className="mb-2 flex items-center gap-2 rounded-xl border border-[#fd6e15]/40 bg-white px-3 py-2 text-[12.5px] font-semibold text-[#b84a08] transition last:mb-0 hover:bg-[#ffecdf]"
+                                  >
+                                    <Download className="h-4 w-4 shrink-0" />
+                                    <span className="min-w-0 break-words">{file.label}</span>
+                                  </a>
+                                )
+                              )}
+                              {m.text && <p className="whitespace-pre-line">{m.text}</p>}
+                            </div>
+                            {m.at && <p className="mt-1 pl-1 text-[10px] text-[#8a97ad]">{timeOf(m.at)}</p>}
+                          </div>
+                        </div>
+                      ) : m.from === "bot" ? (
                         <div key={m.id} className="dh-msg-in flex items-start gap-2">
                           <span className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1 ring-1 ring-[#fd6e15]/40 shadow-sm ${showAvatar(i) ? "" : "invisible"}`}>
                             <Image src={LOGO} alt="" width={30} height={20} className="h-auto w-full object-contain" />
@@ -1306,7 +1443,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                               {m.files?.map((file) => (
                                 <a
                                   key={file.href}
-                                  href={`${API_URL}${file.href}`}
+                                  href={fileUrl(file.href)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   download
@@ -1447,7 +1584,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                           {voiceOn && speaking && <span className="absolute inset-0 animate-ping rounded-full bg-[#134698]/25" />}
                           {voiceOn ? <Volume2 className="relative h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                         </button>
-                        {canTalk && (
+                        {canTalk && !teamLive && (
                           <button
                             type="button"
                             onClick={() => void startCall()}
@@ -1481,7 +1618,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                     </p>
                   )}
                   <div className="mt-1 flex items-center justify-center gap-1.5 text-[10.5px] text-[#7a879c]">
-                    <span>{t.footer}</span>
+                    <span>{teamLive ? t.teamFooter : t.footer}</span>
                     {/* Notification chime on/off (remembered in this browser) */}
                     <button
                       type="button"

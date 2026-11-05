@@ -149,7 +149,7 @@ const OperationalStrength = () => {
         className="pointer-events-none absolute bottom-0 left-0 w-full h-auto translate-y-[40%] opacity-60"
       />
 
-      <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* ── Header ── */}
         <div className="lg:max-w-[66%] lg:min-h-[150px]">
           <span className="block w-24 h-[4px] bg-[#fd6e15] rounded-full mb-2.5" />

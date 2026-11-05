@@ -62,7 +62,7 @@ const TeamExpertise = () => (
     {/* Orange rule fading out at both ends */}
     <span aria-hidden="true" className="block h-[3px] w-full bg-gradient-to-r from-transparent via-[#fd6e15] to-transparent" />
 
-    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 lg:pt-8 pb-10 lg:pb-12">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 lg:pt-8 pb-10 lg:pb-12">
       {/* ── Heading ── */}
       <m.div
         initial={{ opacity: 0, y: 20 }}
