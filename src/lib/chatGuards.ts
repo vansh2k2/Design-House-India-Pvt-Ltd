@@ -12,6 +12,8 @@ const squeeze = (value: string) =>
   value
     .toLowerCase()
     .normalize("NFC")
+    // "!" ending a word is punctuation ("hell!!"), not an "i"
+    .replace(/!+(?![\p{L}@4013$57])/gu, " ")
     .replace(/[@4013!$57]/g, (c) => LEET[c] ?? c)
     .replace(/(\p{L})\1+/gu, "$1");
 
@@ -40,6 +42,27 @@ const WORD_STARTS = [
 ].map(squeeze);
 
 const EXACT_SET = new Set(EXACT_WORDS);
+// Abuse made of ordinary words ("go to hell", "teri maa ki …", "bhen ke …"): matched as whole words in a row
+const PHRASES = [
+  // English
+  "go to hell", "go 2 hell", "go hell", "burn in hell", "rot in hell", "screw you", "shut up bitch", "kill yourself", "son of a bitch",
+  // Hinglish: maa / behen gaali, "bhaad mein jaa"
+  "teri maa ki", "teri ma ki", "teri maa ka", "teri ma ka", "teri maa ke", "teri ma ke", "tere maa ki", "teri mummy ki",
+  "teri behen ki", "teri bahen ki", "teri behan ki", "teri bhen ki", "teri behen ka", "teri bhen ka",
+  "maa ki chut", "ma ki chut", "maa ki aankh", "maa chod", "ma chod", "maa chuda", "ma chuda",
+  "behen chod", "bahen chod", "behan chod", "bhen chod", "behen ke lode", "bhen ke lode", "bhen ke laude", "behen ke laude",
+  "maa ke lode", "ma ke lode", "maa ke laude", "tere baap ki", "bhaad me ja", "bhaad mein ja", "bhad me ja", "bhad mein ja",
+  "bhaad me jao", "bhaad mein jao", "bhad me jao", "bhad mein jao", "jahannum me ja", "bkl", "bc mc",
+  // Hindi
+  "तेरी माँ की", "तेरी मां की", "तेरी माँ का", "तेरी मां का", "तेरी बहन की", "तेरी बहन का", "माँ की चूत", "मां की चूत",
+  "बहन के लौड़े", "माँ के लौड़े", "भाड़ में जा", "भाड़ में जाओ", "भाड़ मे जा", "नरक में जा", "जहन्नुम में जा",
+];
+let phraseKeys: string[] | null = null; // squeezed like the text, made on first use (tokensOf is below)
+const hasBadPhrase = (tokens: string[]) => {
+  phraseKeys = phraseKeys || PHRASES.map((phrase) => ` ${tokensOf(phrase).join(" ")} `);
+  const line = ` ${tokens.join(" ")} `;
+  return phraseKeys.some((key) => line.includes(key));
+};
 
 // These squeeze into ordinary words ("saale" would become "sale"), so they are compared letter for letter
 const UNSQUEEZED_WORDS = new Set(["saale", "saala", "saali"]);
@@ -60,7 +83,7 @@ const isBadWord = (token: string) => {
 export function isAbusive(text: string): boolean {
   if (text.toLowerCase().split(/[^\p{L}]+/u).some((w) => UNSQUEEZED_WORDS.has(w))) return true;
   const tokens = tokensOf(text);
-  if (tokens.some(isBadWord)) return true;
+  if (tokens.some(isBadWord) || hasBadPhrase(tokens)) return true;
 
   // Letters typed one by one ("f u c k"): join each run of single letters and check it as a word
   let run = "";

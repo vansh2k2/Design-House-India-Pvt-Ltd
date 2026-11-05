@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AudioLines, Bell, BellOff, Download, Headset, Mic, MicOff, Minus, PhoneOff, Send, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Ban, Bell, BellOff, Download, Headset, Mic, MicOff, Minus, PhoneOff, Send, Volume2, VolumeX, X } from "lucide-react";
 
 import { api, API_URL } from "@/lib/api";
 import { isAbusive } from "@/lib/chatGuards";
@@ -23,6 +23,9 @@ const COPY = {
     subtitle: "Design House Assistant",
     placeholder: "Type here...",
     blockedPlaceholder: "This chat is blocked",
+    blockedNote: "Chat blocked for offensive language",
+    blockedOpensIn: "It opens again in",
+    blockedByTeam: "Please call +91 96549 00525 for genuine enquiries.",
     abuseHint: "Please avoid offensive words. Sending this counts as a warning.",
     offline: "Sorry, the chat isn't available right now. Please call +91 96549 00525 or email info@designhouse.co.in.",
     footer: "AI assistant • Chats and IP address are saved for follow-up",
@@ -70,6 +73,9 @@ const COPY = {
     subtitle: "Design House Assistant",
     placeholder: "Yahan likhiye...",
     blockedPlaceholder: "Ye chat block hai",
+    blockedNote: "Galat bhasha ki wajah se chat block hai",
+    blockedOpensIn: "Chat phir se active hogi",
+    blockedByTeam: "Sach mein koi kaam ho toh +91 96549 00525 par call kijiye.",
     abuseHint: "Please galat shabd use na kijiye. Bhejne par aapko warning milegi.",
     offline: "Maaf kijiye, chat abhi chal nahi rahi. +91 96549 00525 par call kijiye ya info@designhouse.co.in par email kijiye.",
     footer: "AI assistant • Chat aur IP address follow-up ke liye save hote hain",
@@ -144,6 +150,7 @@ interface ChatResponse {
   lang?: Lang;
   replies: Reply[];
   blocked: boolean;
+  blockedFor?: number; // ms until the block ends (none: until the team lifts it)
   flagged?: boolean;
   end?: boolean; // the visitor said goodbye: the chat ends shortly
   history?: HistoryItem[];
@@ -158,6 +165,7 @@ interface TeamUpdates {
 }
 interface CallStart {
   blocked?: boolean;
+  blockedFor?: number;
   unavailable?: boolean;
   agent?: boolean; // someone from the team has the chat: no call with the assistant
   serverTime?: number;
@@ -171,6 +179,7 @@ interface CallStart {
   knowsName?: boolean; // the visitor's name is already known (from earlier in this chat)
   voiceStyle?: string; // how the assistant sounds: a reply with its own instructions replaces the call's, so it goes along
   goodbye?: { en: string; hi: string }; // the ending message the team set (admin: AI Training)
+  voice?: "sarvam"; // the call's model only writes; its replies are read out by Sarvam (/api/chatbot/call/say)
 }
 interface CallEvent {
   type: string;
@@ -189,10 +198,16 @@ interface ToolDone {
   link?: Reply["link"];
   end?: boolean;
   blocked?: boolean;
+  blockedFor?: number;
   flagged?: boolean;
 }
 
 const SESSION_KEY = "dh_chat_session";
+// 86399000 → "23:59:59"
+const countdown = (ms: number) => {
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map((n) => String(n).padStart(2, "0")).join(":");
+};
 // The name comes before any answer. Until it is known, the call doesn't reply by itself (backend: create_response off)
 // and each reply is asked for with only this to do. A hello or the "talk or type" choice is answered without asking it;
 // the name is asked when they ask something. After a few turns the call goes on without it.
@@ -257,6 +272,14 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const [isTyping, setIsTyping] = useState(false);
   const [input, setInput] = useState("");
   const [blocked, setBlocked] = useState(false);
+  // When the block ends (this browser's clock), for the countdown; null: until the team lifts it
+  const [blockedTill, setBlockedTill] = useState<number | null>(null);
+  const [clock, setClock] = useState(() => Date.now());
+  const blockChat = (forMs?: number) => {
+    setBlocked(true);
+    setBlockedTill(forMs && forMs > 0 ? Date.now() + forMs : null);
+    setClock(Date.now());
+  };
   // Replies read out when there's no call (separate from the notification chime)
   const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("dh_chat_voice_on") === "1");
   const [speaking, setSpeaking] = useState(false);
@@ -504,9 +527,27 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
 
   const applyResponse = (data: ChatResponse) => {
     rememberChat(data.sessionId, data.lang);
-    setBlocked(Boolean(data.blocked));
+    if (data.blocked) blockChat(data.blockedFor);
+    else {
+      setBlocked(false);
+      setBlockedTill(null);
+    }
     syncTeam(data);
   };
+
+  // A block with an end: the countdown ticks every second, and the chat opens again when it reaches zero
+  useEffect(() => {
+    if (blockedTill === null) return;
+    const tick = setInterval(() => {
+      const now = Date.now();
+      setClock(now);
+      if (now >= blockedTill) {
+        setBlocked(false);
+        setBlockedTill(null);
+      }
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [blockedTill]);
 
   // While the chat is open it checks every few seconds whether the team has written or taken the chat over
   useEffect(() => {
@@ -620,6 +661,59 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const goodbyeSaidRef = useRef(false);
   // The ending message, as the team set it in the admin (the call start brings it)
   const goodbyeRef = useRef({ en: "Thank you for talking to Design House. Have a great day!", hi: "डिज़ाइन हाउस से बात करने के लिए धन्यवाद! आपका दिन अच्छा रहे।" });
+
+  /* Sarvam voice in a call: the replies come as text and are read out here, one after another. Stopping (the visitor
+     speaks over it, a new line replaces it, the call ends) moves the turn number on, so audio still on its way is dropped. */
+  const sarvamVoiceRef = useRef(false);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const voiceTurnRef = useRef(0);
+  const voiceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  // The same as when the call's own audio stops
+  const voiceEnded = () => {
+    assistantTalking(false);
+    if (endAfterSpeechRef.current) endCallRef.current();
+    if (closeAfterSpeechRef.current || closingModeRef.current) startClosing();
+  };
+  const stopVoice = () => {
+    voiceTurnRef.current += 1;
+    const audio = voiceAudioRef.current;
+    voiceAudioRef.current = null;
+    audio?.pause();
+    if (audio && speakingRef.current) voiceEnded();
+  };
+  const speakVoice = (text: string) => {
+    const turn = voiceTurnRef.current;
+    // Asked for straight away, played in turn
+    const clip = fetch(`${API_URL}/api/chatbot/call/say`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sessionIdRef.current, text }),
+    }).then((res) => (res.ok ? res.blob() : Promise.reject(new Error(`speech ${res.status}`))));
+    voiceQueueRef.current = voiceQueueRef.current.then(async () => {
+      let blob: Blob;
+      try {
+        blob = await clip;
+      } catch {
+        return;
+      }
+      if (turn !== voiceTurnRef.current || !callRef.current) return;
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      voiceAudioRef.current = audio;
+      await new Promise<void>((resolve) => {
+        audio.onplay = () => assistantTalking(true);
+        audio.onended = () => resolve();
+        audio.onpause = () => resolve();
+        audio.onerror = () => resolve();
+        audio.play().catch(() => resolve());
+      });
+      URL.revokeObjectURL(url);
+      if (voiceAudioRef.current === audio) {
+        voiceAudioRef.current = null;
+        voiceEnded();
+      }
+    });
+  };
   const visitorSpeakingRef = useRef(false);
   const speechStartedAtRef = useRef(0);
   const lastSpeechMsRef = useRef(0);
@@ -661,6 +755,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   const sayInstead = (line: string) => {
     const call = callRef.current;
     if (!call) return;
+    if (sarvamVoiceRef.current) stopVoice(); // also a reply still on its way
     if (speakingRef.current) {
       call.send({ type: "response.cancel" });
       call.send({ type: "output_audio_buffer.clear" });
@@ -693,13 +788,13 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     if (lastSpeechMsRef.current >= SHORTEST_SPEECH_MS) sayInstead(COPY[langRef.current].didntCatch);
   };
 
-  const onAbuse = ({ say, blocked: nowBlocked }: { say?: string; blocked?: boolean }, itemId?: string) => {
+  const onAbuse = ({ say, blocked: nowBlocked, blockedFor }: { say?: string; blocked?: boolean; blockedFor?: number }, itemId?: string) => {
     if (itemId) {
       dropBubble(itemId);
       callRef.current?.send({ type: "conversation.item.delete", item_id: itemId });
     }
     if (nowBlocked) {
-      setBlocked(true);
+      blockChat(blockedFor);
       endAfterSpeechRef.current = true;
     }
     if (say) sayInstead(say);
@@ -713,7 +808,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     // Hindi waits (as "listening") until the backend has written it in Roman letters
     if (!waits) updateBubble(itemId, "user", () => ({ text, live: false }));
     try {
-      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; text?: string; lang?: Lang; finished?: boolean }>("turn", { role: "user", text });
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; blockedFor?: number; text?: string; lang?: Lang; finished?: boolean }>("turn", { role: "user", text });
       if (saved.lang) rememberChat("", saved.lang);
       if (saved.finished) sayGoodbye();
       if (saved.flagged) onAbuse(saved, itemId);
@@ -807,7 +902,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       }
       if (done.files?.length || done.link) setMessages((prev) => [...prev, { id: ++idRef.current, from: "bot", text: "", files: done.files, link: done.link }]);
       if (done.flagged) setMessages((prev) => prev.filter((m, i) => !(i === prev.length - 1 && m.from === "user")));
-      if (done.blocked) setBlocked(true);
+      if (done.blocked) blockChat(done.blockedFor);
       // Blocked: the call ends as soon as that's said. A goodbye: the chat ends a little later.
       if (done.end) {
         if (done.blocked) endAfterSpeechRef.current = true;
@@ -853,6 +948,8 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         }
         break;
       case "input_audio_buffer.speech_started":
+        // The visitor speaks over the reply: it stops, as the call's own voice does
+        if (sarvamVoiceRef.current && voiceAudioRef.current) stopVoice();
         lastActivityRef.current = Date.now();
         visitorSpeakingRef.current = true;
         speechStartedAtRef.current = Date.now();
@@ -913,14 +1010,19 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
         else updateBubble(event.item_id, "bot", () => ({ live: false }));
         break;
       }
-      // A written reply: the visitor typed
+      // A written reply: the visitor typed. With the Sarvam voice every reply is written, and read out here (not the ones to
+      // a typed turn, nor the "type here" hand-over, as before).
       case "response.output_text.done": {
-        const text = (event.text || "").trim();
-        if (botSaysGoodbye(text)) {
+        const text = (event.text || "").trim().replace(/^["“”']+|["“”']+$/g, "").trim();
+        const spoken = sarvamVoiceRef.current && !typedTurnRef.current && !typingAckRef.current;
+        const greeting = spoken && greetingNextRef.current;
+        if (greeting) greetingNextRef.current = false;
+        if (text && !greeting && botSaysGoodbye(text)) {
           goodbyeSaidRef.current = true;
           closeAfterSpeechRef.current = true;
         }
-        if (event.item_id && text) void assistantSaid(event.item_id, text, false);
+        if (event.item_id && text) void assistantSaid(event.item_id, text, greeting);
+        if (spoken && text) speakVoice(text);
         break;
       }
       case "response.done": {
@@ -959,6 +1061,11 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   };
 
   const endCall = (note?: string) => {
+    // A reply still being read out (Sarvam voice) stops with the call
+    voiceTurnRef.current += 1;
+    voiceAudioRef.current?.pause();
+    voiceAudioRef.current = null;
+    sarvamVoiceRef.current = false;
     callCleanupRef.current?.();
     callCleanupRef.current = null;
     choosingRef.current = false;
@@ -1019,7 +1126,10 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
             noise: noiseOnRef.current,
           });
           start = res.data.data as CallStart;
-          if (start.blocked) throw new DOMException("Blocked", "Blocked");
+          if (start.blocked) {
+            blockChat(start.blockedFor);
+            throw new DOMException("Blocked", "Blocked");
+          }
           if (start.agent) throw new DOMException("The team has this chat", "Team");
           if (start.unavailable) throw new DOMException("No calls right now", "Unavailable");
           rememberChat(start.sessionId, start.lang);
@@ -1040,7 +1150,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       openingCallRef.current = false;
       setCallState("off");
       const name = (error as DOMException).name;
-      if (name === "Blocked") setBlocked(true);
+      if (name === "Blocked") setBlocked(true); // blockChat has set the countdown
       else if (name === "Team") setTeam(true); // no note: the visitor just carries on typing to the team
       else if (name === "NotAllowedError" || name === "SecurityError") setVoiceNote(copy().micDenied);
       else if (name === "NotFoundError") setVoiceNote(copy().micNotFound);
@@ -1062,11 +1172,21 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       setCallState("off");
       return;
     }
-    const { greeting, choiceGreeting, maxSeconds, knowsName, voiceStyle, goodbye } = start as CallStart;
+    const { greeting, choiceGreeting, maxSeconds, knowsName, voiceStyle, goodbye, voice } = start as CallStart;
     voiceStyleRef.current = voiceStyle || "";
     if (goodbye?.en) goodbyeRef.current = goodbye;
     nameKnownRef.current = Boolean(knowsName);
     nameAsksRef.current = 0;
+    sarvamVoiceRef.current = voice === "sarvam";
+    if (sarvamVoiceRef.current) {
+      // No audio comes from the call: "stop talking" stops the reply being read out here instead
+      const send = call.send;
+      call.send = (event) => {
+        const { type } = event as { type?: string };
+        if (type === "output_audio_buffer.clear" || type === "response.cancel") stopVoice();
+        if (type !== "output_audio_buffer.clear") send(event);
+      };
+    }
     callRef.current = call;
     setCallState("on");
     lastActivityRef.current = Date.now();
@@ -1189,7 +1309,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     let finished = false;
     const bubbleId = isAbusive(text) ? null : userSay(text);
     try {
-      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; lang?: Lang; finished?: boolean }>("turn", { role: "user", text });
+      const saved = await callPost<{ flagged?: boolean; say?: string; blocked?: boolean; blockedFor?: number; lang?: Lang; finished?: boolean }>("turn", { role: "user", text });
       finished = Boolean(saved.finished);
       if (saved.lang) rememberChat("", saved.lang);
       if (saved.flagged) {
@@ -1528,6 +1648,20 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
                         <span className={`absolute top-[3px] h-4 w-4 rounded-full bg-white shadow transition-all ${noiseOn ? "left-[33px]" : "left-[3px]"}`} />
                         <span className={noiseOn ? "pl-0.5" : "ml-auto pr-0.5"}>{noiseOn ? "ON" : "OFF"}</span>
                       </button>
+                    </div>
+                  )}
+                  {blocked && (
+                    <div role="status" aria-live="polite" className="mb-2 flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2">
+                      <Ban className="h-4 w-4 shrink-0 text-red-500" />
+                      <div className="min-w-0 flex-1 leading-tight">
+                        <p className="text-[11.5px] font-semibold text-red-700">{t.blockedNote}</p>
+                        <p className="text-[10.5px] text-red-600/80">{blockedTill === null ? t.blockedByTeam : t.blockedOpensIn}</p>
+                      </div>
+                      {blockedTill !== null && (
+                        <span className="shrink-0 rounded-lg bg-red-500 px-2 py-1 font-mono text-[13px] font-bold tabular-nums text-white">
+                          {countdown(blockedTill - clock)}
+                        </span>
+                      )}
                     </div>
                   )}
                   <div
