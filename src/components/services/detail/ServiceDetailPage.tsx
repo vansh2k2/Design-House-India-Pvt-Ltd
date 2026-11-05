@@ -10,6 +10,7 @@ import ServiceProcess from "./ServiceProcess";
 import ServiceProjects from "./ServiceProjects";
 import ServiceIdealFor from "./ServiceIdealFor";
 import ServiceFaqs from "./ServiceFaqs";
+import ResidentialPage from "../residential/ResidentialPage";
 import type { ServiceDetail } from "./types";
 
 /* A service's page (e.g. /services/corporate-interiors): banner with features, why choose us, process,
@@ -20,12 +21,19 @@ const ServiceDetailPage = ({ data }: { data: ServiceDetail }) => (
     <Navbar />
 
     <main className="flex-1">
-      {data.hero.showcase ? <ServiceShowcaseHero hero={data.hero} showcase={data.hero.showcase} /> : <ServiceHero data={data} />}
-      <ServiceWhy data={data} />
-      <ServiceProcess data={data} />
-      <ServiceProjects data={data} />
-      <ServiceIdealFor data={data} />
-      <ServiceFaqs name={data.name} faqs={data.faqs} heading={data.faqHeading} numbered={data.faqStyle?.numbered} tone={data.faqStyle?.tone} />
+      {/* Residential Interiors has a page of its own design */}
+      {data.slug === "residential-interiors" ? (
+        <ResidentialPage data={data} />
+      ) : (
+        <>
+          {data.hero.showcase ? <ServiceShowcaseHero hero={data.hero} showcase={data.hero.showcase} /> : <ServiceHero data={data} />}
+          <ServiceWhy data={data} />
+          <ServiceProcess data={data} />
+          <ServiceProjects data={data} />
+          <ServiceIdealFor data={data} />
+          <ServiceFaqs name={data.name} faqs={data.faqs} heading={data.faqHeading} numbered={data.faqStyle?.numbered} tone={data.faqStyle?.tone} />
+        </>
+      )}
       <ProjectCta
         narrow
         eyebrow={data.ctaEyebrow ?? "Let's Build Together"}

@@ -170,6 +170,7 @@ interface CallStart {
   maxSeconds: number;
   knowsName?: boolean; // the visitor's name is already known (from earlier in this chat)
   voiceStyle?: string; // how the assistant sounds: a reply with its own instructions replaces the call's, so it goes along
+  goodbye?: { en: string; hi: string }; // the ending message the team set (admin: AI Training)
 }
 interface CallEvent {
   type: string;
@@ -192,15 +193,16 @@ interface ToolDone {
 }
 
 const SESSION_KEY = "dh_chat_session";
-// The name comes first. Until it is known, the call doesn't reply by itself (backend: create_response off) and each
-// reply is asked for with only this to do. After a few tries the call goes on without it.
-const MAX_NAME_ASKS = 3;
-const NAME_STEP = `You are DH Assist, a warm young woman answering a call for Design House India Private Limited. You are a woman, so use feminine verbs for yourself (बताती हूँ, बताऊँगी). You don't know the visitor's name yet, and you must learn it before answering anything.
+// The name comes before any answer. Until it is known, the call doesn't reply by itself (backend: create_response off)
+// and each reply is asked for with only this to do. A hello or the "talk or type" choice is answered without asking it;
+// the name is asked when they ask something. After a few turns the call goes on without it.
+const MAX_NAME_ASKS = 5;
+const NAME_STEP = `You are DH Assist, a warm young woman answering a call for Design House India Private Limited. You are a woman, so use feminine verbs for yourself (बताती हूँ, बताऊँगी). You don't know the visitor's name yet: you ask it when they ask you something, before answering it.
 - If what the visitor just said is their name (like "Rahul", "mera naam Rahul hai", "I'm Priya"), call update_visitor with it and say nothing.
 - If they would rather type than talk (like "typing", "type karunga", "likhkar", "I'll type"), call continue_typing and say nothing.
-- If they just chose to talk (like "bolkar", "baat karni hai", "talk"), say one short warm line asking their name, in their language: "जी ज़रूर! आपका नाम क्या है?" or "Sure! May I know your name?"
+- If they just chose to talk (like "bolkar", "baat karni hai", "talk"), or only said hello, ok or thanks, say one short warm line asking how you can help, in their language, without asking their name: "जी ज़रूर! बताइए, मैं आपकी क्या मदद कर सकती हूँ?" or "Sure! Tell me, how can I help you today?"
 - If the talk is over and they want nothing more, call end_conversation and say nothing.
-- Otherwise, whatever they said, even a question or "tell me first": do NOT answer it. In the language they are speaking (Hindi in Devanagari), say one short warm line that you'll help right away, and ask their name. For example: "जी, मैं अभी बताती हूँ, बस पहले अपना नाम बता दीजिए?" or "Sure, I'll tell you right away. May I know your name first?"
+- Otherwise (they asked something or want something, even "tell me first"): do NOT answer it yet. In the language they are speaking (Hindi in Devanagari), say one short warm line that you'll help right away, and ask their name. For example: "जी, मैं अभी बताती हूँ, बस पहले अपना नाम बता दीजिए?" or "Sure, I'll tell you right away. May I know your name first?"
 - If they clearly refuse to give a name, call update_visitor with name "Visitor" and say nothing.
 - Insults or harassment: call report_abuse. Talk not meant for you (people around them talking to each other): call not_for_me and say nothing.`;
 // Typed in answer to "talk or type?": this means talking, anything else means they are typing
@@ -616,6 +618,8 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
   // Once the goodbye has been said it stays that way: whatever else is said, 10 seconds of quiet ends the chat
   const closingModeRef = useRef(false);
   const goodbyeSaidRef = useRef(false);
+  // The ending message, as the team set it in the admin (the call start brings it)
+  const goodbyeRef = useRef({ en: "Thank you for talking to Design House. Have a great day!", hi: "डिज़ाइन हाउस से बात करने के लिए धन्यवाद! आपका दिन अच्छा रहे।" });
   const visitorSpeakingRef = useRef(false);
   const speechStartedAtRef = useRef(0);
   const lastSpeechMsRef = useRef(0);
@@ -673,7 +677,7 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     if (!call) return;
     call.send({ type: "response.cancel" });
     call.send({ type: "output_audio_buffer.clear" });
-    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`You are DH Assist, a warm young woman answering for Design House India Private Limited, so use feminine verbs for yourself. The visitor has finished. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the same language as those words, and say only a short warm goodbye. In English: "Thank you for talking to Design House. Have a great day!" In Hindi, in Devanagari: "डिज़ाइन हाउस से बात करने के लिए धन्यवाद! आपका दिन अच्छा रहे।" Don't ask anything. Say nothing else.`), tool_choice: "none", ...replyHow() } });
+    call.send({ type: "response.create", response: { instructions: withVoiceStyle(`You are DH Assist, a warm young woman answering for Design House India Private Limited, so use feminine verbs for yourself. The visitor has finished. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the same language as those words, and say only a short warm goodbye. In English: "${goodbyeRef.current.en}" In Hindi, written in Devanagari: "${goodbyeRef.current.hi}" Don't ask anything. Say nothing else.`), tool_choice: "none", ...replyHow() } });
   };
 
   // What was heard can't be trusted: it isn't shown or answered. Someone talking is asked again; a noise is just ignored.
@@ -760,7 +764,8 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     for (let waited = 0; awaitingWordsRef.current && waited < 15; waited++) await sleep(100);
     if (callRef.current !== call) return;
     typingAckRef.current = true;
-    const next = nameKnownRef.current ? "asking how you can help" : "asking their name";
+    // Their name is asked later, once they ask something
+    const next = "asking how you can help";
     const line = alreadySpoke ? `You have already told them they can type. Now write only one short warm sentence ${next}.` : `Write one short warm sentence telling them to type here in the chat and ${next}.`;
     call.send({ type: "response.create", response: { instructions: withVoiceStyle(`You are DH Assist, a warm young woman answering a call for Design House India Private Limited, so use feminine verbs for yourself. The visitor wants to type instead of talk. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the same language as those words. Hindi written in Urdu letters is spoken Hindi: reply in Hindi. Write Hindi in Devanagari. ${line} Write nothing else.`), tool_choice: "none", output_modalities: ["text"] } });
   };
@@ -1057,8 +1062,9 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
       setCallState("off");
       return;
     }
-    const { greeting, choiceGreeting, maxSeconds, knowsName, voiceStyle } = start as CallStart;
+    const { greeting, choiceGreeting, maxSeconds, knowsName, voiceStyle, goodbye } = start as CallStart;
     voiceStyleRef.current = voiceStyle || "";
+    if (goodbye?.en) goodbyeRef.current = goodbye;
     nameKnownRef.current = Boolean(knowsName);
     nameAsksRef.current = 0;
     callRef.current = call;
