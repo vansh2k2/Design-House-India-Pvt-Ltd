@@ -697,17 +697,19 @@ const EnhancedChatbot = ({ isOpen, setIsOpen, openRef, openAtOnce }: ChatbotProp
     }
     let replyAfterwards = false;
     for (const { name, call_id: callId, arguments: rawArgs } of requested) {
-      const gaveName = (name === "update_visitor" || name === "submit_enquiry") && /"name"\s*:\s*"[^"]+"/.test(rawArgs || "");
-      if (gaveName) {
-        nameDone();
-        // The reply that follows thanks them by name and answers their earlier question, in their language
-        callRef.current?.send({ type: "conversation.item.create", item: { type: "message", role: "system", content: [{ type: "input_text", text: `The visitor just gave their name (if it was "Visitor", they didn't want to). Thank them by name, then answer what they had asked before. If they only chose to talk and asked nothing, simply ask how you can help, without remarking on it. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the language of those words, never in English unless they are in English.${/^[\x00-\x7F]*$/.test(lastVisitorWordsRef.current) && !/\b(mera|naam|hai|hoon|aap|main|ji)\b/i.test(lastVisitorWordsRef.current) ? " Those words are in English: reply in English, even if the name is Indian." : ""} Hindi written in Urdu letters is spoken Hindi: reply in Hindi, in Devanagari.` }] } });
-      }
+      const reportsName = (name === "update_visitor" || name === "submit_enquiry") && /"name"\s*:\s*"[^"]+"/.test(rawArgs || "");
+      // The backend checks a name against what was said, and those words can still be on their way
+      if (reportsName) for (let waited = 0; awaitingWordsRef.current && waited < 15; waited++) await sleep(100);
       let done: ToolDone;
       try {
         done = await callPost<ToolDone>("tool", { name, args: JSON.parse(rawArgs || "{}") });
       } catch {
         done = { output: { problem: "That didn't work just now. Don't guess: say you'll have the team help them." } };
+      }
+      if (reportsName && !(done.output as { nameRejected?: boolean })?.nameRejected) {
+        nameDone();
+        // The reply that follows thanks them by name and answers their earlier question, in their language
+        callRef.current?.send({ type: "conversation.item.create", item: { type: "message", role: "system", content: [{ type: "input_text", text: `The visitor just gave their name (if it was "Visitor", they didn't want to). Thank them by name, then answer what they had asked before. If they only chose to talk and asked nothing, simply ask how you can help, without remarking on it. Their last words were: "${lastVisitorWordsRef.current.slice(0, 200)}". Reply in the language of those words, never in English unless they are in English.${/^[\x00-\x7F]*$/.test(lastVisitorWordsRef.current) && !/\b(mera|naam|hai|hoon|aap|main|ji)\b/i.test(lastVisitorWordsRef.current) ? " Those words are in English: reply in English, even if the name is Indian." : ""} Hindi written in Urdu letters is spoken Hindi: reply in Hindi, in Devanagari.` }] } });
       }
       if (done.files?.length || done.link) setMessages((prev) => [...prev, { id: ++idRef.current, from: "bot", text: "", files: done.files, link: done.link }]);
       if (done.flagged) setMessages((prev) => prev.filter((m, i) => !(i === prev.length - 1 && m.from === "user")));
