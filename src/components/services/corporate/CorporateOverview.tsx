@@ -54,17 +54,17 @@ const CorporateOverview = ({ overview }: { overview: Overview }) => (
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-5">
           <Link
             href={overview.buttons.primary.href}
-            className="group inline-flex h-[48px] items-center justify-center gap-3 whitespace-nowrap rounded-[8px] bg-[#F7830F] px-6 text-[14px] lg:px-4 lg:text-[13px] xl:px-6 xl:text-[14px] font-semibold text-white shadow-[0_6px_16px_rgba(247,131,15,0.25)] transition-colors hover:bg-[#E06F00]"
+            className="group inline-flex h-[42px] items-center justify-center gap-2.5 whitespace-nowrap rounded-[8px] bg-[#F7830F] px-5 text-[13px] lg:px-4 lg:text-[12px] xl:px-5 xl:text-[13px] font-semibold text-white shadow-[0_6px_16px_rgba(247,131,15,0.25)] transition-colors hover:bg-[#E06F00]"
           >
             {overview.buttons.primary.label}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
           </Link>
           <Link
             href={overview.buttons.secondary.href}
-            className="group inline-flex h-[48px] items-center justify-center gap-3 whitespace-nowrap rounded-[8px] border-[1.5px] border-[#0A2B5E] px-7 text-[14px] lg:px-5 lg:text-[13px] xl:px-7 xl:text-[14px] font-semibold text-[#0A2B5E] transition-colors hover:bg-[#0A2B5E] hover:text-white"
+            className="group inline-flex h-[42px] items-center justify-center gap-2.5 whitespace-nowrap rounded-[8px] border-[1.5px] border-[#0A2B5E] px-6 text-[13px] lg:px-4 lg:text-[12px] xl:px-6 xl:text-[13px] font-semibold text-[#0A2B5E] transition-colors hover:bg-[#0A2B5E] hover:text-white"
           >
             {overview.buttons.secondary.label}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </div>

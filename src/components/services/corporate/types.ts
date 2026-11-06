@@ -8,6 +8,7 @@ export interface CorporateDesign {
   banner: {
     background: StaticImageData; // already fades to navy on the left, where the text sits
     imageAlt: string;
+    textShade?: boolean; // a navy shade further onto the photo, for a photo that is bright where the text runs onto it
     stats: { icon: LucideIcon; value: string; label: string }[];
   };
   // Text, a row of points and two buttons on the left, the photo (with its own curved edge) on the right
@@ -33,6 +34,7 @@ export interface CorporateDesign {
     text: string;
     items: { icon: LucideIcon; title: string; text: string }[];
     cta?: { label: string; href: string };
+    background?: StaticImageData; // the photo behind the cards; default the Corporate page's
   };
   // "Our Process" photo cards
   process: {

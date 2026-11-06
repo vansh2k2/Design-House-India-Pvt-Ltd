@@ -15,7 +15,8 @@ const CallFloat = () => {
           setPhoneNumber(response.data.data.callNumber || "");
         }
       } catch (error) {
-        console.error("Error fetching call number:", error);
+        // Only a warning: without the number the button just stays hidden
+        console.warn("Could not load the call number:", error);
       }
     };
     fetchCallNumber();

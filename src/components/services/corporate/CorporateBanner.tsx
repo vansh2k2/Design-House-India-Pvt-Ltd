@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { HERO_ACCENT_SHADOW, HERO_BANNER_CSS, HERO_DESC_SHADOW, HERO_TITLE_SHADOW } from "@/components/common/heroBannerEffects";
+import CountUp from "@/components/home/strengths/CountUp";
 import curveLeft from "@/assets/icon/oc.png";
 import curveRight from "@/assets/icon/oc1.png";
 import type { ServiceDetail } from "../detail/types";
@@ -10,6 +11,13 @@ import type { CorporateDesign } from "./types";
 
 type Hero = ServiceDetail["hero"];
 type Banner = CorporateDesign["banner"];
+
+// A figure that starts with a number ("21+ Years", "500+") counts up to it when the strip comes into view;
+// the others ("End-to-End") show as they are
+const counted = (value: string) => {
+  const match = value.match(/^(\d[\d,]*)(.*)$/);
+  return match ? <CountUp end={Number(match[1].replace(/,/g, ""))} suffix={match[2]} duration={2000} /> : value;
+};
 
 /* Full-width navy banner: a background photo that already fades to navy on the left, the text over that navy
    part, and a strip of figures underneath with gold curves in its two corners. Part of CorporatePage.
@@ -31,8 +39,12 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
       />
       {/* Keeps the text readable where the photo sits behind it on small screens */}
       <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#0B1F3F] via-[#0B1F3F]/90 to-[#0B1F3F]/55 lg:hidden" />
+      {/* On wide screens, when asked: the navy runs further onto the photo, so the text over it stays readable */}
+      {banner.textShade && (
+        <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-gradient-to-r from-[#0B1F3F]/90 from-25% via-[#0B1F3F]/65 via-55% to-transparent lg:block" />
+      )}
 
-      <div className="relative px-4 py-10 sm:px-6 sm:py-12 lg:w-[41%] lg:py-[2.6vw] lg:pl-[6.3vw] lg:pr-0">
+      <div className="relative px-4 py-10 sm:px-6 sm:py-12 lg:w-[43%] lg:py-[1.8vw] lg:pl-[6.3vw] lg:pr-0">
         {/* Text colours, shadows and entrance effects as on the About Us banner */}
         <p className="hb-blur-in text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.25em] text-white" style={{ animationDelay: "0.15s" }}>
           {hero.eyebrow}
@@ -40,7 +52,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
         <span className="hb-blur-in mt-2.5 block h-[3px] w-[86px] rounded-full bg-[#fd6e15]" style={{ animationDelay: "0.2s" }} />
 
         <h1
-          className="mt-4 font-serif text-[38px] sm:text-[46px] lg:text-[clamp(36px,3.5vw,58px)] font-medium leading-[1.05] tracking-tight text-white [perspective:800px]"
+          className="mt-4 lg:mt-2.5 font-serif text-[38px] sm:text-[46px] lg:text-[clamp(36px,3.5vw,58px)] font-medium leading-[1.05] tracking-tight text-white [perspective:800px]"
           style={{ textShadow: HERO_TITLE_SHADOW }}
         >
           <span className="block overflow-hidden">
@@ -57,7 +69,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
 
         {hero.tagline && (
           <p
-            className="hb-blur-in mt-3 text-[16px] sm:text-[18px] 2xl:text-[20px] font-semibold leading-snug text-white"
+            className="hb-blur-in mt-3 lg:mt-2 text-[16px] sm:text-[18px] 2xl:text-[20px] font-semibold leading-snug text-white"
             style={{ animationDelay: "0.5s", textShadow: HERO_DESC_SHADOW }}
           >
             {hero.tagline}
@@ -65,14 +77,15 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
         )}
 
         <p
-          className="hb-desc-in mt-2 max-w-[470px] text-[13px] lg:max-w-[31vw] 2xl:text-[15px] leading-[1.5] text-white/90"
+          className="hb-desc-in mt-2 max-w-[470px] text-[13px] lg:max-w-[34vw] 2xl:text-[15px] leading-[1.5] text-white/90"
           style={{ animationDelay: "0.6s", textShadow: HERO_DESC_SHADOW }}
         >
           {hero.text}
         </p>
 
-        {/* The first column is wider, so "End-to-end workspace" fits on one line */}
-        <ul className="mt-5 grid grid-cols-2 gap-y-5 sm:grid-cols-4 lg:max-w-[38vw] lg:grid-cols-[1.3fr_1fr_1fr_1.15fr] 2xl:mt-6">
+        {/* The first column is wider, so "End-to-end workspace" fits on one line. Pulled a little left on large
+            screens, so the first item's text lines up closer with the text above */}
+        <ul className="mt-5 lg:mt-4 grid grid-cols-2 gap-y-5 sm:grid-cols-4 lg:-ml-3 lg:max-w-[38vw] lg:grid-cols-[1.3fr_1fr_1fr_1.15fr] 2xl:mt-6">
           {hero.features.map(({ icon: Icon, label, text }, i) => (
             <li key={label} className={`relative px-1.5 text-center ${i % 2 ? "border-l border-white/20" : ""} ${i > 0 ? "sm:border-l sm:border-white/20" : ""}`}>
               <span className="mx-auto flex h-[44px] w-[44px] items-center justify-center rounded-full ring-1 ring-[#F5A23A]/80 2xl:h-[52px] 2xl:w-[52px]">
@@ -95,7 +108,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
           ))}
         </ul>
 
-        <div className="mt-6 flex gap-3 2xl:mt-8 2xl:gap-4">
+        <div className="mt-6 lg:mt-5 flex gap-3 2xl:mt-6 2xl:gap-4">
           <Link
             href={hero.primaryCta?.href ?? "/contact"}
             className="group inline-flex h-[44px] flex-1 items-center justify-center gap-2 rounded-[4px] bg-[#fd6e15] text-[12px] font-semibold uppercase tracking-[0.04em] text-white transition-colors hover:bg-[#e05d0e] sm:w-[170px] sm:flex-none 2xl:h-[48px] 2xl:w-[190px] 2xl:text-[13px]"
@@ -124,7 +137,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
           <li key={value + label} className={`flex items-center justify-center gap-3 2xl:gap-4 ${i > 0 ? "lg:border-l lg:border-white/25" : ""}`}>
             <Icon className="h-8 w-8 shrink-0 text-[#F5A23A] 2xl:h-10 2xl:w-10" strokeWidth={1.4} />
             <div className="min-w-0">
-              <p className="text-[15px] font-bold leading-tight text-white 2xl:text-[18px]">{value}</p>
+              <p className="text-[15px] font-bold leading-tight tabular-nums text-white 2xl:text-[18px]">{counted(value)}</p>
               <p className="text-[12px] leading-tight text-white/85 2xl:text-[14px]">{label}</p>
             </div>
           </li>

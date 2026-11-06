@@ -41,7 +41,7 @@ const SocialSidebar = () => {
           }
         }
 
-        @keyframes pulse {
+        @keyframes social-pulse { /* its own name: "pulse" would replace Tailwind's animate-pulse (the loading bars) with this scaling */
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.2); }
         }
@@ -113,7 +113,7 @@ const SocialSidebar = () => {
 
         .social-item:hover .glow-effect {
           opacity: 0.6;
-          animation: pulse 2s ease-in-out infinite;
+          animation: social-pulse 2s ease-in-out infinite;
         }
 
         .ripple-effect {

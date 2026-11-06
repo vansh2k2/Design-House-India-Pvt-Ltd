@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import ProcessReveal from "./ProcessReveal";
 import type { CorporateDesign } from "./types";
 
 type ProcessCards = CorporateDesign["process"];
@@ -9,7 +10,7 @@ type ProcessCards = CorporateDesign["process"];
    CorporatePage. */
 const CorporateProcess = ({ process }: { process: ProcessCards }) => (
   <section className="w-full bg-[#FBF5EE]">
-    <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+    <div className="mx-auto max-w-[1440px] px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-7">
       <div className="mx-auto max-w-[900px] text-center">
         <div className="flex items-center justify-center gap-3">
           <span className="h-[2px] w-12 rounded-full bg-[#F28C1B] sm:w-16" />
@@ -22,11 +23,12 @@ const CorporateProcess = ({ process }: { process: ProcessCards }) => (
         <p className="mx-auto mt-3 max-w-[760px] text-[14px] sm:text-[15.5px] leading-[1.55] text-[#2E3A4E]">{process.text}</p>
       </div>
 
-      <ol className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 xl:gap-4">
+      {/* The steps come in one by one as they scroll into view (ProcessReveal) */}
+      <ProcessReveal className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 xl:gap-4">
         {process.steps.map(({ image, icon: Icon, title, text }) => (
-          <li key={title} className="flex flex-col rounded-[16px] bg-white shadow-[rgba(50,50,93,0.25)_0px_2px_5px_-1px,rgba(0,0,0,0.3)_0px_1px_3px_-1px]">
+          <li key={title} className="flex flex-col rounded-[16px] bg-white shadow-[rgba(60,64,67,0.3)_0px_1px_2px_0px,rgba(60,64,67,0.15)_0px_1px_3px_1px]">
             <div className="relative">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-t-[16px]">
+              <div className="pr-photo relative aspect-[16/10] overflow-hidden rounded-[16px]">
                 <Image
                   src={image}
                   alt=""
@@ -37,14 +39,16 @@ const CorporateProcess = ({ process }: { process: ProcessCards }) => (
                 />
               </div>
               {/* Half on the photo, half on the card */}
-              <span className="absolute bottom-0 left-1/2 flex h-[54px] w-[54px] -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-white shadow-[0_3px_12px_rgba(242,140,27,0.3)] ring-1 ring-[#F28C1B]/30">
-                <Icon className="h-7 w-7 text-[#F28C1B]" strokeWidth={1.6} />
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+                <span className="pr-icon relative flex h-[54px] w-[54px] items-center justify-center rounded-full bg-white shadow-[0_3px_12px_rgba(242,140,27,0.3)] ring-1 ring-[#F28C1B]/30">
+                  <Icon className="h-7 w-7 text-[#F28C1B]" strokeWidth={1.6} />
+                </span>
               </span>
             </div>
 
             <div className="flex flex-1 flex-col items-center px-4 pb-5 pt-9 text-center xl:px-2 2xl:px-4">
               {/* Two lines tall, so the bars and texts line up across the row */}
-              <h3 className="flex min-h-[2.5em] items-center text-[15px] xl:text-[13px] 2xl:text-[14.5px] font-semibold leading-[1.25] text-[#0A2B5E]">
+              <h3 className="pr-rise flex min-h-[2.5em] items-center text-[15px] xl:text-[13px] 2xl:text-[14.5px] font-semibold leading-[1.25] text-[#0A2B5E]">
                 <span>
                   {title.split("\n").map((line) => (
                     <span key={line} className="block xl:whitespace-nowrap">
@@ -53,12 +57,12 @@ const CorporateProcess = ({ process }: { process: ProcessCards }) => (
                   ))}
                 </span>
               </h3>
-              <span aria-hidden="true" className="mt-2.5 h-[3px] w-10 rounded-full bg-[#F28C1B]" />
-              <p className="mt-3 text-[13.5px] xl:text-[12.5px] 2xl:text-[13.5px] leading-[1.5] text-[#2E3A4E]">{text}</p>
+              <span aria-hidden="true" className="pr-bar mt-2.5 h-[3px] w-10 rounded-full bg-[#F28C1B]" />
+              <p style={{ "--pr-step": 1 } as React.CSSProperties} className="pr-rise mt-3 text-[13.5px] xl:text-[12.5px] 2xl:text-[13.5px] leading-[1.5] text-[#2E3A4E]">{text}</p>
             </div>
           </li>
         ))}
-      </ol>
+      </ProcessReveal>
     </div>
   </section>
 );

@@ -25,7 +25,7 @@ const CorporateFeatured = ({ featured }: { featured: Featured }) => (
   <section className="relative w-full overflow-hidden bg-[#FBF8F4]">
     <Leaf />
 
-    <div className="relative mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
+    <div className="relative mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-10 lg:px-10">
         <div className="shrink-0">
           <div className="flex items-center gap-3">

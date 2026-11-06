@@ -19,6 +19,9 @@ import {
   Shirt,
   ShoppingBag,
   Wrench,
+  HardHat,
+  MessagesSquare,
+  Users,
 } from "lucide-react";
 
 import heroImg from "../../../../public/service/optimized/retail/nr1.webp";
@@ -40,6 +43,11 @@ import electronicsImg from "../../../../public/service/optimized/retail/nr16.web
 import furnishingImg from "../../../../public/service/optimized/retail/nr17.webp";
 import luxuryImg from "../../../../public/service/optimized/retail/nr18.webp";
 import faqImg from "../../../../public/service/optimized/retail/nr19.webp";
+// The same photos cut for the Corporate-style sections: the banner without its dark band at the bottom, the
+// overview photo without its white left part, the FAQ photo without its white right part
+import bannerImg from "../../../../public/service/optimized/retail/nr1-banner.webp";
+import overviewPhotoImg from "../../../../public/service/optimized/retail/nr2-overview.webp";
+import faqPhotoImg from "../../../../public/service/optimized/retail/nr19-faq.webp";
 
 import { DisplayRack, KioskCounter, LightBulbGlow, StoreFront } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
@@ -145,6 +153,89 @@ export const retailShowrooms: ServiceDetail = {
       { title: "Home Furnishing Showroom", place: "Bengaluru, Karnataka", image: furnishingImg, icon: Lamp },
       { title: "Luxury Retail Showroom", place: "Mumbai, Maharashtra", image: luxuryImg, icon: Gem },
     ],
+  },
+  /* The page in the Corporate Interiors design (../corporate/CorporatePage): same layout, cards, shadows,
+     animations, fonts and colours, with this service's own text and photos. The banner text above and the FAQs
+     below are used too; the other sections above stay for the admin and in case the page goes back. */
+  corporate: {
+    banner: {
+      background: bannerImg,
+      imageAlt: "Retail showroom with a lit wooden counter, wall shelves and screens",
+      textShade: true,
+      stats: [
+        { icon: Award, value: "21+ Years", label: "of Industry Experience" },
+        { icon: StoreFront, value: "200+", label: "Retail Projects Delivered" },
+        { icon: Layers, value: "End-to-End", label: "Design & Execution" },
+        { icon: MapPin, value: "Pan-India", label: "Project Delivery" },
+      ],
+    },
+    overview: {
+      eyebrow: "Overview",
+      title: ["Creating Retail Spaces", "That Drive Sales"],
+      text: "From space planning to final execution, we create retail environments that combine functionality, aesthetics and brand storytelling. Our turnkey solutions are tailored to your products, target audience and business goals, ensuring a distinctive and high-performing showroom.",
+      image: overviewPhotoImg,
+      points: [
+        { icon: Gem, title: "Brand Centric\nDesign" },
+        { icon: LayoutGrid, title: "Optimized Space\nPlanning" },
+        { icon: Boxes, title: "Custom Display\nSolutions" },
+        { icon: BadgeCheck, title: "Quality & Timely\nDelivery" },
+      ],
+      buttons: {
+        primary: { label: "Enquire Now", href: "/contact" },
+        secondary: { label: "View Projects", href: "/portfolio/interior/retail-interior" },
+      },
+    },
+    offer: {
+      title: ["Spaces That", "Build Brands"],
+      text: "Design House India Private Limited is a premier manufacturer of retail display solutions with nationwide reach. End-to-end interior, display and fit-out solutions across India.",
+      items: [
+        { image: showroomImg, icon: StoreFront, title: "Showrooms & Stores", text: "Branded and experiential spaces" },
+        { image: displayImg, icon: DisplayRack, title: "Display Solutions", text: "Custom display fixtures, shelving, counters and furniture, tailored to your products and brand." },
+        { image: spacePlanningImg, icon: LayoutGrid, title: "Optimized Space Planning", text: "Better product display and customer flow" },
+        { image: materialsImg, icon: PencilRuler, title: "Design & Planning", text: "Layout, 3D visuals and material selection" },
+        { image: fitOutImg, icon: Wrench, title: "Manufacturing & Execution", text: "In-house manufacturing and on-site installation" },
+        { image: handoverImg, icon: Handshake, title: "Handover", text: "Final quality check and timely delivery" },
+      ],
+    },
+    benefits: {
+      title: ["Why", "Choose Us"],
+      text: "Elegant and engaging showrooms that bring your brand to life.",
+      background: benefitsImg,
+      items: [
+        { icon: Layers, title: "Turnkey Solutions", text: "Layout, design, fixtures, lighting, branding, manufacturing, installation and handover." },
+        { icon: ReceiptText, title: "Detailed Quotation", text: "Share your requirements and we will prepare a detailed quotation for your showroom." },
+        { icon: CalendarCheck, title: "Clear Schedule", text: "A schedule covering production, installation and handover once the design is final." },
+        { icon: Factory, title: "In-house Fixtures", text: "Display fixtures, shelving, counters and furniture made in-house." },
+        { icon: RefreshCw, title: "Showroom Upgrades", text: "We renovate or reconfigure your existing showroom to match your brand." },
+        { icon: MapPin, title: "Pan-India Execution", text: "Production, logistics and on-site installation wherever your store is located." },
+      ],
+      cta: { label: "Discuss Your Retail Showroom Project", href: "/contact" },
+    },
+    process: {
+      title: ["From Concept to", "Opening"],
+      text: "A structured process to deliver a seamless retail showroom experience.",
+      steps: [
+        { image: handoverImg, icon: MessagesSquare, title: "Consultation", text: "Understand your brand, products and store requirements" },
+        { image: showroomImg, icon: PencilRuler, title: "Design & Planning", text: "Store layout and space planning, interior design and 3D visuals" },
+        { image: materialSelectionImg, icon: Layers, title: "Material Selection", text: "Careful attention to lighting and materials" },
+        { image: manufacturingImg, icon: Factory, title: "In-house Manufacturing", text: "Custom display fixtures, shelving, counters and furniture made in-house" },
+        { image: installationImg, icon: HardHat, title: "On-site Installation", text: "Production, logistics and on-site installation wherever your store is located" },
+        { image: finishedStoreImg, icon: Handshake, title: "Handover", text: "Final quality check and timely delivery" },
+      ],
+    },
+    featured: {
+      eyebrow: "Featured Retail",
+      title: ["Showroom", "Projects"],
+      text: "A curated selection of our retail showroom projects across India.",
+      items: [
+        { image: fashionImg, icon: Shirt, title: "Fashion Brand Showroom", tags: ["Delhi NCR"], href: "/portfolio/interior/retail-interior" },
+        { image: electronicsImg, icon: Monitor, title: "Electronics Showroom", tags: ["Gurugram, Haryana"], href: "/portfolio/interior/retail-interior" },
+        { image: lifestyleImg, icon: ShoppingBag, title: "Lifestyle Store", tags: ["Noida, Uttar Pradesh"], href: "/portfolio/interior/retail-interior" },
+        { image: furnishingImg, icon: Lamp, title: "Home Furnishing Showroom", tags: ["Bengaluru, Karnataka"], href: "/portfolio/interior/retail-interior" },
+        { image: luxuryImg, icon: Gem, title: "Luxury Retail Showroom", tags: ["Mumbai, Maharashtra"], href: "/portfolio/interior/retail-interior" },
+      ],
+    },
+    faqPhoto: faqPhotoImg,
   },
   // Not in the page's design, so it isn't shown; kept for the admin and for later
   hideIdealFor: true,
