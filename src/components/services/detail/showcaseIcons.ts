@@ -11,6 +11,11 @@ const icon = (name: string, shapes: Shape[]): LucideIcon =>
     shapes.map(([tag, attrs], i) => [tag, { ...attrs, key: String(i) }])
   );
 
+export const HouseHeart = icon("HouseHeart", [
+  ["path", { d: "M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }],
+  ["path", { d: "M12 17.6s-3.4-2-3.4-4.3a1.8 1.8 0 0 1 3.4-.85 1.8 1.8 0 0 1 3.4.85c0 2.3-3.4 4.3-3.4 4.3z" }],
+]);
+
 export const OfficeDesk = icon("OfficeDesk", [
   ["circle", { cx: "7", cy: "4.6", r: "2.1" }],
   ["path", { d: "M4.5 12V9.6A2.5 2.5 0 0 1 7 7.1a2.5 2.5 0 0 1 2.5 2.5V12" }],

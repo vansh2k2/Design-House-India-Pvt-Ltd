@@ -1,21 +1,27 @@
-import { Armchair, Award, BadgeCheck, CalendarClock, Factory, FileCheck, Gem, Layers, LayoutGrid, MapPin, RefreshCw, Users, UsersRound } from "lucide-react";
+import { Armchair, Award, BadgeCheck, BriefcaseBusiness, PencilRuler, Coffee, ConciergeBell, Factory, HardHat, Layers, MapPin, MessagesSquare, MonitorCog, Users, UsersRound } from "lucide-react";
 
-import heroImg from "../../../../public/service/optimized/corporate/ni1.webp";
-import whyImg from "../../../../public/service/optimized/corporate/ni2.webp";
-import benefitsImg from "../../../../public/service/optimized/corporate/i5.webp";
-import offer1Img from "../../../../public/service/optimized/corporate/n1.webp";
-import offer2Img from "../../../../public/service/optimized/corporate/n2.webp";
-import offer3Img from "../../../../public/service/optimized/corporate/n3.webp";
-import offer4Img from "../../../../public/service/optimized/corporate/n4.webp";
-import offer5Img from "../../../../public/service/optimized/corporate/n5.webp";
-import offer6Img from "../../../../public/service/optimized/corporate/n6.webp";
+import heroImg from "../../../../public/service/optimized/corporate/i1.webp";
+import workstationsImg from "../../../../public/service/optimized/corporate/i2.webp";
+import meetingRoomImg from "../../../../public/service/optimized/corporate/i3.webp";
+import receptionImg from "../../../../public/service/optimized/corporate/i4.webp";
+import collaborativeImg from "../../../../public/service/optimized/corporate/i5.webp";
+import bannerImg from "@/assets/banner/cibg.webp";
+import overviewImg from "@/assets/image/ci.webp";
 import itOfficeImg from "@/assets/hero-corporate-1.jpg";
 import headquartersImg from "@/assets/image/co1.webp";
 import coworkingImg from "@/assets/image/co2.webp";
 import consultingImg from "@/assets/image/co3.webp";
 import loungeImg from "@/assets/image/ws1.webp";
+import consultationImg from "@/assets/image/s2.webp";
+import conceptImg from "@/assets/image/a2.webp";
+import materialsImg from "@/assets/image/ac4.webp";
+import manufacturingImg from "@/assets/image/w3.webp";
+import installationImg from "@/assets/image/ac3.webp";
+import handoverImg from "@/assets/image/b2.webp";
+import openWorkspaceImg from "@/assets/image/os1.webp";
+import boardroomImg from "@/assets/image/so1.webp";
 
-import { LoungeSofa, MeetingTable, OfficeDesk, TeamGroup } from "../detail/showcaseIcons";
+import { HouseHeart, LoungeSofa, MeetingTable, OfficeDesk, TeamGroup } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const corporateInteriors: ServiceDetail = {
@@ -28,14 +34,31 @@ export const corporateInteriors: ServiceDetail = {
     text: "We design and execute high-performance corporate interiors that reflect your brand culture and enhance productivity. From office fit-outs to meeting rooms, workstations and collaborative spaces, we create functional and inspiring workplaces.",
     image: heroImg,
     secondaryCtaLink: { label: "View Projects", href: "/portfolio/interior/corporate-interior" },
+    photoWords: ["People", "Ideas", "Spaces", "Growth"],
     features: [
-      { icon: OfficeDesk, label: "Office Fit-Outs", text: "End-to-end workspace solutions" },
+      { icon: OfficeDesk, label: "Office Fit-Outs", text: "End-to-end workspace\nsolutions" },
       { icon: TeamGroup, label: "Workstations", text: "Ergonomic and modular designs" },
       { icon: MeetingTable, label: "Meeting Rooms", text: "Functional and flexible spaces" },
       { icon: LoungeSofa, label: "Reception & Lounges", text: "Strong first impressions" },
     ],
+  },
+  why: {
+    eyebrow: "Overview",
+    title: ["Creating Homes", "That Inspire"],
+    text: "We design and execute modern, functional and personalized residential interiors that reflect your lifestyle. From concept and design to in-house manufacturing and final execution, we transform spaces into comfortable, elegant and inspiring homes.",
+    image: overviewImg,
+    points: [
+      { icon: HouseHeart, title: "Personalized\nDesign", text: "Interiors planned around your lifestyle" },
+      { icon: Layers, title: "End-to-End\nExecution", text: "From concept to final handover" },
+      { icon: Factory, title: "In-house\nManufacturing", text: "Furniture and fixtures made in our own units" },
+      { icon: MapPin, title: "Multi-City\nDelivery", text: "Projects delivered across cities" },
+    ],
+  },
+  // The page's own sections (../corporate/CorporatePage); the banner text above, and the FAQs below, are used too
+  corporate: {
     banner: {
-      imageAlt: "Corporate office reception with a marble desk and open workstations behind it",
+      background: bannerImg,
+      imageAlt: "Corporate office reception with a lit marble desk and open workstations with a city view",
       stats: [
         { icon: Award, value: "21+ Years", label: "of Industry Experience" },
         { icon: Users, value: "500+", label: "Happy Clients" },
@@ -43,51 +66,71 @@ export const corporateInteriors: ServiceDetail = {
         { icon: MapPin, value: "Pan-India", label: "Project Delivery" },
       ],
     },
-  },
-  why: {
-    layout: "banner",
-    title: ["Corporate Spaces", "That Perform"],
-    text: "We combine design thinking, technical expertise and industry experience to create workspaces that are efficient, beautiful and future-ready.",
-    image: whyImg,
-    points: [
-      { icon: Gem, title: "Brand Focused\nDesign", text: "Workspaces that reflect your brand identity" },
-      { icon: LayoutGrid, title: "Optimized\nSpace Planning", text: "Better space utilization for higher productivity" },
-      { icon: Armchair, title: "Functional &\nErgonomic Layouts", text: "Comfortable and efficient work environments" },
-      { icon: BadgeCheck, title: "Quality &\nTimely Delivery", text: "Premium materials and on-time execution" },
-    ],
-    buttons: {
-      primary: { label: "Discuss Corporate Interiors", href: "/contact" },
-      secondary: { label: "View Projects", href: "/portfolio/interior/corporate-interior" },
+    overview: {
+      eyebrow: "Overview",
+      title: ["Creating Homes", "That Inspire"],
+      text: "We design and execute modern, functional and personalized residential interiors that reflect your lifestyle. From concept and design to in-house manufacturing and final execution, we transform spaces into comfortable, elegant and inspiring homes.",
+      image: overviewImg,
+      points: [
+        { icon: HouseHeart, title: "Personalized\nDesign" },
+        { icon: Layers, title: "End-to-End\nExecution" },
+        { icon: Factory, title: "In-house\nManufacturing" },
+        { icon: MapPin, title: "Multi-City\nDelivery" },
+      ],
+      buttons: {
+        primary: { label: "Get a Residential Design Consultation", href: "/contact" },
+        secondary: { label: "Explore Our Work", href: "/portfolio/interior/corporate-interior" },
+      },
     },
-  },
-  offer: {
-    eyebrow: "What We Offer",
-    title: ["Workspaces That Inspire", "Success"],
-    text: "We design modern corporate office interiors that enhance workplace productivity and reinforce brand identity through turnkey design, manufacturing, and fit-out solutions across India.",
-    items: [
-      { title: "Office Fit-Outs", text: "End-to-end workspace solutions", image: offer1Img, alt: "Corporate office lounge with glass-walled rooms behind it", href: "/contact" },
-      { title: "Workstations", text: "Ergonomic and modular designs", image: offer2Img, alt: "Open-plan office with rows of workstations and a glass meeting room", href: "/contact" },
-      { title: "Meeting Rooms", text: "Functional and flexible spaces", image: offer3Img, alt: "Boardroom with a long table, leather chairs and a wall screen", href: "/contact" },
-      { title: "Corporate Headquarters", text: "Workspaces that reflect your brand identity", image: offer4Img, alt: "Office lounge with armchairs, a sofa and lit display shelves", href: "/contact" },
-      { title: "Collaborative Spaces", text: "Comfortable and efficient work environments", image: offer5Img, alt: "Office cafeteria with a bar counter, stools and round tables", href: "/contact" },
-      { title: "Reception & Lounges", text: "Strong first impressions", image: offer6Img, alt: "Office reception with a marble desk and orange armchairs for visitors", href: "/contact" },
-    ],
-  },
-  // The lines are this service's own: its FAQs and process below, and its line on the Services page
-  benefits: {
-    eyebrow: "Core Benefits",
-    title: ["Why", "Choose Us"],
-    text: "Workspaces designed for productivity, brand identity and growth.",
-    image: benefitsImg,
-    items: [
-      { icon: Layers, title: "Turnkey Solutions", text: "Everything from space planning and design to in-house manufacturing, on-site execution and final handover." },
-      { icon: UsersRound, title: "Single Team", text: "You work with a single team throughout the project." },
-      { icon: Factory, title: "Manufacturing & Installation", text: "In-house manufacturing and on-site installation." },
-      { icon: CalendarClock, title: "Detailed Schedule", text: "We share a detailed schedule covering design, production and execution." },
-      { icon: FileCheck, title: "Approvals Support", text: "We coordinate with building management and prepare the drawings and documents needed for approvals." },
-      { icon: RefreshCw, title: "Existing Office Upgrades", text: "We can refresh or extend your existing interiors, reuse what works and redesign the areas that need improvement." },
-    ],
-    cta: { label: "Discuss Your Workspace Project", href: "/contact" },
+    offer: {
+      title: ["Complete Corporate Interior", "Solutions"],
+      text: "From strategic planning to flawless execution, we deliver end-to-end corporate interior solutions that enhance productivity, reflect your brand identity and create modern, future-ready workspaces.",
+      items: [
+        { image: workstationsImg, icon: Armchair, title: "Workspace Design", text: "Ergonomic, efficient and collaborative workspaces for higher productivity." },
+        { image: meetingRoomImg, icon: Users, title: "Meeting Rooms", text: "Smart, tech-enabled meeting spaces for focused discussions and better decisions." },
+        { image: receptionImg, icon: ConciergeBell, title: "Reception & Lobbies", text: "Welcoming, brand-aligned reception areas that create a strong first impression." },
+        { image: collaborativeImg, icon: UsersRound, title: "Collaborative Spaces", text: "Flexible and informal spaces that encourage teamwork, creativity and innovation." },
+        { image: headquartersImg, icon: BriefcaseBusiness, title: "Executive Offices", text: "Elegant and functional leadership spaces that reflect authority and brand values." },
+        { image: loungeImg, icon: Coffee, title: "Pantry & Breakout Zones", text: "Relaxing and engaging spaces for refreshment, interaction and employee well-being." },
+      ],
+    },
+    benefits: {
+      title: ["Why", "Choose Us"],
+      text: "A reliable partner for residential interiors that combines design expertise, quality execution and a seamless, stress-free experience.",
+      items: [
+        { icon: PencilRuler, title: "Bespoke Design", text: "Personalized interiors that reflect your lifestyle, space and taste." },
+        { icon: Layers, title: "End-to-End Solutions", text: "From concept and planning to manufacturing and on-site execution." },
+        { icon: Factory, title: "In-house Manufacturing", text: "Precision, quality control and timely delivery through our own production setup." },
+        { icon: BadgeCheck, title: "Assured Quality", text: "Premium materials, skilled craftsmanship and lasting finishes." },
+        { icon: Users, title: "Experienced Team", text: "A dedicated team of designers, project managers and execution specialists." },
+        { icon: MapPin, title: "Pan-India Execution", text: "Consistent design and project delivery across multiple cities." },
+      ],
+      cta: { label: "Discuss Your Home Interior Project", href: "/contact" },
+    },
+    process: {
+      title: ["From Concept to", "Workspace"],
+      text: "A clear, collaborative and well-structured process that transforms your ideas into a high-performing, brand-aligned and future-ready workspace.",
+      steps: [
+        { image: consultationImg, icon: MessagesSquare, title: "Consultation &\nRequirement Study", text: "Understand your business goals, brand identity, space needs and budget to define the right scope." },
+        { image: conceptImg, icon: MonitorCog, title: "Concept &\nDesign Development", text: "Translate your requirements into functional designs with space planning, 3D visuals and a detailed proposal." },
+        { image: materialsImg, icon: Layers, title: "Material Finalization", text: "Select the right materials, finishes, colors and fittings that match your brand, functionality and durability needs." },
+        { image: manufacturingImg, icon: Factory, title: "In-house Manufacturing", text: "Precision-built furniture and interior elements at our own facility with strict quality checks." },
+        { image: installationImg, icon: HardHat, title: "Execution & Installation", text: "On-site execution with skilled teams, proper coordination and quality supervision." },
+        { image: handoverImg, icon: Armchair, title: "Handover & After Support", text: "A fully completed workspace with final walkthrough, quality check, warranty support and continued assistance." },
+      ],
+    },
+    featured: {
+      title: ["Interior", "Projects"],
+      text: "A curated selection of our corporate interior projects, showcasing functional design, brand-aligned workspaces and refined execution.",
+      items: [
+        { image: openWorkspaceImg, icon: Armchair, title: "Open Workspace", tags: ["Collaborative", "Flexible", "Productive"] },
+        { image: boardroomImg, icon: Users, title: "Meeting Room", tags: ["Smart", "Connected", "Professional"] },
+        { image: heroImg, icon: ConciergeBell, title: "Reception & Lobby", tags: ["Welcoming", "Brand-Aligned", "Premium"] },
+        { image: headquartersImg, icon: BriefcaseBusiness, title: "Executive Office", tags: ["Elegant", "Functional", "Leader-Focused"] },
+        { image: loungeImg, icon: Coffee, title: "Pantry & Breakout", tags: ["Relaxing", "Engaging", "People-Centric"] },
+      ],
+    },
+    faqPhoto: meetingRoomImg,
   },
   process: {
     title: "From Planning to Possession",
@@ -125,20 +168,24 @@ export const corporateInteriors: ServiceDetail = {
   },
   faqs: [
     {
-      q: "Do you provide end-to-end turnkey solutions?",
+      q: "What services does Design House India offer?",
+      a: "We provide end-to-end turnkey solutions for corporate interiors, including workspace design, fit-outs, furniture, branded environments, architectural signage and project execution.",
+    },
+    {
+      q: "Do you handle both design and execution?",
       a: "Yes. We handle everything from space planning and design to in-house manufacturing, on-site execution and final handover, so you work with a single team throughout the project.",
     },
     {
-      q: "Can you work with our existing office design?",
-      a: "Yes. We can refresh or extend your existing interiors, reuse what works and redesign the areas that need improvement, while keeping the look consistent with your brand.",
+      q: "Can you customize designs as per our brand and space requirements?",
+      a: "Yes. Every workspace is planned around your brand identity, team size, workflow and budget, with layouts, materials and finishes chosen to suit your space.",
     },
     {
-      q: "How long does a typical project take?",
-      a: "It depends on the size of the space, the scope of work and site conditions. After understanding your requirements we share a detailed schedule covering design, production and execution.",
+      q: "Do you have in-house manufacturing capabilities?",
+      a: "Yes. Furniture and interior elements are built at our own production facility, which gives us control over quality, finishes and delivery timelines.",
     },
     {
-      q: "Do you handle approvals and permissions?",
-      a: "We coordinate with building management and prepare the drawings and documents needed for approvals. Specific requirements vary by building and city, and we guide you through each step.",
+      q: "Which locations do you serve?",
+      a: "We are headquartered in Delhi-NCR with strong operations in Mumbai, and we deliver corporate interior projects across India.",
     },
   ],
   ctaTitle: ["Let's Discuss", "Your Workspace Project"],

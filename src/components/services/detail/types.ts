@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import type { StaticImageData } from "next/image";
 
+import type { CorporateDesign } from "../corporate/types";
+
 type ShowcaseStat = { icon: LucideIcon; value: string; label: string }; // a line break in the label is kept
 
 /* Everything a service detail page (/services/<slug>) shows; one object per service in ../details.
@@ -99,6 +101,7 @@ export interface ServiceDetail {
   hideIdealFor?: boolean;
   separators?: boolean; // a thin line between the sections after the banner (SectionSeparator.tsx)
   look?: "home"; // home: the home page's headings, colours, buttons and card hover on the newer sections (homeLook.tsx)
+  corporate?: CorporateDesign; // a page of its own design (../corporate/CorporatePage) in place of the sections above
   ctaEyebrow?: string; // default "Let's Build Together"
   ctaTitle: [string, string]; // second part in gold
   ctaSubtitle?: string; // default "Get in touch with our team for a customized solution."

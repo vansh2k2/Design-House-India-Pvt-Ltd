@@ -18,6 +18,7 @@ import ServiceFaqs from "./ServiceFaqs";
 import ServiceFaqsImage from "./ServiceFaqsImage";
 import SectionSeparator from "./SectionSeparator";
 import ResidentialPage from "../residential/ResidentialPage";
+import CorporatePage from "../corporate/CorporatePage";
 import type { ServiceDetail } from "./types";
 
 /* A service's page (e.g. /services/corporate-interiors): banner with features, why choose us, process,
@@ -33,6 +34,9 @@ const ServiceDetailPage = ({ data }: { data: ServiceDetail }) => {
       {/* Residential Interiors has a page of its own design */}
       {data.slug === "residential-interiors" ? (
         <ResidentialPage data={data} />
+      ) : data.corporate ? (
+        /* So does Corporate Interiors (../corporate) */
+        <CorporatePage data={data} design={data.corporate} />
       ) : (
         <>
           {data.hero.banner ? (
