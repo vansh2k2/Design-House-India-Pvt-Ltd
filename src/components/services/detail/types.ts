@@ -33,28 +33,57 @@ export interface ServiceDetail {
       stat: ShowcaseStat;
       moreStats?: ShowcaseStat[]; // shown in a row with stat (photo-right-slant-stats)
     };
+    // Banner with the text on the photo (ServiceBannerHero), and a strip of figures below it. The photo must have
+    // the navy of that banner on its left, for the text. It also uses the fields above, except photoWords.
+    banner?: {
+      imageAlt: string;
+      stats: ShowcaseStat[];
+    };
   };
   why: {
     eyebrow?: string; // default "Why Choose Us"
-    layout?: "split" | "overview"; // split: edge-to-edge photo + points beside it (default); overview: inset photo, points in a row below
+    layout?: "split" | "overview" | "banner"; // split: edge-to-edge photo + points beside it (default); overview: inset photo, points in a row below; banner: text on an image, inside the page's margins
     title: [string, string];
     text: string;
     image: StaticImageData;
     points: { icon: LucideIcon; title: string; text: string }[];
+    buttons?: { primary: { label: string; href: string }; secondary: { label: string; href: string } }; // banner layout
+    bannerTextEnd?: string; // banner layout: where the image's picture begins, as a share of its width (default 46%)
+  };
+  // "What We Offer" (ServiceOffer): a row of six cards after why. The images hold their own icon and rounded corners.
+  offer?: {
+    eyebrow: string;
+    title: [string, string]; // second part in orange
+    text: string;
+    items: { title: string; text: string; image: StaticImageData; alt: string; href: string; icon?: LucideIcon }[]; // icon: drawn on a photo without one
+  };
+  // "Core Benefits" (ServiceBenefits): six frosted cards and a button, over a soft photo, after offer
+  benefits?: {
+    eyebrow: string;
+    title: [string, string]; // second part in orange
+    text: string;
+    image: StaticImageData;
+    imageReady?: boolean; // the image already has its soft, light middle, so it isn't blurred or lightened
+    items: { icon: LucideIcon; title: string; text: string }[];
+    cta: { label: string; href: string };
   };
   process: {
     tone?: "white" | "warm";
+    layout?: "cards"; // cards: a card per step with a photo (ServiceProcessCards)
     title: string;
+    titleAccent?: string; // cards layout: after the title, in orange
     text: string;
-    steps: { title: string; text: string }[];
+    steps: { title: string; text: string; image?: StaticImageData; icon?: LucideIcon }[];
   };
   projects: {
     eyebrow?: string; // default "Featured Projects"
     linkLabel?: string; // default "View All Projects"
     title: string;
+    titleAccent?: string; // cards layout: after the title, in orange
     text?: string;
     linkStyle?: "button" | "text"; // "View All Projects" as a gold button (default) or a text link; text also adds arrows to the cards
-    items: { title: string; place: string; image: StaticImageData }[]; // place: location, or a short description
+    layout?: "cards"; // cards: rounded cards with an icon on the photo (ServiceProjectCards)
+    items: { title: string; place: string; image: StaticImageData; icon?: LucideIcon }[]; // place: location, or a short description
   };
   idealFor: {
     title: string[]; // one entry per line
@@ -66,7 +95,10 @@ export interface ServiceDetail {
   };
   faqs: { q: string; a: string }[];
   faqHeading?: { title: string; text: string }; // default "Quick Answers"
-  faqStyle?: { numbered?: boolean; tone?: "white" | "blue" };
+  faqStyle?: { numbered?: boolean; tone?: "white" | "blue"; image?: StaticImageData; textFrom?: string; compact?: boolean }; // image: the questions on its free right side (ServiceFaqsImage); compact: a shorter section
+  hideIdealFor?: boolean;
+  separators?: boolean; // a thin line between the sections after the banner (SectionSeparator.tsx)
+  look?: "home"; // home: the home page's headings, colours, buttons and card hover on the newer sections (homeLook.tsx)
   ctaEyebrow?: string; // default "Let's Build Together"
   ctaTitle: [string, string]; // second part in gold
   ctaSubtitle?: string; // default "Get in touch with our team for a customized solution."

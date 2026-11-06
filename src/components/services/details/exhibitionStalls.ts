@@ -1,34 +1,52 @@
 import {
+  Award,
   BadgeCheck,
+  Building2,
+  CalendarCheck,
   Car,
   Cpu,
+  Factory,
   Gem,
   GraduationCap,
+  Headset,
   HeartPulse,
-  Building2,
+  Layers,
   LayoutGrid,
   Leaf,
+  MapPin,
+  Palette,
+  PencilRuler,
+  Presentation,
+  ReceiptText,
   ShoppingCart,
   Users,
+  Wrench,
 } from "lucide-react";
 
-import heroImg from "../../../../public/service/optimized/exhibition/e1.webp";
-import whiteStallImg from "../../../../public/service/optimized/exhibition/e2.webp";
-import blueStallImg from "../../../../public/service/optimized/exhibition/e3.webp";
-import redStallImg from "../../../../public/service/optimized/exhibition/e4.webp";
-import greenWallStallImg from "../../../../public/service/optimized/exhibition/e5.webp";
-import overviewImg from "@/assets/image/es.webp";
-import healthcareImg from "@/assets/image/b4.webp";
-import wellnessImg from "@/assets/what-we-do/exhibition.jpg";
-import organicImg from "@/assets/image/os4.webp";
-import corporateImg from "@/assets/image/t4.webp";
+import heroImg from "../../../../public/service/optimized/exhibition/ne1.webp";
+import overviewImg from "../../../../public/service/optimized/exhibition/ne2.webp";
+import creativeImg from "../../../../public/service/optimized/exhibition/ne3.webp";
+import designImg from "../../../../public/service/optimized/exhibition/ne4.webp";
+import fabricationImg from "../../../../public/service/optimized/exhibition/ne5.webp";
+import installationImg from "../../../../public/service/optimized/exhibition/ne6.webp";
+import finishedStallImg from "../../../../public/service/optimized/exhibition/ne7.webp";
+import supportImg from "../../../../public/service/optimized/exhibition/ne8.webp";
+import benefitsImg from "../../../../public/service/optimized/exhibition/ne9.webp";
+import healthcareImg from "../../../../public/service/optimized/exhibition/ne10.webp";
+import wellnessImg from "../../../../public/service/optimized/exhibition/ne11.webp";
+import organicImg from "../../../../public/service/optimized/exhibition/ne12.webp";
+import corporateImg from "../../../../public/service/optimized/exhibition/ne13.webp";
+import eventImg from "../../../../public/service/optimized/exhibition/ne16.webp";
+import faqImg from "../../../../public/service/optimized/exhibition/ne17.webp";
 
 import { ExhibitionBooth, GearOutline, LightBulbGlow, TeamGroup } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
+// The wording is this service's own: this file's earlier text, its FAQs, and its lines on the Home and Services pages
 export const exhibitionStalls: ServiceDetail = {
   slug: "exhibition-stalls",
   name: "Exhibition Stall Design & Build",
+  look: "home",
   hero: {
     eyebrow: "Our Services",
     title: ["Exhibition Stall", "Design & Build"],
@@ -42,21 +60,20 @@ export const exhibitionStalls: ServiceDetail = {
       { icon: ExhibitionBooth, label: "Custom Fabrication", text: "High-quality and durable structures" },
       { icon: TeamGroup, label: "Engaging Experiences", text: "Spaces that attract and connect" },
     ],
-    showcase: {
-      layout: "photo-left-cut-navy",
-      imageAlt: "Exhibition stall with a lit reception counter, wooden columns and a seating area",
-      gallery: [
-        { image: whiteStallImg, alt: "White exhibition stall with gold lighting and a seating area" },
-        { image: blueStallImg, alt: "Blue and white exhibition stall with a reception desk and screens" },
-        { image: redStallImg, alt: "Red and white exhibition stall with screens and a branded counter" },
-        { image: greenWallStallImg, alt: "Exhibition stall with wooden slats and a green plant wall" },
+    banner: {
+      imageAlt: "Exhibition stall with a white canopy, wooden panels, screens and a lit counter",
+      stats: [
+        { icon: Award, value: "21+ Years", label: "of Industry Experience" },
+        { icon: ExhibitionBooth, value: "200+", label: "Exhibition Stalls Delivered" },
+        { icon: Layers, value: "End-to-End", label: "Design & Execution" },
+        { icon: MapPin, value: "Pan-India", label: "Project Delivery" },
       ],
-      stat: { icon: ExhibitionBooth, value: "200+", label: "Exhibition Stalls Delivered" },
     },
   },
   why: {
     eyebrow: "Overview",
-    layout: "overview",
+    layout: "banner",
+    bannerTextEnd: "40%",
     title: ["Exhibition Stalls", "That Showcase Your Brand"],
     text: "We create custom exhibition stalls that combine design, functionality and brand storytelling. Our end-to-end solutions are tailored to your products, target audience and event objectives, helping you make a strong impression and generate valuable business leads. With in-house fabrication, smart visitor flow and careful attention to lighting, graphics and finishes, every stall we deliver is designed to draw people in and turn conversations into lasting business relationships.",
     image: overviewImg,
@@ -66,28 +83,65 @@ export const exhibitionStalls: ServiceDetail = {
       { icon: LayoutGrid, title: "Custom Fabrication", text: "Modular and reusable solutions" },
       { icon: BadgeCheck, title: "Quality & Timely Delivery", text: "Professional execution with on-site support" },
     ],
+    buttons: {
+      primary: { label: "Enquire Now", href: "/contact" },
+      secondary: { label: "View Projects", href: "/portfolio/signage/exhibition-events-portfolio" },
+    },
+  },
+  offer: {
+    eyebrow: "What We Offer",
+    title: ["Exhibits That Command", "Attention"],
+    text: "We engineer custom trade show booths and exhibition stalls that maximize visitor engagement, command visual attention, and deliver high-impact turnkey presence at major expos across India.",
+    items: [
+      { icon: Palette, title: "Creative Designs", text: "Unique and brand-focused concepts", image: creativeImg, alt: "Blue and white exhibition stall with a curved canopy and a lit counter", href: "/contact" },
+      { icon: PencilRuler, title: "3D Design & Visuals", text: "We create 3D visuals of your stall so you can review the layout, branding and finishes before fabrication begins.", image: designImg, alt: "Laptop showing a 3D stall design beside drawings and colour swatches", href: "/contact" },
+      { icon: Factory, title: "Custom Fabrication", text: "High-quality and durable structures", image: fabricationImg, alt: "CNC machine carving a wooden panel in the workshop", href: "/contact" },
+      { icon: Wrench, title: "Installation & Dismantling", text: "Our team installs the stall before the event, supports you during the show and dismantles it once the event is over.", image: installationImg, alt: "Workers installing an exhibition stall at the venue", href: "/contact" },
+      { icon: Layers, title: "End-to-End Execution", text: "From design to on-site installation", image: finishedStallImg, alt: "Finished exhibition stall with screens, shelves and a seating area", href: "/contact" },
+      { icon: MapPin, title: "Pan-India Execution", text: "We build and install exhibition stalls at venues across India, managing transport, installation and on-site support.", image: supportImg, alt: "Team member with a headset working on a stall design", href: "/contact" },
+    ],
+  },
+  benefits: {
+    eyebrow: "Core Benefits",
+    title: ["Why", "Choose Us"],
+    text: "Creative and high-impact stalls that make your brand stand out at every event.",
+    image: benefitsImg,
+    imageReady: true,
+    items: [
+      { icon: Layers, title: "Turnkey Solutions", text: "Stall concept and 3D design, fabrication, graphics and branding, lighting, furniture, transport, on-site installation, event support and dismantling after the show." },
+      { icon: ReceiptText, title: "Detailed Quotation", text: "Share your requirements and we will prepare a detailed quotation for your stall." },
+      { icon: CalendarCheck, title: "Ready on Time", text: "Once the design is finalised we share a schedule for fabrication, transport and installation so the stall is ready on time." },
+      { icon: Factory, title: "In-house Fabrication", text: "In-house fabrication, smart visitor flow and careful attention to lighting, graphics and finishes." },
+      { icon: Presentation, title: "Business Leads", text: "Stalls that help you make a strong impression and generate valuable business leads." },
+      { icon: Headset, title: "On-site Support", text: "On-site supervision and dismantling" },
+    ],
+    cta: { label: "Discuss Your Exhibition Project", href: "/contact" },
   },
   process: {
-    tone: "warm",
-    title: "From Concept to Execution",
+    layout: "cards",
+    title: "From Concept to",
+    titleAccent: "Execution",
     text: "A streamlined process to ensure a successful exhibition experience.",
     steps: [
-      { title: "Consultation", text: "Understand your goals, audience and event requirements" },
-      { title: "Design & Planning", text: "Creative concept, 3D visuals and material selection" },
-      { title: "Fabrication & Execution", text: "In-house manufacturing and on-site installation" },
-      { title: "Event Support", text: "On-site supervision and dismantling" },
+      { title: "Consultation", text: "Understand your goals, audience and event requirements", image: supportImg },
+      { title: "Design & Planning", text: "Creative concept, 3D visuals and material selection", image: designImg },
+      { title: "Fabrication & Execution", text: "In-house manufacturing and on-site installation", image: fabricationImg },
+      { title: "Event Support", text: "On-site supervision and dismantling", image: eventImg },
     ],
   },
   projects: {
+    layout: "cards",
     title: "Our Exhibition Stall Projects",
     linkStyle: "text",
     items: [
-      { title: "Healthcare Exhibition Stall", place: "Pragati Maidan, New Delhi", image: healthcareImg },
-      { title: "Wellness Brand Stall", place: "India Expo Mart, Greater Noida", image: wellnessImg },
-      { title: "Organic Products Stall", place: "Bharat Organic Expo", image: organicImg },
-      { title: "Corporate Brand Stall", place: "Mumbai Exhibition Centre", image: corporateImg },
+      { title: "Healthcare Exhibition Stall", place: "Pragati Maidan, New Delhi", image: healthcareImg, icon: ExhibitionBooth },
+      { title: "Wellness Brand Stall", place: "India Expo Mart, Greater Noida", image: wellnessImg, icon: ExhibitionBooth },
+      { title: "Organic Products Stall", place: "Bharat Organic Expo", image: organicImg, icon: ExhibitionBooth },
+      { title: "Corporate Brand Stall", place: "Mumbai Exhibition Centre", image: corporateImg, icon: ExhibitionBooth },
     ],
   },
+  // Not in the page's design, so it isn't shown; kept for the admin and for later
+  hideIdealFor: true,
   idealFor: {
     title: ["Exhibition Stalls for Every Industry"],
     tiles: [
@@ -104,7 +158,7 @@ export const exhibitionStalls: ServiceDetail = {
     title: "Frequently Asked Questions",
     text: "Quick answers to common questions about our exhibition stall services.",
   },
-  faqStyle: { numbered: true, tone: "blue" },
+  faqStyle: { numbered: true, tone: "blue", image: faqImg, textFrom: "46%" },
   faqs: [
     {
       q: "What is included in an exhibition stall turnkey solution?",

@@ -220,10 +220,10 @@ export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | 
             // fallback
           }
 
-          // A designed page (hero.showcase) shows what's in its own file. The seed script saved other text for these
+          // A designed page (hero.showcase or hero.banner) shows what's in its own file. The seed script saved other text for these
           // pages, shorter lists and other titles, and that can't be told apart from an edit in the admin. A photo
           // uploaded in the admin can, so that is used, and so are the team's FAQs (above).
-          if (fallback.hero.showcase) {
+          if (fallback.hero.showcase || fallback.hero.banner) {
             const savedProjects = Array.isArray(detail.projects?.items) ? detail.projects.items : [];
             const overviewPhoto = uploadedImage(detail.why?.image);
             return {
