@@ -14,10 +14,12 @@ type Benefits = CorporateDesign["benefits"];
 const CorporateBenefits = ({ benefits }: { benefits: Benefits }) => (
   <section className="relative w-full overflow-hidden bg-[#F6F1EA]">
     <Image src={benefits.background ?? bgImg} alt="" aria-hidden="true" fill placeholder="blur" sizes="100vw" className="object-cover object-center" />
-    {/* Lightens the photo behind the cards, mostly on small screens where they cover the furniture */}
-    <div aria-hidden="true" className="absolute inset-0 bg-white/45 lg:bg-white/15" />
+    {/* Lightens the photo behind the cards, mostly on small screens where they cover the furniture; left out when
+        asked (noShade) */}
+    {!benefits.noShade && <div aria-hidden="true" className="absolute inset-0 bg-white/45 lg:bg-white/15" />}
 
-    <div className="relative mx-auto max-w-[1100px] px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-7">
+    {/* Wider (wide) for longer card titles, so they stay on one line */}
+    <div className={`relative mx-auto px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-7 ${benefits.wide ? "max-w-[1200px]" : "max-w-[1100px]"}`}>
       <div className="text-center">
         <div className="flex items-center justify-center gap-3">
           <span className="h-[2px] w-10 rounded-full bg-[#F28C1B] sm:w-14" />
@@ -79,7 +81,7 @@ const CorporateBenefits = ({ benefits }: { benefits: Benefits }) => (
         <div className="mt-8 text-center">
           <Link
             href={benefits.cta.href}
-            className="group inline-flex items-center gap-3 rounded-[10px] bg-gradient-to-b from-[#F59A35] to-[#E57A0E] px-7 py-3 text-[14px] sm:text-[15px] font-semibold text-white shadow-[0_6px_18px_rgba(229,122,14,0.4)] transition-shadow hover:shadow-[0_8px_24px_rgba(229,122,14,0.55)]"
+            className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-b from-[#F59A35] to-[#E57A0E] px-7 py-3 text-[14px] sm:text-[15px] font-semibold text-white shadow-[0_6px_18px_rgba(229,122,14,0.4)] transition-shadow hover:shadow-[0_8px_24px_rgba(229,122,14,0.55)]"
           >
             {benefits.cta.label}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

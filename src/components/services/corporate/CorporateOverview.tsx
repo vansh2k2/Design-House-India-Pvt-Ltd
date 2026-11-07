@@ -14,14 +14,22 @@ const CorporateOverview = ({ overview }: { overview: Overview }) => (
       <Image src={overview.image} alt="" fill placeholder="blur" sizes="(min-width: 1024px) 52vw, 100vw" className="object-cover object-left" />
     </div>
 
-    <div className="relative mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-[3vw]">
-      <div className="lg:w-[48%] lg:pl-[2.5vw] lg:pr-6 2xl:pl-[3vw]">
+    {/* With offerEdge the text starts at the left edge of the "What We Offer" cards below */}
+    <div
+      className={`relative mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-[3vw] ${overview.offerEdge ? "max-w-[1400px]" : "max-w-[1440px]"} ${overview.smallTitle ? "2xl:py-[3.3vw]" : ""}`}
+    >
+      <div className={`lg:w-[48%] lg:pr-6 ${overview.offerEdge ? "" : "lg:pl-[2.5vw] 2xl:pl-[3vw]"}`}>
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-8 rounded-full bg-[#F28C1B]" />
           <span className="text-[12px] sm:text-[13px] font-bold uppercase tracking-[0.12em] text-[#0A2B5E]">{overview.eyebrow}</span>
         </div>
 
-        <h2 className="mt-3 font-serif text-[34px] sm:text-[42px] lg:text-[clamp(36px,3.3vw,54px)] font-bold leading-[1.05] text-[#0A2B5E]">
+        {/* A longer title (smallTitle) is set a little smaller */}
+        <h2
+          className={`mt-3 font-serif font-bold leading-[1.05] text-[#0A2B5E] ${
+            overview.smallTitle ? "text-[30px] sm:text-[36px] lg:text-[clamp(28px,2.5vw,36px)] xl:whitespace-nowrap" : "text-[34px] sm:text-[42px] lg:text-[clamp(36px,3.3vw,54px)]"
+          }`}
+        >
           {overview.title[0]}
           <br />
           <span className="relative inline-block pb-2 italic text-[#F28C1B]">

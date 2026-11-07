@@ -13,7 +13,7 @@ const ServiceProjects = ({ data }: { data: ServiceDetail }) => {
   const many = projects.items.length > 4; // six product cards in a row on lg
 
   return (
-    <section id="products" className={`w-full scroll-mt-24 ${textLink ? "bg-white" : "bg-[#FBF5EE]"}`}>
+    <section id="products" className="w-full scroll-mt-24 bg-white">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-6">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-5">
           <div>

@@ -63,6 +63,8 @@ const ServicesGrid = ({ initialServices }: { initialServices?: PublicServiceItem
               >
                 <Link
                   href={href ?? "/portfolio"}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group flex flex-col h-full rounded-md bg-white overflow-hidden shadow-[rgba(0,0,0,0.02)_0px_1px_3px_0px,rgba(27,31,35,0.15)_0px_0px_0px_1px] hover:shadow-[0_10px_24px_-12px_rgba(10,43,94,0.35)] transition-shadow"
                 >
                   <div className="relative h-[150px] overflow-hidden bg-slate-100">

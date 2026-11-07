@@ -71,9 +71,10 @@ const ServiceBenefits = ({ benefits, look }: { benefits: Benefits; look?: Servic
           <Link
             href={benefits.cta.href}
             className={
+              // Fully rounded on every service page
               home
-                ? HOME.primaryButton
-                : "group inline-flex h-12 items-center justify-center gap-3 rounded-[10px] border border-[#FFC27A] bg-gradient-to-r from-[#EE8A12] to-[#D96F06] px-7 text-center text-[14.5px] font-semibold text-white shadow-[0_6px_18px_rgba(217,111,6,0.4)] transition-opacity hover:opacity-90"
+                ? `${HOME.primaryButton} !rounded-full`
+                : "group inline-flex h-12 items-center justify-center gap-3 rounded-full border border-[#FFC27A] bg-gradient-to-r from-[#EE8A12] to-[#D96F06] px-7 text-center text-[14.5px] font-semibold text-white shadow-[0_6px_18px_rgba(217,111,6,0.4)] transition-opacity hover:opacity-90"
             }
           >
             {benefits.cta.label}

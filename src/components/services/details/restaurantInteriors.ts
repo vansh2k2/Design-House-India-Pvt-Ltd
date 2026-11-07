@@ -1,8 +1,24 @@
 import {
+  Armchair,
+  Award,
+  BadgeCheck,
   ChefHat,
   Coffee,
+  ConciergeBell,
+  Factory,
   Gem,
+  Hammer,
+  HardHat,
+  Headset,
   Hotel,
+  Layers,
+  LayoutGrid,
+  Lightbulb,
+  MapPin,
+  Martini,
+  MessagesSquare,
+  MonitorCog,
+  Sandwich,
   ShieldCheck,
   Truck,
   UtensilsCrossed,
@@ -12,17 +28,33 @@ import {
 } from "lucide-react";
 
 import heroImg from "../../../../public/service/optimized/restaurant/rs1.webp";
-import barImg from "../../../../public/service/optimized/restaurant/rs2.webp";
-import openKitchenImg from "../../../../public/service/optimized/restaurant/rs3.webp";
-import seatingImg from "../../../../public/service/optimized/restaurant/rs4.webp";
-import diningHallImg from "../../../../public/service/optimized/restaurant/rs5.webp";
+import bannerImg from "@/assets/banner/ribg.webp";
+import benefitsBgImg from "@/assets/banner/whoribg.webp";
+import designOverviewImg from "@/assets/image/riright.webp";
 import overviewImg from "@/assets/image/ri1.webp";
 import fineDiningImg from "@/assets/image/ir1.webp";
 import cafeImg from "@/assets/image/ir2.webp";
 import qsrImg from "@/assets/image/ir3.webp";
 import loungeImg from "@/assets/image/ir4.webp";
+import featured1Img from "@/assets/image/rr111.webp";
+import featured2Img from "@/assets/image/rr222.webp";
+import featured3Img from "@/assets/image/rr333.webp";
+import featured4Img from "@/assets/image/rr444.webp";
+import featured5Img from "@/assets/image/rr555.webp";
+import offer1Img from "@/assets/image/ri11.webp";
+import offer2Img from "@/assets/image/ri2.webp";
+import offer3Img from "@/assets/image/ri3.webp";
+import offer4Img from "@/assets/image/ri4.webp";
+import offer5Img from "@/assets/image/ri5.webp";
+import offer6Img from "@/assets/image/ri6.webp";
+import consultationImg from "@/assets/image/ri111.webp";
+import conceptImg from "@/assets/image/ri222.webp";
+import materialsImg from "@/assets/image/ri333.webp";
+import manufacturingImg from "@/assets/image/ri444.webp";
+import installationImg from "@/assets/image/ri555.webp";
+import handoverImg from "@/assets/image/ri666.webp";
 
-import { BarCounter, Cloche, DiningTable, HangingLamp } from "../detail/showcaseIcons";
+import { Cloche, DiningTable } from "../detail/showcaseIcons";
 import type { ServiceDetail } from "../detail/types";
 
 export const restaurantInteriors: ServiceDetail = {
@@ -31,27 +63,16 @@ export const restaurantInteriors: ServiceDetail = {
   hero: {
     eyebrow: "Our Services",
     title: ["Restaurant", "Interiors"],
-    tagline: "Inviting Spaces That Create Memorable Experiences",
-    text: "We design and execute restaurant interiors that blend ambience, functionality and brand identity. From casual dining to fine-dine, we create spaces that enhance guest experiences and drive business growth.",
+    tagline: "Immersive Dining Spaces for Memorable Experiences",
+    text: "We design and execute high-impact restaurant interiors that blend ambience, functionality and brand identity to enhance customer engagement. From concept and space planning to fit-outs, kitchen coordination and execution, we create modern, functional and dining-driven restaurants.",
     image: heroImg,
     secondaryCtaLink: { label: "View Projects", href: "/portfolio/interior/restaurant-interior" },
     features: [
-      { icon: DiningTable, label: "Dining Areas", text: "Comfortable and engaging spaces" },
-      { icon: BarCounter, label: "Bars & Beverage Zone", text: "Stylish and functional designs" },
-      { icon: ChefHat, label: "Open Kitchens", text: "Modern and efficient layouts" },
-      { icon: HangingLamp, label: "Lighting & Ambience", text: "Setting the perfect mood" },
+      { icon: Cloche, label: "Restaurant Design", text: "End-to-end\ndining solutions" },
+      { icon: DiningTable, label: "Space Planning", text: "Optimized seating\nand seamless flow" },
+      { icon: Lightbulb, label: "Ambience & Lighting", text: "Mood-driven\nlighting concepts" },
+      { icon: Hammer, label: "Interior Fit-Out", text: "High-quality build\nand finishes" },
     ],
-    showcase: {
-      layout: "photo-right-cut-navy",
-      imageAlt: "Restaurant with green banquette seating, wooden tables and woven pendant lights",
-      gallery: [
-        { image: seatingImg, alt: "Dining area with green and cream chairs and tropical plants" },
-        { image: barImg, alt: "Bar with a lit bottle wall and a row of leather stools" },
-        { image: diningHallImg, alt: "Dining hall with round tables under woven pendant lights" },
-        { image: openKitchenImg, alt: "Open kitchen with chefs behind a green counter" },
-      ],
-      stat: { icon: Cloche, value: "150+", label: "Restaurant Projects Delivered" },
-    },
   },
   why: {
     eyebrow: "Overview",
@@ -65,6 +86,95 @@ export const restaurantInteriors: ServiceDetail = {
       { icon: ShieldCheck, title: "Durable & Functional", text: "Materials for high-traffic restaurant environments" },
       { icon: Clock, title: "On-Time Delivery", text: "Reliable execution with quality standards" },
     ],
+  },
+  // The page's own sections, in the Corporate Interiors design (../corporate/CorporatePage); the banner text above,
+  // and the FAQs below, are used too
+  corporate: {
+    banner: {
+      background: bannerImg,
+      compactText: true,
+      lastFeatureShade: true,
+      imageAlt: "Restaurant with a lit reception counter, ring pendant lights and dining tables beside a garden view",
+      stats: [
+        { icon: Award, value: "21+ Years", label: "of Industry Experience" },
+        { icon: Users, value: "500+", label: "Happy Clients" },
+        { icon: Layers, value: "End-to-End", label: "Design & Execution" },
+        { icon: MapPin, value: "Pan-India", label: "Project Delivery" },
+      ],
+    },
+    overview: {
+      eyebrow: "Overview",
+      title: ["Creating Restaurant Interiors", "That Inspire"],
+      smallTitle: true,
+      offerEdge: true,
+      text: "We design and execute modern, brand-aligned restaurant interiors that create inviting dining experiences, enhance customer engagement and drive higher footfall. From concept and design to in-house manufacturing and final execution, we create immersive, functional and high-impact restaurant spaces.",
+      image: designOverviewImg,
+      points: [
+        { icon: Cloche, title: "Brand-Aligned\nDesign" },
+        { icon: Layers, title: "End-to-End\nExecution" },
+        { icon: Factory, title: "In-house\nManufacturing" },
+        { icon: MapPin, title: "Multi-City\nDelivery" },
+      ],
+      buttons: {
+        primary: { label: "Get a Restaurant Interior Design Consultation", href: "/contact" },
+        secondary: { label: "Explore Our Work", href: "/portfolio/interior/restaurant-interior" },
+      },
+    },
+    offer: {
+      title: ["Complete Restaurant Interior", "Solutions"],
+      tallPhotos: true,
+      text: "From strategic planning to flawless execution, we deliver end-to-end restaurant interior solutions that showcase your concept, strengthen brand identity and create immersive, high-performing dining experiences.",
+      items: [
+        { image: offer1Img, icon: ConciergeBell, title: "Restaurant Design", text: "Brand-aligned and guest-centric restaurant layouts that elevate ambience and the dining experience." },
+        { image: offer2Img, icon: Wine, title: "Bar & Beverage Zones", text: "Stylish bar counters and beverage stations designed for display, service and atmosphere." },
+        { image: offer3Img, icon: LayoutGrid, title: "Space Planning", text: "Optimized layouts for smooth guest flow, efficient seating and seamless service." },
+        { image: offer4Img, icon: Layers, title: "Material Finalization", text: "Curated materials, finishes and lighting that align with your brand, durability needs and design aesthetics." },
+        { image: offer5Img, icon: HardHat, title: "Fit-Out & Execution", text: "End-to-end project execution with skilled teams, quality control and timely delivery for a ready-to-open restaurant." },
+        { image: offer6Img, icon: Headset, title: "Handover & After Support", text: "A fully completed restaurant with final walkthrough, warranty support and continued assistance." },
+      ],
+    },
+    benefits: {
+      title: ["Why", "Choose Us"],
+      text: "A reliable partner for restaurant interiors that combines design expertise, quality execution and a seamless, brand-focused dining experience.",
+      items: [
+        { icon: Cloche, title: "Restaurant-Focused Design", text: "Dining spaces that enhance ambience, comfort and overall guest experience." },
+        { icon: Layers, title: "End-to-End Solutions", text: "From concept and planning to fit-out, lighting, furniture and project execution." },
+        { icon: Factory, title: "In-house Manufacturing", text: "High-quality, customized furniture, seating and fixtures with precise delivery." },
+        { icon: BadgeCheck, title: "Assured Quality", text: "Premium materials, skilled craftsmanship and long-lasting finishes." },
+        { icon: Users, title: "Experienced Team", text: "A dedicated team of designers, project managers and execution specialists." },
+        { icon: MapPin, title: "Pan-India Execution", text: "Consistent design and project delivery across multiple cities." },
+      ],
+      cta: { label: "Discuss Your Restaurant Interior Project", href: "/contact" },
+      background: benefitsBgImg,
+      noShade: true,
+      wide: true,
+    },
+    process: {
+      title: ["From Concept to", "Restaurant"],
+      text: "A clear, collaborative and well-structured process that transforms your ideas into a high-impact, brand-aligned and operationally-ready restaurant.",
+      steps: [
+        { image: consultationImg, icon: MessagesSquare, title: "Consultation &\nRequirement Study", text: "Understand your restaurant concept, cuisine, target audience, space needs and budget to define the right scope." },
+        { image: conceptImg, icon: MonitorCog, title: "Concept &\nDesign Development", text: "Translate your vision into efficient layouts, 3D visuals and a detailed design proposal that enhances the dining experience." },
+        { image: materialsImg, icon: Layers, title: "Material Finalization", text: "Select the right materials, finishes, colors and furniture that align with your restaurant brand, theme and durability needs." },
+        { image: manufacturingImg, icon: Factory, title: "In-house Manufacturing", text: "Precision-built furniture, seating, counters and custom elements at our own facility with strict quality checks." },
+        { image: installationImg, icon: HardHat, title: "Execution & Installation", text: "On-site execution with skilled teams, proper coordination and quality supervision for a seamless setup." },
+        { image: handoverImg, icon: Armchair, title: "Handover & After Support", text: "A fully completed restaurant with final walkthrough, warranty support and continued assistance for smooth operations." },
+      ],
+    },
+    featured: {
+      eyebrow: "Featured Restaurant Interiors",
+      title: ["Restaurant", "Projects"],
+      text: "A curated selection of our restaurant interior projects, showcasing brand-aligned design, immersive dining spaces and refined execution.",
+      items: [
+        { image: featured1Img, icon: UtensilsCrossed, title: "Fine Dine Restaurant", tags: ["Dine-in", "Private Dining", "Luxury"], href: "/portfolio/interior/restaurant-interior" },
+        { image: featured2Img, icon: Sandwich, title: "Casual Dining Restaurant", tags: ["Cafés", "QSR", "Bistro"], href: "/portfolio/interior/restaurant-interior" },
+        { image: featured3Img, icon: Coffee, title: "Café Interiors", tags: ["Coffee Bars", "Bakeries", "Lounge"], href: "/portfolio/interior/restaurant-interior" },
+        { image: featured4Img, icon: ConciergeBell, title: "Food Court Design", tags: ["Multi-Cuisine", "High Footfall", "Scalable"], href: "/portfolio/interior/restaurant-interior" },
+        { image: featured5Img, icon: Martini, title: "Bar & Lounge", tags: ["Bars", "Lounges", "Nightlife"], href: "/portfolio/interior/restaurant-interior" },
+      ],
+    },
+    faqPhoto: heroImg,
+    ownFaqs: true,
   },
   process: {
     tone: "warm",
@@ -105,28 +215,24 @@ export const restaurantInteriors: ServiceDetail = {
   faqStyle: { numbered: true, tone: "blue" },
   faqs: [
     {
-      q: "What is included in a restaurant interior turnkey solution?",
-      a: "Concept and theme design, space planning, 3D visuals, custom furniture and fixtures, lighting, branding elements, in-house manufacturing, on-site installation and final handover.",
+      q: "What services does Design House India offer?",
+      a: "We provide end-to-end turnkey solutions for restaurant interiors, including design, space planning, fit-outs, interior execution, display fixtures, furniture, lighting and project management.",
     },
     {
-      q: "How much does a restaurant interior project cost?",
-      a: "The cost depends on the size of the restaurant, the concept, materials, furniture and scope of work. Share your requirements and we will prepare a detailed quotation.",
+      q: "Do you handle both design and execution?",
+      a: "Yes. We handle everything from concept and space planning to in-house manufacturing, on-site execution and final handover, so you work with a single team throughout the project.",
     },
     {
-      q: "How long does a typical restaurant project take?",
-      a: "Timelines depend on the size, design complexity and site readiness. After finalising the design we share a schedule covering production, installation and handover.",
+      q: "Can you customize designs as per our brand and space requirements?",
+      a: "Yes. Every restaurant is planned around your concept, cuisine, brand identity, seating needs and budget, with layouts, materials and finishes chosen to suit your space.",
     },
     {
-      q: "Do you provide custom furniture and display fixtures?",
-      a: "Yes. We design and manufacture tables, seating, bar counters, display units and other fixtures in-house, tailored to your concept and brand.",
+      q: "Do you have in-house manufacturing capabilities?",
+      a: "Yes. Furniture, seating, counters and fixtures are built at our own production facility, which gives us control over quality, finishes and delivery timelines.",
     },
     {
-      q: "Can you work with an existing restaurant space?",
-      a: "Yes. We can renovate or reconfigure your existing restaurant, reuse what works and upgrade the layout, furniture, lighting and finishes.",
-    },
-    {
-      q: "Do you execute restaurant projects outside Delhi NCR?",
-      a: "Yes. We execute and support restaurant projects across India, managing production, logistics and on-site installation wherever your outlet is located.",
+      q: "Which locations do you serve?",
+      a: "We are headquartered in Delhi-NCR with strong operations in Mumbai, and we deliver restaurant interior projects across India.",
     },
   ],
   ctaEyebrow: "Let's Discuss",

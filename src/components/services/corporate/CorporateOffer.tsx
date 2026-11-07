@@ -45,8 +45,9 @@ const CorporateOffer = ({ offer }: { offer: Offer }) => (
       <OfferReveal className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 xl:gap-4 2xl:gap-5">
         {offer.items.map(({ image, icon: Icon, title, text, href }) => (
           <li key={title} className="flex flex-col overflow-hidden rounded-[12px] bg-white shadow-[rgba(50,50,93,0.25)_0px_2px_5px_-1px,rgba(0,0,0,0.3)_0px_1px_3px_-1px]">
-            {/* Taller than the photos' own 16:9, so the photo shows more; its sides are trimmed a little */}
-            <div className="co-shine relative aspect-[3/2]">
+            {/* Taller than the photos' own 16:9, so the photo shows more; its sides are trimmed a little. With
+                tallPhotos the photo is taller still and the text below sits closer, so the card keeps its height */}
+            <div className={`co-shine relative ${offer.tallPhotos ? "aspect-[7/5]" : "aspect-[3/2]"}`}>
               <Image
                 src={image}
                 alt=""
@@ -66,18 +67,18 @@ const CorporateOffer = ({ offer }: { offer: Offer }) => (
               </span>
             </div>
 
-            <div className="flex flex-1 flex-col items-center px-4 pb-3 pt-3 text-center xl:px-2.5 2xl:px-4">
+            <div className={`flex flex-1 flex-col items-center px-4 text-center xl:px-2.5 2xl:px-4 ${offer.tallPhotos ? "pb-2 pt-2" : "pb-3 pt-3"}`}>
               <h3 className="co-rise text-[16px] xl:text-[14px] 2xl:text-[16px] font-semibold leading-tight text-[#0A2B5E]">{title}</h3>
-              <p style={{ "--co-step": 1 } as React.CSSProperties} className="co-rise mt-1.5 text-[13px] xl:text-[11.5px] 2xl:text-[13px] leading-[1.45] text-[#3B4658] [text-wrap:balance]">{text}</p>
+              <p style={{ "--co-step": 1 } as React.CSSProperties} className={`co-rise text-[13px] xl:text-[11.5px] 2xl:text-[13px] leading-[1.45] text-[#3B4658] [text-wrap:balance] ${offer.tallPhotos ? "mt-1" : "mt-1.5"}`}>{text}</p>
 
               {/* Pushed to the bottom, so the links line up across the row */}
-              <span style={{ "--co-step": 2 } as React.CSSProperties} className="co-rise mt-auto block pt-2.5">
+              <span style={{ "--co-step": 2 } as React.CSSProperties} className={`co-rise mt-auto block ${offer.tallPhotos ? "pt-1.5" : "pt-2.5"}`}>
                 <span className="mx-auto block h-px w-10 bg-[#B9C0CC]" />
               </span>
               <Link
                 href={href ?? "/contact"}
                 style={{ "--co-step": 3 } as React.CSSProperties}
-                className="co-rise group mt-2.5 inline-flex items-center gap-2.5 text-[13px] xl:text-[12.5px] 2xl:text-[13px] font-bold text-[#0A2B5E] hover:text-[#F28C1B]"
+                className={`co-rise group inline-flex items-center gap-2.5 text-[13px] xl:text-[12.5px] 2xl:text-[13px] font-bold text-[#0A2B5E] hover:text-[#F28C1B] ${offer.tallPhotos ? "mt-1.5" : "mt-2.5"}`}
               >
                 More Information
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F28C1B] text-white transition-transform group-hover:translate-x-0.5">

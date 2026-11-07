@@ -21,8 +21,12 @@ const counted = (value: string) => {
 
 /* Full-width navy banner: a background photo that already fades to navy on the left, the text over that navy
    part, and a strip of figures underneath with gold curves in its two corners. Part of CorporatePage.
+   With compactText (Restaurant Interiors) the tagline and text are a little smaller and the text a little wider,
+   so a longer text keeps the banner at the same height.
    */
-const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
+const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => {
+  const compact = banner.compactText;
+  return (
   <section className="hero-banner relative w-full bg-[#0B1F3F] pt-[56px] sm:pt-[68px]">
     <style>{HERO_BANNER_CSS}</style>
     {/* Banner */}
@@ -44,7 +48,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
         <div aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[58%] bg-gradient-to-r from-[#0B1F3F]/90 from-25% via-[#0B1F3F]/65 via-55% to-transparent lg:block" />
       )}
 
-      <div className="relative px-4 py-10 sm:px-6 sm:py-12 lg:w-[43%] lg:py-[1.8vw] lg:pl-[6.3vw] lg:pr-0">
+      <div className={`relative px-4 py-10 sm:px-6 sm:py-12 lg:w-[43%] lg:pl-[6.3vw] lg:pr-0 ${compact ? "lg:py-[1.92vw] 2xl:py-[2.06vw]" : "lg:py-[1.8vw]"}`}>
         {/* Text colours, shadows and entrance effects as on the About Us banner */}
         <p className="hb-blur-in text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.25em] text-white" style={{ animationDelay: "0.15s" }}>
           {hero.eyebrow}
@@ -69,7 +73,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
 
         {hero.tagline && (
           <p
-            className="hb-blur-in mt-3 lg:mt-2 text-[16px] sm:text-[18px] 2xl:text-[20px] font-semibold leading-snug text-white"
+            className={`hb-blur-in mt-3 lg:mt-2 text-[16px] font-semibold leading-snug text-white ${compact ? "sm:text-[17px] 2xl:text-[18px]" : "sm:text-[18px] 2xl:text-[20px]"}`}
             style={{ animationDelay: "0.5s", textShadow: HERO_DESC_SHADOW }}
           >
             {hero.tagline}
@@ -77,7 +81,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
         )}
 
         <p
-          className="hb-desc-in mt-2 max-w-[470px] text-[13px] lg:max-w-[34vw] 2xl:text-[15px] leading-[1.5] text-white/90"
+          className={`hb-desc-in mt-2 max-w-[470px] leading-[1.5] text-white/90 ${compact ? "text-[12.5px] lg:max-w-[38vw] 2xl:text-[14px]" : "text-[13px] lg:max-w-[34vw] 2xl:text-[15px]"}`}
           style={{ animationDelay: "0.6s", textShadow: HERO_DESC_SHADOW }}
         >
           {hero.text}
@@ -87,7 +91,15 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
             screens, so the first item's text lines up closer with the text above */}
         <ul className="mt-5 lg:mt-4 grid grid-cols-2 gap-y-5 sm:grid-cols-4 lg:-ml-3 lg:max-w-[38vw] lg:grid-cols-[1.3fr_1fr_1fr_1.15fr] 2xl:mt-6">
           {hero.features.map(({ icon: Icon, label, text }, i) => (
-            <li key={label} className={`relative px-1.5 text-center ${i % 2 ? "border-l border-white/20" : ""} ${i > 0 ? "sm:border-l sm:border-white/20" : ""}`}>
+            // When asked (lastFeatureShade), a soft navy shade behind the last feature, where it sits over the photo
+            <li
+              key={label}
+              className={`relative px-1.5 text-center ${i % 2 ? "border-l border-white/20" : ""} ${i > 0 ? "sm:border-l sm:border-white/20" : ""} ${
+                banner.lastFeatureShade && i === hero.features.length - 1
+                  ? "isolate lg:before:absolute lg:before:-inset-x-1 lg:before:-inset-y-2 lg:before:-z-10 lg:before:rounded-xl lg:before:bg-[#0B1F3F]/75 lg:before:blur-md"
+                  : ""
+              }`}
+            >
               <span className="mx-auto flex h-[44px] w-[44px] items-center justify-center rounded-full ring-1 ring-[#F5A23A]/80 2xl:h-[52px] 2xl:w-[52px]">
                 <Icon className="h-[24px] w-[24px] text-[#F5A23A] 2xl:h-[28px] 2xl:w-[28px]" strokeWidth={1.4} />
               </span>
@@ -111,14 +123,14 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
         <div className="mt-6 lg:mt-5 flex gap-3 2xl:mt-6 2xl:gap-4">
           <Link
             href={hero.primaryCta?.href ?? "/contact"}
-            className="group inline-flex h-[44px] flex-1 items-center justify-center gap-2 rounded-[4px] bg-[#fd6e15] text-[12px] font-semibold uppercase tracking-[0.04em] text-white transition-colors hover:bg-[#e05d0e] sm:w-[170px] sm:flex-none 2xl:h-[48px] 2xl:w-[190px] 2xl:text-[13px]"
+            className="group inline-flex h-[40px] flex-1 items-center justify-center gap-2 rounded-[4px] bg-[#fd6e15] text-[11.5px] font-semibold uppercase tracking-[0.04em] text-white transition-colors hover:bg-[#e05d0e] sm:w-[150px] sm:flex-none 2xl:h-[44px] 2xl:w-[170px] 2xl:text-[12.5px]"
           >
             {hero.primaryCta?.label ?? "Enquire Now"}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
           <Link
             href={hero.secondaryCtaLink?.href ?? "/portfolio"}
-            className="group inline-flex h-[44px] flex-1 items-center justify-center gap-2 rounded-[4px] border border-white/80 text-[12px] font-semibold uppercase tracking-[0.04em] text-white transition-colors hover:bg-white hover:text-[#0B1F3F] sm:w-[170px] sm:flex-none 2xl:h-[48px] 2xl:w-[190px] 2xl:text-[13px]"
+            className="group inline-flex h-[40px] flex-1 items-center justify-center gap-2 rounded-[4px] border border-white/80 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-white transition-colors hover:bg-white hover:text-[#0B1F3F] sm:w-[150px] sm:flex-none 2xl:h-[44px] 2xl:w-[170px] 2xl:text-[12.5px]"
           >
             {hero.secondaryCtaLink?.label ?? "View Projects"}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -145,6 +157,7 @@ const CorporateBanner = ({ hero, banner }: { hero: Hero; banner: Banner }) => (
       </ul>
     </div>
   </section>
-);
+  );
+};
 
 export default CorporateBanner;

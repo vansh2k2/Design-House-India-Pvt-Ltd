@@ -408,7 +408,7 @@ const Process = () => (
 
 /* ── 6. Featured projects ── */
 const Projects = () => (
-  <section className="relative w-full overflow-hidden bg-[#FAF7F2]">
+  <section className="relative w-full overflow-hidden bg-white">
     <div className={`${WRAP} py-14 lg:py-16`}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-10">
         <div className="shrink-0">

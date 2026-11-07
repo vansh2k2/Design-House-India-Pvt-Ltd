@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import FeaturedReveal from "./FeaturedReveal";
 import type { CorporateDesign } from "./types";
 
 type Featured = CorporateDesign["featured"];
@@ -22,7 +23,7 @@ const Leaf = () => (
    project with an icon on the photo's bottom edge, a title, an orange bar, three keywords and an arrow.
    Part of CorporatePage. */
 const CorporateFeatured = ({ featured }: { featured: Featured }) => (
-  <section className="relative w-full overflow-hidden bg-[#FBF8F4]">
+  <section className="relative w-full overflow-hidden bg-white">
     <Leaf />
 
     <div className="relative mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
@@ -40,7 +41,8 @@ const CorporateFeatured = ({ featured }: { featured: Featured }) => (
         <p className="max-w-[520px] text-[14px] sm:text-[15px] leading-[1.6] text-[#2E3A4E]">{featured.text}</p>
       </div>
 
-      <ul className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-4 2xl:gap-5">
+      {/* The cards pull in from the left like a train as they scroll into view (FeaturedReveal) */}
+      <FeaturedReveal className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-4 2xl:gap-5">
         {featured.items.map(({ image, icon: Icon, title, tags, href }) => (
           <li key={title}>
             <Link
@@ -60,15 +62,15 @@ const CorporateFeatured = ({ featured }: { featured: Featured }) => (
                 </div>
                 {/* Half on the photo, half on the card */}
                 <span className="absolute bottom-0 left-4 flex h-[46px] w-[46px] translate-y-1/2 items-center justify-center rounded-full bg-[#FCEBDC] ring-4 ring-white">
-                  <Icon className="h-6 w-6 text-[#0A2B5E]" strokeWidth={1.5} />
+                  <Icon className="cf-wheel h-6 w-6 text-[#0A2B5E]" strokeWidth={1.5} />
                 </span>
               </div>
 
               <div className="flex flex-1 flex-col px-4 pb-4 pt-8 xl:px-3">
-                <h3 className="text-[16px] xl:text-[15px] 2xl:text-[16px] font-bold leading-tight text-[#0A2B5E] transition-colors group-hover:text-[#D9963B]">{title}</h3>
-                <span aria-hidden="true" className="mt-2 h-[3px] w-8 rounded-full bg-[#D9963B]" />
+                <h3 className="cf-rise text-[16px] xl:text-[15px] 2xl:text-[16px] font-bold leading-tight text-[#0A2B5E] transition-colors group-hover:text-[#D9963B]">{title}</h3>
+                <span aria-hidden="true" className="cf-bar mt-2 h-[3px] w-8 rounded-full bg-[#D9963B]" />
 
-                <div className="mt-auto flex items-center justify-between gap-2 pt-4 xl:gap-1.5 2xl:gap-2">
+                <div style={{ "--cf-step": 1 } as React.CSSProperties} className="cf-rise mt-auto flex items-center justify-between gap-2 pt-4 xl:gap-1.5 2xl:gap-2">
                   <p className="min-w-0 whitespace-nowrap text-[11.5px] xl:text-[10px] 2xl:text-[10.5px] text-[#3B4658]">
                     {tags.map((tag, i) => (
                       <span key={tag}>
@@ -85,7 +87,7 @@ const CorporateFeatured = ({ featured }: { featured: Featured }) => (
             </Link>
           </li>
         ))}
-      </ul>
+      </FeaturedReveal>
     </div>
   </section>
 );

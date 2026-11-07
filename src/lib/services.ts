@@ -204,7 +204,8 @@ export async function fetchServiceDetail(slug: string): Promise<ServiceDetail | 
         if (detail && fallback) {
           // Fetch FAQs for this service from backend FAQs collection if available
           let serviceFaqs = fallback.faqs;
-          try {
+          // A designed page can keep its own FAQs (corporate.ownFaqs), whatever is saved in the admin
+          if (!fallback.corporate?.ownFaqs) try {
             const cleanSlug = slug.replace(/^\/services\//, "").replace(/\/$/, "");
             const faqRes = await fetch(`${API_URL}/api/faqs/by-service/${encodeURIComponent(cleanSlug)}`, {
               next: { revalidate: 10 },
