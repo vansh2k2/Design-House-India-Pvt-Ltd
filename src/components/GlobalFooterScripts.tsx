@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import { API_URL } from "@/lib/api";
 
-const GlobalFooterScripts = () => {
-  const [footerScripts, setFooterScripts] = useState("");
+const GlobalFooterScripts = ({ scripts }: { scripts?: string }) => {
+  const [footerScripts, setFooterScripts] = useState(scripts || "");
 
   useEffect(() => {
+    if (scripts !== undefined) {
+      setFooterScripts(scripts);
+      return;
+    }
     const fetchFooterScripts = async () => {
       try {
         const response = await fetch(`${API_URL}/api/seo-settings/advanced`);
@@ -19,7 +23,7 @@ const GlobalFooterScripts = () => {
       }
     };
     fetchFooterScripts();
-  }, []);
+  }, [scripts]);
 
   if (!footerScripts) return null;
 

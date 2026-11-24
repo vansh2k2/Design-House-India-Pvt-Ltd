@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import GlobalFooterScripts from "@/components/GlobalFooterScripts";
-import { API_URL, fetchLocations } from "@/lib/api";
+import HeadCode from "@/components/seo/HeadCode";
+import { API_URL, fetchLocations, fetchAdvancedSeo } from "@/lib/api";
 import { LocationsProvider } from "@/context/LocationsContext";
 import { SocialLinksProvider } from "@/context/SocialLinksContext";
 import { fetchSocialLinks, socialProfiles } from "@/lib/socialLinks";
@@ -26,9 +28,6 @@ const playfair = localFont({
 
 export const metadata: Metadata = {
   title: "Design House India",
-  verification: {
-    google: "mqnOE06iopOGw64MqLF8dbJAkRgBtecavtI_1OKzlFQ",
-  },
   icons: {
     icon: "/favicon.png",
   },
@@ -40,7 +39,32 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [locations, socialLinks] = await Promise.all([fetchLocations(), fetchSocialLinks()]);
+  const [locations, socialLinks, advancedSeo] = await Promise.all([
+    fetchLocations(),
+    fetchSocialLinks(),
+    fetchAdvancedSeo(),
+  ]);
+
+  // Dynamic SEO & Analytics configuration directly from CMS database (falling back to env / default if backend is unreachable)
+  const configuredGa4Id = (
+    advancedSeo !== null && advancedSeo !== undefined
+      ? (advancedSeo.ga4MeasurementId ?? "")
+      : (process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || "G-YN241B64T9")
+  ).trim();
+  const ga4MeasurementId = /^G-[A-Z0-9]+$/i.test(configuredGa4Id) ? configuredGa4Id : undefined;
+
+  const configuredGtmId = (
+    advancedSeo !== null && advancedSeo !== undefined
+      ? (advancedSeo.gtmContainerId ?? "")
+      : (process.env.NEXT_PUBLIC_GTM_CONTAINER_ID || "")
+  ).trim();
+  const gtmContainerId = /^GTM-[A-Z0-9]+$/i.test(configuredGtmId) ? configuredGtmId : undefined;
+
+  const gscVerification = (
+    advancedSeo !== null && advancedSeo !== undefined
+      ? (advancedSeo.googleSearchConsoleVerification ?? "")
+      : (process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "mqnOE06iopOGw64MqLF8dbJAkRgBtecavtI_1OKzlFQ")
+  ).trim();
 
   // Tells search engines which social profiles belong to the company (Advanced SEO → Social Media Links)
   const organizationSchema = {
@@ -57,9 +81,64 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${inter.className} ${playfair.variable}`}>
+      <head>
+        {/* Google Tag Manager - in <head> */}
+        {gtmContainerId && (
+          <Script
+            id="google-tag-manager"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${gtmContainerId}');`,
+            }}
+          />
+        )}
+
+        {/* Google Analytics (gtag.js) - in <head> */}
+        {ga4MeasurementId && (
+          <>
+            <Script
+              id="google-analytics-src"
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${ga4MeasurementId}`}
+            />
+            <Script
+              id="google-analytics"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${ga4MeasurementId}', { send_page_view: true });`,
+              }}
+            />
+          </>
+        )}
+
+        {/* Google Search Console Verification */}
+        {gscVerification && (
+          <meta name="google-site-verification" content={gscVerification} />
+        )}
+      </head>
       {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) inject
           attributes on <body> before hydration; ignore those mismatches. */}
       <body suppressHydrationWarning>
+        {advancedSeo?.headerScripts && <HeadCode code={advancedSeo.headerScripts} />}
+
+        {/* Google Tag Manager (noscript) - immediately after opening <body> */}
+        {gtmContainerId && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${gtmContainerId}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        )}
 
         <script
           type="application/ld+json"
@@ -70,7 +149,7 @@ export default async function RootLayout({
             <Providers>{children}</Providers>
           </SocialLinksProvider>
 
-          <GlobalFooterScripts />
+          <GlobalFooterScripts scripts={advancedSeo?.footerScripts} />
         </LocationsProvider>
       </body>
     </html>

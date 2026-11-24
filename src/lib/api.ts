@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 /**
@@ -139,3 +141,41 @@ export async function fetchActiveHeroSlides(): Promise<any[]> {
         return [];
     }
 }
+
+export interface AdvancedSeoData {
+    headerScripts?: string;
+    footerScripts?: string;
+    ga4MeasurementId?: string;
+    gtmContainerId?: string;
+    googleSearchConsoleVerification?: string;
+    advancedSeo?: {
+        globalHeadCode?: string;
+        globalBodyCode?: string;
+        ga4MeasurementId?: string;
+        gtmContainerId?: string;
+        googleSearchConsoleVerification?: string;
+        headerScripts?: string;
+        footerScripts?: string;
+        [key: string]: any;
+    };
+    seoFiles?: any[];
+    socialLinks?: Record<string, string>;
+    [key: string]: any;
+}
+
+/**
+ * Fetches advanced SEO tracking tags, GA4 Measurement ID, GTM ID,
+ * and search console verifications for root layout injection dynamically
+ * from the database on every request (cache: "no-store" with per-request deduplication via React cache).
+ */
+export const fetchAdvancedSeo = cache(async (): Promise<AdvancedSeoData | null> => {
+    try {
+        const res = await fetch(`${API_URL}/api/seo-settings/advanced`, { cache: "no-store" });
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json?.success ? json.data : null;
+    } catch {
+        return null;
+    }
+});
+
