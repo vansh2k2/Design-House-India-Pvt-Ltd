@@ -45,11 +45,12 @@ export default async function RootLayout({
     fetchAdvancedSeo(),
   ]);
 
-  // Dynamic SEO & Analytics configuration directly from CMS database (falling back to env / default if backend is unreachable)
+  // Dynamic SEO & Analytics configuration directly from CMS database (falling back to env / default if empty or unreachable)
+  const defaultGa4Id = (process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || "G-YN241B64T9").trim();
   const configuredGa4Id = (
-    advancedSeo !== null && advancedSeo !== undefined
-      ? (advancedSeo.ga4MeasurementId ?? "")
-      : (process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || "G-YN241B64T9")
+    advancedSeo?.ga4MeasurementId?.trim() ||
+    advancedSeo?.advancedSeo?.ga4MeasurementId?.trim() ||
+    defaultGa4Id
   ).trim();
   const ga4MeasurementId = /^G-[A-Z0-9]+$/i.test(configuredGa4Id) ? configuredGa4Id : undefined;
 
