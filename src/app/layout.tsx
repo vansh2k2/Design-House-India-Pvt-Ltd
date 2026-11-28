@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import GlobalFooterScripts from "@/components/GlobalFooterScripts";
+import SiteAnalyticsTracker from "@/components/analytics/SiteAnalyticsTracker";
 import HeadCode from "@/components/seo/HeadCode";
 import { API_URL, fetchLocations, fetchAdvancedSeo } from "@/lib/api";
 import { LocationsProvider } from "@/context/LocationsContext";
@@ -151,6 +152,7 @@ gtag('config', '${ga4MeasurementId}', { send_page_view: true });`,
           </SocialLinksProvider>
 
           <GlobalFooterScripts scripts={advancedSeo?.footerScripts} />
+          <SiteAnalyticsTracker />
         </LocationsProvider>
       </body>
     </html>
